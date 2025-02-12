@@ -25,14 +25,16 @@ export default function Header() {
         {/* 電腦版 navbar */}
         <div className="d-none d-sm-flex">
           <div className="header-icon-container">
-            <img src="/image/DiveIn logo-light.png" alt="Logo" />
+          <Link href="/">
+            <img src="/image/DiveIn-logo-dark-final.png" alt="Logo" />
+          </Link>
           </div>
           <div className="header-list d-flex justify-content-between align-items-center">
             <ul className="m-0 d-flex justify-content-between align-items-center list-unstyled">
               <li className="px-3 py-2">
                 <Link
                   className="a"
-                  href="#"
+                  href="/"
                   onMouseEnter={() => {
                     setShowPop(false);
                   }}
@@ -44,7 +46,7 @@ export default function Header() {
               <li className="px-3 py-2">
                 <Link
                   className="a"
-                  href="#"
+                  href="/products"
                   onMouseEnter={() => handleMouseEnter("products")}
                 >
                   商品
@@ -53,7 +55,7 @@ export default function Header() {
               <li className="px-3 py-2">
                 <Link
                   className="a"
-                  href="#"
+                  href="/activity"
                   onMouseEnter={() => handleMouseEnter("events")}
                 >
                   活動
@@ -62,7 +64,7 @@ export default function Header() {
               <li className="px-3 py-2">
                 <Link
                   className="a"
-                  href="#"
+                  href="/rent"
                   onMouseEnter={() => handleMouseEnter("rental")}
                 >
                   租借
@@ -71,7 +73,7 @@ export default function Header() {
               <li className="px-3 py-2">
                 <Link
                   className="a"
-                  href="#"
+                  href="/group"
                   onMouseEnter={() => handleMouseEnter("group")}
                 >
                   揪團
@@ -123,12 +125,12 @@ export default function Header() {
             </button>
           </div>
           <div className="header-icon-container text-center">
-            <img src="/image/DiveIn logo-light.png" alt="Logo" />
+            <img src="/image/DiveIn-logo-dark-final.png" alt="Logo" />
           </div>
           <div className="mobile-cart fs-4">
-            <a href="#" className="a text-black">
+            <Link href="/cart" className="a text-black">
               <FiShoppingCart />
-            </a>
+            </Link>
             {/* <a href="#"="" class="a text-black ms-1"><i class="bi bi-person"></i></a> */}
           </div>
         </div>
