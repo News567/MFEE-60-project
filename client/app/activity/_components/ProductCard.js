@@ -22,7 +22,7 @@ export default function ProductCard({ product }) {
       <Link href={`/activity/${product.id}`} className={styles.productLink}>
         <div className={styles.productImg}>
           <Image
-            src={`/img/product/${product.main_image}` || "/image/activity/1.jpg"}
+            src={`/image/activity/${product.main_image}` || "/image/activity/1.jpg"}
             alt={product.name || "商品圖片"}
             width={200}
             height={200}
@@ -59,7 +59,7 @@ export default function ProductCard({ product }) {
         </div> */}
         <div className={styles.productInfo}>
           <div className={styles.brandName}>
-            {product.brand_name || "活動地點"}
+            {product.city_name || "活動地點"}
           </div>
           <div>{product.name || "活動名稱"}</div>
           <div className={styles.salePrice}>NT${product.price}</div>

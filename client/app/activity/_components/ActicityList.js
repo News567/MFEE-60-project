@@ -11,160 +11,26 @@ import ProductCard from "./ProductCard";
 const API_BASE_URL = "http://localhost:3005/api";
 
 export default function ProductList() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const [showDropdown, setShowDropdown] = useState(false);
-    const [showDisplayDropdown, setShowDisplayDropdown] = useState(false);
-    const [selectedSort, setSelectedSort] = useState({
-        text: "排序",
-        value: 1,
-    });
-    const [showClassification, setShowClassification] = useState(false);
-    const [selectedDisplay, setSelectedDisplay] = useState("每頁顯示24件");
-    const [showBrandClassification, setShowBrandClassification] =
-        useState(false);
-
-    // 撈取資料
-    const [products, setProducts] = useState([]);
-    // 分頁
-    //parseInt 把字串轉成數字    || 負責設定預設值
-    const [page, setPage] = useState(parseInt(searchParams.get("page")) || 1);
-    const [limit, setLimit] = useState(
-        parseInt(searchParams.get("limit")) || 24
-    );
-    const [totalPages, setTotalPages] = useState(1);
-    // 可以放動畫 先不動
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    // 處理 URL 更新
-    const updateURL = (newPage, newLimit) => {
-        const params = new URLSearchParams();
-        params.set("page", newPage.toString());
-        params.set("limit", newLimit.toString());
-        router.push(`/products?${params.toString()}`);
-    };
-
-    // 獲取產品資料
-    // FIXME: - 有依賴問題
+    const [activities, setActivities] = useState([]);
+    // console.log(API_BASE_URL + "/activity");
     useEffect(() => {
-        fetchProducts(page, limit, selectedSort.value); // 讓 API 依照當前排序方式請求
-    }, [page, limit, selectedSort.value]); // 監聽 selectedSort.value
-
-    // 獲取所有產品
-    const fetchProducts = async (currentPage, itemsPerPage, sortValue) => {
-        try {
-            setLoading(true);
-            const response = await axios.get(
-                `${API_BASE_URL}/products?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}`
-            );
-            console.log("API Response:", response.data);
-            if (response.data.status === "success") {
-                setProducts(response.data.data);
-                setTotalPages(response.data.pagination.totalPages);
-                setPage(response.data.pagination.currentPage);
-                updateURL(response.data.pagination.currentPage, itemsPerPage);
-                console.log("API Response:", response.data.data);
-            } else {
-                setError("獲取產品資料失敗");
-            }
-        } catch (error) {
-            console.error("Error fetching products:", error.response || error);
-            setError("獲取產品資料時發生錯誤");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // 每頁顯示按鈕
-    const handleDisplayChange = (newLimit, displayText) => {
-        setSelectedDisplay(displayText);
-        setLimit(newLimit);
-        setPage(1); // 切換顯示數量時重置為第一頁
-        setShowDisplayDropdown(false); //關閉下拉選單
-    };
-
-    // 處理排序
-    const handleSort = async (text, value) => {
-        setSelectedSort({ text, value });
-        setShowDropdown(false); //關閉下拉選單
-
-        const sortedProducts = [...products];
-        switch (value) {
-            case 1: // 綜合
-                sortedProducts.sort((a, b) => a.id - b.id);
-                break;
-            case 2: // 最新上架
-                sortedProducts.sort(
-                    (a, b) => new Date(b.created_at) - new Date(a.created_at)
-                );
-                break;
-            case 3: // 價格：由低到高
-                sortedProducts.sort((a, b) => a.price - b.price);
-                break;
-            case 4: // 價格：由高到低
-                sortedProducts.sort((a, b) => b.price - a.price);
-                break;
-            default:
-                break;
-        }
-        fetchProducts(page, limit, value);
-    };
-
-    // 處理品牌篩選
-    const handleBrandFilter = async (brandName) => {
-        try {
-            setLoading(true);
-            const response = await axios.get(
-                `${API_BASE_URL}/products/brand/${brandName}`
-            );
-            if (response.data.status === "success") {
-                setProducts(response.data.data);
-            } else {
-                setError("獲取品牌產品失敗");
-            }
-        } catch (error) {
-            console.error("Error fetching products by brand:", error);
-            setError("獲取品牌產品時發生錯誤");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // 處理分類篩選
-    const handleCategoryFilter = async (categoryName) => {
-        try {
-            setLoading(true);
-            const response = await axios.get(
-                `${API_BASE_URL}/products/category/${categoryName}`
-            );
-            if (response.data.status === "success") {
-                setProducts(response.data.data);
-            } else {
-                setError("獲取分類產品失敗");
-            }
-        } catch (error) {
-            console.error("Error fetching products by category:", error);
-            setError("獲取分類產品時發生錯誤");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // 處理點擊外部關閉下拉選單
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (!e.target.closest(".dropdown")) {
-                setShowDropdown(false);
-                setShowDisplayDropdown(false);
-            }
+        const getList = async () => {
+            await axios
+                .get(API_BASE_URL + "/activity")
+                .then((res) => {
+                    if (res.data.status !== "success")
+                        throw new Error("讀取資料失敗");
+                    setActivities(res.data.data);
+                })
+                .catch((error) => {
+                    console.error("載入活動失敗:", error);
+                });
         };
-        document.addEventListener("click", handleClickOutside, true);
-        return () => document.removeEventListener("click", handleClickOutside);
+        getList();
     }, []);
-
-    // if (loading) return <div className="text-center py-4">載入中...</div>;
-    // if (error) return <div className="text-center py-4 text-danger">{error}</div>;
+    useEffect(() => {
+        console.log("資料更新:", activities);
+    }, [activities]); // 當 activities 更新時才會執行 console.log
 
     return (
         <div className="container py-4">
@@ -172,17 +38,11 @@ export default function ProductList() {
                 {/* 左側邊欄 */}
                 <div className="col-lg-3 col-md-4">
                     <div className="d-grid ">
-                        {/* 產品分類 */}
+                        {/* 活動地點分類 */}
                         <div
-                            className={`${styles.productClassification} ${
-                                styles.sideCard
-                            } ${showClassification ? styles.open : ""}`}>
-                            <div
-                                className={styles.cardTitle}
-                                onClick={() =>
-                                    setShowClassification(!showClassification)
-                                }>
-                                <h5>產品分類</h5>
+                            className={`${styles.productClassification} ${styles.sideCard} ${styles.open}`}>
+                            <div className={styles.cardTitle}>
+                                <h5>活動地點</h5>
                                 <i className="bi bi-chevron-down"></i>
                             </div>
                             <ul className={styles.classificationMenu}>
@@ -190,83 +50,103 @@ export default function ProductList() {
                                     className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
                                     <a
                                         href="#"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleCategoryFilter("面鏡");
-                                        }}>
-                                        面鏡 / 呼吸管
+                                        // onClick={(e) => {
+                                        //     e.preventDefault();
+                                        //     handleCategoryFilter("面鏡");
+                                        // }}
+                                    >
+                                        台灣
                                     </a>
                                     <ul className={styles.submenu}>
                                         <li>
                                             <a
                                                 href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleCategoryFilter(
-                                                        "自由潛水面鏡"
-                                                    );
-                                                }}>
-                                                自由潛水面鏡
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "自由潛水面鏡"
+                                                //     );
+                                                // }}
+                                            >
+                                                屏東
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleCategoryFilter(
-                                                        "休閒潛水面鏡"
-                                                    );
-                                                }}>
-                                                休閒潛水面鏡
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "自由潛水面鏡"
+                                                //     );
+                                                // }}
+                                            >
+                                                台東
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleCategoryFilter(
-                                                        "度數鏡片面鏡"
-                                                    );
-                                                }}>
-                                                度數鏡片面鏡
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "自由潛水面鏡"
+                                                //     );
+                                                // }}
+                                            >
+                                                澎湖
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleCategoryFilter(
-                                                        "呼吸管"
-                                                    );
-                                                }}>
-                                                呼吸管
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "自由潛水面鏡"
+                                                //     );
+                                                // }}
+                                            >
+                                                綠島
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleCategoryFilter(
-                                                        "防霧劑 / 清潔劑"
-                                                    );
-                                                }}>
-                                                防霧劑 / 清潔劑
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "自由潛水面鏡"
+                                                //     );
+                                                // }}
+                                            >
+                                                蘭嶼
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleCategoryFilter(
-                                                        "面鏡帶 / 面鏡盒 / 扣具"
-                                                    );
-                                                }}>
-                                                面鏡帶 / 面鏡盒 / 扣具
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "自由潛水面鏡"
+                                                //     );
+                                                // }}
+                                            >
+                                                小琉球
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a
+                                                href="#"
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "自由潛水面鏡"
+                                                //     );
+                                                // }}
+                                            >
+                                                其他
                                             </a>
                                         </li>
                                     </ul>
@@ -275,306 +155,212 @@ export default function ProductList() {
                                     className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
                                     <a
                                         href="#"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleCategoryFilter("蛙鞋");
-                                        }}>
-                                        蛙鞋
+                                        // onClick={(e) => {
+                                        //     e.preventDefault();
+                                        //     handleCategoryFilter("蛙鞋");
+                                        // }}
+                                    >
+                                        日本
                                     </a>
                                     <ul className={styles.submenu}>
                                         <li>
                                             <a
                                                 href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleCategoryFilter(
-                                                        "開放式蛙鞋"
-                                                    );
-                                                }}>
-                                                開放式蛙鞋
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "開放式蛙鞋"
+                                                //     );
+                                                // }}
+                                            >
+                                                沖繩
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleCategoryFilter(
-                                                        "全包式蛙鞋"
-                                                    );
-                                                }}>
-                                                全包式蛙鞋
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "開放式蛙鞋"
+                                                //     );
+                                                // }}
+                                            >
+                                                石垣島
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a
+                                                href="#"
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "開放式蛙鞋"
+                                                //     );
+                                                // }}
+                                            >
+                                                其他
                                             </a>
                                         </li>
                                     </ul>
                                 </li>
-                                <li className={styles.categoryItem}>
+                                <li
+                                    className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
                                     <a
                                         href="#"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleCategoryFilter("潛水配件");
-                                        }}>
-                                        潛水配件
+                                        // onClick={(e) => {
+                                        //     e.preventDefault();
+                                        //     handleCategoryFilter("蛙鞋");
+                                        // }}
+                                    >
+                                        菲律賓
                                     </a>
+                                    <ul className={styles.submenu}>
+                                        <li>
+                                            <a
+                                                href="#"
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "開放式蛙鞋"
+                                                //     );
+                                                // }}
+                                            >
+                                                長灘島
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a
+                                                href="#"
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "開放式蛙鞋"
+                                                //     );
+                                                // }}
+                                            >
+                                                宿霧
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a
+                                                href="#"
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "開放式蛙鞋"
+                                                //     );
+                                                // }}
+                                            >
+                                                薄荷島
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a
+                                                href="#"
+                                                // onClick={(e) => {
+                                                //     e.preventDefault();
+                                                //     handleCategoryFilter(
+                                                //         "開放式蛙鞋"
+                                                //     );
+                                                // }}
+                                            >
+                                                其他
+                                            </a>
+                                        </li>
+                                    </ul>
                                 </li>
-                                <li className={styles.categoryItem}>
+                                <li
+                                    className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
                                     <a
                                         href="#"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleCategoryFilter("防寒衣物");
-                                        }}>
-                                        防寒衣物
-                                    </a>
-                                </li>
-                                <li className={styles.categoryItem}>
-                                    <a
-                                        href="#"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleCategoryFilter("包包攜行");
-                                        }}>
-                                        包包攜行
-                                    </a>
-                                </li>
-                                <li className={styles.categoryItem}>
-                                    <a
-                                        href="#"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleCategoryFilter("生活小物");
-                                        }}>
-                                        生活小物
+                                        // onClick={(e) => {
+                                        //     e.preventDefault();
+                                        //     handleCategoryFilter("蛙鞋");
+                                        // }}
+                                    >
+                                        其他
                                     </a>
                                 </li>
                             </ul>
                         </div>
 
-                        {/* 品牌名稱 */}
-                        <div
-                            className={`${styles.productClassification} ${
-                                styles.sideCard
-                            } ${showBrandClassification ? styles.open : ""}`}>
-                            <div
-                                className={styles.cardTitle}
-                                onClick={() =>
-                                    setShowBrandClassification(
-                                        !showBrandClassification
-                                    )
-                                }>
-                                <h5>品牌名稱</h5>
-                                <i className="bi bi-chevron-down"></i>
-                            </div>
-                            <ul className={styles.classificationMenu}>
-                                <li
-                                    className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                                    <a href="#" className={styles.categoryLink}>
-                                        A
-                                    </a>
-                                    <ul className={styles.submenu}>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleBrandFilter(
-                                                        "Aqua Lung"
-                                                    );
-                                                }}>
-                                                Aqua Lung
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleBrandFilter("Atomic");
-                                                }}>
-                                                Atomic
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li
-                                    className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                                    <a href="#">B、C、D</a>
-                                    <ul className={styles.submenu}>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={() =>
-                                                    handleBrandFilter("Beuchat")
-                                                }>
-                                                Beuchat
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={() =>
-                                                    handleBrandFilter("Cressi")
-                                                }>
-                                                Cressi
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={() =>
-                                                    handleBrandFilter("DiveR")
-                                                }>
-                                                DiveR
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li
-                                    className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                                    <a href="#">E、F、G、H、I</a>
-                                    <ul className={styles.submenu}>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={() =>
-                                                    handleBrandFilter(
-                                                        "Fourth Element"
-                                                    )
-                                                }>
-                                                Fourth Element
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={() =>
-                                                    handleBrandFilter("Hollis")
-                                                }>
-                                                Hollis
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li
-                                    className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                                    <a href="#">L、M、N</a>
-                                    <ul className={styles.submenu}>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={() =>
-                                                    handleBrandFilter("Mares")
-                                                }>
-                                                Mares
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li
-                                    className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                                    <a href="#">O、P、R</a>
-                                    <ul className={styles.submenu}>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={() =>
-                                                    handleBrandFilter("OMER")
-                                                }>
-                                                OMER
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={() =>
-                                                    handleBrandFilter("Problue")
-                                                }>
-                                                Problue
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li
-                                    className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                                    <a href="#">S</a>
-                                    <ul className={styles.submenu}>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={() =>
-                                                    handleBrandFilter(
-                                                        "Scubapro"
-                                                    )
-                                                }>
-                                                Scubapro
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={() =>
-                                                    handleBrandFilter("Seac")
-                                                }>
-                                                Seac
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li
-                                    className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                                    <a href="#">T、V、W</a>
-                                    <ul className={styles.submenu}>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={() =>
-                                                    handleBrandFilter("Tusa")
-                                                }>
-                                                Tusa
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li
-                                    className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                                    <a href="#">0-9、其他</a>
-                                    <ul className={styles.submenu}>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={() =>
-                                                    handleBrandFilter("2XU")
-                                                }>
-                                                2XU
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a
-                                                href="#"
-                                                onClick={() =>
-                                                    handleBrandFilter(
-                                                        "其他品牌"
-                                                    )
-                                                }>
-                                                其他品牌
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <button className="btn btn-primary w-100 mb-3">
-                            套用篩選(0/20)
-                        </button>
-
-                        {/* 商品篩選 */}
+                        {/* 活動篩選 */}
                         <div className={styles.sideCard}>
                             <div className={styles.cardTitle}>
                                 <h5>商品篩選</h5>
                             </div>
                             <div className={styles.filterSection}>
+                                <div className={styles.filterTitle}>
+                                    證照資格
+                                </div>
+                                <div className={styles.checkboxGroup}>
+                                    <div className={styles.checkboxItem}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            id="brand-leaders"
+                                        />
+                                        <label htmlFor="brand-leaders">
+                                            無須證照 (4)
+                                        </label>
+                                    </div>
+                                    <div className={styles.checkboxItem}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            id="brand-omer"
+                                        />
+                                        <label htmlFor="brand-omer">
+                                            需OWD證照 (15)
+                                        </label>
+                                    </div>
+                                    <div className={styles.checkboxItem}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            id="brand-omer"
+                                        />
+                                        <label htmlFor="brand-omer">
+                                            需AOWD證照 (15)
+                                        </label>
+                                    </div>
+                                </div>
+                                <div className={styles.filterTitle}>
+                                    導覽語言
+                                </div>
+                                <div className={styles.checkboxGroup}>
+                                    <div className={styles.checkboxItem}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            id="brand-leaders"
+                                        />
+                                        <label htmlFor="brand-leaders">
+                                            英文 (4)
+                                        </label>
+                                    </div>
+                                    <div className={styles.checkboxItem}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            id="brand-omer"
+                                        />
+                                        <label htmlFor="brand-omer">
+                                            中文 (15)
+                                        </label>
+                                    </div>
+                                    <div className={styles.checkboxItem}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            id="brand-omer"
+                                        />
+                                        <label htmlFor="brand-omer">
+                                            日文 (15)
+                                        </label>
+                                    </div>
+                                </div>
                                 <div className={styles.filterTitle}>
                                     價格區間
                                 </div>
@@ -591,9 +377,8 @@ export default function ProductList() {
                                         className={styles.priceInput}
                                     />
                                 </div>
-
                                 <div className={styles.filterTitle}>
-                                    品牌類別
+                                    行程時間
                                 </div>
                                 <div className={styles.checkboxGroup}>
                                     <div className={styles.checkboxItem}>
@@ -603,7 +388,7 @@ export default function ProductList() {
                                             id="brand-leaders"
                                         />
                                         <label htmlFor="brand-leaders">
-                                            LEADERS (4)
+                                            少於4小時 (4)
                                         </label>
                                     </div>
                                     <div className={styles.checkboxItem}>
@@ -613,31 +398,40 @@ export default function ProductList() {
                                             id="brand-omer"
                                         />
                                         <label htmlFor="brand-omer">
-                                            OMER (15)
+                                            4小時-1日 (15)
+                                        </label>
+                                    </div>
+                                    <div className={styles.checkboxItem}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            id="brand-omer"
+                                        />
+                                        <label htmlFor="brand-omer">
+                                            1日-2日 (15)
+                                        </label>
+                                    </div>
+                                    <div className={styles.checkboxItem}>
+                                        <input
+                                            type="checkbox"
+                                            className={styles.checkbox}
+                                            id="brand-omer"
+                                        />
+                                        <label htmlFor="brand-omer">
+                                            2日以上 (15)
                                         </label>
                                     </div>
                                 </div>
-
-                                <div className={styles.filterTitle}>
-                                    顏色類別
-                                </div>
-                                <div className={styles.colorGroup}>
-                                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                                        <div
-                                            key={i}
-                                            className={styles.colorCircle}
-                                            style={{
-                                                backgroundColor: "#808080",
-                                            }}></div>
-                                    ))}
-                                </div>
                             </div>
                         </div>
+                        <button className="btn btn-primary w-100 mb-3">
+                            套用篩選(0/20)
+                        </button>
 
-                        {/* 新品上市 */}
+                        {/* 最新活動 */}
                         <div className={styles.sideCard}>
                             <div className={styles.cardTitle}>
-                                <h5>新品上市</h5>
+                                <h5>最新活動</h5>
                             </div>
                             {[1, 2, 3].map((item) => (
                                 <div
@@ -646,7 +440,7 @@ export default function ProductList() {
                                     <div className={styles.sidebarProductImg}>
                                         <Image
                                             src="/images/1.webp"
-                                            alt="新品商品"
+                                            alt="最新活動"
                                             fill
                                             sizes="80px"
                                             style={{ objectFit: "cover" }}
@@ -657,13 +451,13 @@ export default function ProductList() {
                                             className={
                                                 styles.sidebarProductBrand
                                             }>
-                                            品牌名稱
+                                            活動地點
                                         </div>
                                         <div
                                             className={
                                                 styles.sidebarProductTitle
                                             }>
-                                            商品名稱
+                                            活動名稱
                                         </div>
                                         <div
                                             className={
@@ -676,10 +470,10 @@ export default function ProductList() {
                             ))}
                         </div>
 
-                        {/* 特惠商品 */}
+                        {/* 特惠活動 */}
                         <div className={styles.sideCard}>
                             <div className={styles.cardTitle}>
-                                <h5>特惠商品</h5>
+                                <h5>特惠活動</h5>
                             </div>
                             {[1, 2, 3].map((item) => (
                                 <div
@@ -688,7 +482,7 @@ export default function ProductList() {
                                     <div className={styles.sidebarProductImg}>
                                         <Image
                                             src="/images/1.webp"
-                                            alt="特惠商品"
+                                            alt="特惠活動"
                                             fill
                                             sizes="80px"
                                             style={{ objectFit: "cover" }}
@@ -699,13 +493,13 @@ export default function ProductList() {
                                             className={
                                                 styles.sidebarProductBrand
                                             }>
-                                            品牌名稱
+                                            活動地點
                                         </div>
                                         <div
                                             className={
                                                 styles.sidebarProductTitle
                                             }>
-                                            商品名稱
+                                            活動名稱
                                         </div>
                                         <div
                                             className={
@@ -729,7 +523,6 @@ export default function ProductList() {
                             歡迎來到我們的課程與活動專區，這裡匯集了潛水愛好者不可錯過的精彩體驗！從基礎潛水課程到進階技術培訓，還有刺激有趣的深海探險活動，我們為您精心設計每一項內容，確保安全與專業性兼具。無論您是剛開始接觸潛水還是已有豐富經驗，這裡都有適合您的選擇。
                         </p>
                         <p>
-                            現在購物，還可享受獨家優惠：單筆滿 $3000
                             現在報名，還可享受獨家優惠：單次報名滿 $3000
                             即贈精美潛水紀念品，部分課程更有限時折扣活動！立即瀏覽，輕鬆找到專屬於您的潛水體驗，為下一次海底旅程做好準備。學習新技能、探索深海奧秘，就從這裡開始！
                         </p>
@@ -762,29 +555,29 @@ export default function ProductList() {
                         <div className="dropdown">
                             <button
                                 className="btn btn-outline-secondary dropdown-toggle"
-                                onClick={() =>
-                                    setShowDisplayDropdown(!showDisplayDropdown)
-                                }>
-                                {selectedDisplay}
+                                // onClick={() =>
+                                //     setShowDisplayDropdown(!showDisplayDropdown)
+                                // }
+                            >
+                                {/* {selectedDisplay} */}
+                                
                             </button>
-                            <ul
-                                className={`dropdown-menu ${
-                                    showDisplayDropdown ? "show" : ""
-                                }`}>
+                            <ul className={`dropdown-menu`}>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        onClick={() =>
-                                            handleDisplayChange(
-                                                24,
-                                                "每頁顯示24件"
-                                            )
-                                        }>
+                                        // onClick={() =>
+                                        //     handleDisplayChange(
+                                        //         24,
+                                        //         "每頁顯示24件"
+                                        //     )
+                                        // }
+                                    >
                                         每頁顯示24件
                                     </button>
                                 </li>
                                 <li>
-                                    <button
+                                    {/* <button
                                         className="dropdown-item"
                                         onClick={() =>
                                             handleDisplayChange(
@@ -793,10 +586,10 @@ export default function ProductList() {
                                             )
                                         }>
                                         每頁顯示48件
-                                    </button>
+                                    </button> */}
                                 </li>
                                 <li>
-                                    <button
+                                    {/* <button
                                         className="dropdown-item"
                                         onClick={() =>
                                             handleDisplayChange(
@@ -805,7 +598,7 @@ export default function ProductList() {
                                             )
                                         }>
                                         每頁顯示72件
-                                    </button>
+                                    </button> */}
                                 </li>
                             </ul>
                         </div>
@@ -813,55 +606,58 @@ export default function ProductList() {
                         <div className="dropdown">
                             <button
                                 className="btn btn-outline-secondary dropdown-toggle"
-                                onClick={() => setShowDropdown(!showDropdown)}>
+                                // onClick={() => setShowDropdown(!showDropdown)}
+                            >
                                 <i className="bi bi-sort-down-alt me-2"></i>
-                                {selectedSort.text}
+                                {/* {selectedSort.text} */}
                             </button>
-                            <ul
-                                className={`dropdown-menu ${
-                                    showDropdown ? "show" : ""
-                                }`}>
+                            <ul className={`dropdown-menu show`}>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        onClick={() => handleSort("綜合", 1)}>
+                                        // onClick={() => handleSort("綜合", 1)}
+                                    >
                                         綜合
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        onClick={() =>
-                                            handleSort("最新上架", 2)
-                                        }>
+                                        // onClick={() =>
+                                        //     handleSort("最新上架", 2)
+                                        // }
+                                    >
                                         最新上架
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        onClick={() =>
-                                            handleSort("價格：由低到高", 3)
-                                        }>
+                                        // onClick={() =>
+                                        //     handleSort("價格：由低到高", 3)
+                                        // }
+                                    >
                                         價格：由低到高
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        onClick={() =>
-                                            handleSort("價格：由高到低", 4)
-                                        }>
+                                        // onClick={() =>
+                                        //     handleSort("價格：由高到低", 4)
+                                        // }
+                                    >
                                         價格：由高到低
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        onClick={() =>
-                                            handleSort("商品評分最高", 5)
-                                        }>
-                                        商品評分最高
+                                        // onClick={() =>
+                                        //     handleSort("商品評分最高", 5)
+                                        // }
+                                    >
+                                        活動評分最高
                                     </button>
                                 </li>
                             </ul>
@@ -869,104 +665,16 @@ export default function ProductList() {
                     </div>
 
                     {/* 商品列表 */}
-                    <div className="row g-4">
-                        
-                            <ProductCard key="1" product="1" />
-                    </div>
                     {/* <div className="row g-4">
-                        {products.map((product) => (
-                            <ProductCard key={product.id} product={product} />
-                        ))}
+                        <ProductCard key="1" product="1" />
                     </div> */}
+                    <div className="row g-4">
+                        {activities.map((activity) => (
+                            <ProductCard key={activity.id} product={activity} />
+                        ))}
+                    </div>
 
                     {/* 分頁 */}
-                    <div className="d-flex justify-content-between align-items-center mt-4">
-                        <div>
-                            第{page}頁/共{totalPages}頁
-                        </div>
-                        <nav aria-label="Page navigation">
-                            <ul className="pagination mb-0">
-                                {/* 上一頁按鈕 */}
-                                <li
-                                    className={`page-item ${
-                                        page === 1 ? "disabled" : ""
-                                    }`}>
-                                    <button
-                                        className="page-link"
-                                        onClick={() =>
-                                            setPage((prev) =>
-                                                Math.max(prev - 1, 1)
-                                            )
-                                        }
-                                        disabled={page === 1}>
-                                        <span aria-hidden="true">&laquo;</span>
-                                    </button>
-                                </li>
-
-                                {/* 動態生成頁碼按鈕 */}
-                                {[...Array(totalPages)].map((_, index) => {
-                                    const pageNumber = index + 1;
-                                    // 只顯示當前頁附近的頁碼
-                                    if (
-                                        pageNumber === 1 || // 第一頁
-                                        pageNumber === totalPages || // 最後一頁
-                                        (pageNumber >= page - 1 &&
-                                            pageNumber <= page + 1) // 當前頁的前後一頁
-                                    ) {
-                                        return (
-                                            <li
-                                                key={pageNumber}
-                                                className={`page-item ${
-                                                    page === pageNumber
-                                                        ? "active"
-                                                        : ""
-                                                }`}>
-                                                <button
-                                                    className="page-link"
-                                                    onClick={() =>
-                                                        setPage(pageNumber)
-                                                    }>
-                                                    {pageNumber}
-                                                </button>
-                                            </li>
-                                        );
-                                    } else if (
-                                        pageNumber === page - 2 ||
-                                        pageNumber === page + 2
-                                    ) {
-                                        // 顯示省略號
-                                        return (
-                                            <li
-                                                key={pageNumber}
-                                                className="page-item disabled">
-                                                <span className="page-link">
-                                                    ...
-                                                </span>
-                                            </li>
-                                        );
-                                    }
-                                    return null;
-                                })}
-
-                                {/* 下一頁按鈕 */}
-                                <li
-                                    className={`page-item ${
-                                        page === totalPages ? "disabled" : ""
-                                    }`}>
-                                    <button
-                                        className="page-link"
-                                        onClick={() =>
-                                            setPage((prev) =>
-                                                Math.min(prev + 1, totalPages)
-                                            )
-                                        }
-                                        disabled={page === totalPages}>
-                                        <span aria-hidden="true">&raquo;</span>
-                                    </button>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
                 </div>
             </div>
         </div>

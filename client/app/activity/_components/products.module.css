@@ -132,6 +132,12 @@
   display: none;
 }
 
+.checkboxList{
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+}
+
 .productClassification.open .classificationMenu {
   display: block;
 }
