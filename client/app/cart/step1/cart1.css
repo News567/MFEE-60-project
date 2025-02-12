@@ -1,0 +1,227 @@
+:root {
+  --primary-color: #219ebc;
+  --primary-hover: #cab331;
+  --primary-light: #e6f3f7;
+}
+
+/* 更新卡片樣式 */
+.cartCss .card {
+  border-color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.cartCss .card-header {
+  background-color: var(--primary-color);
+  color: white;
+  border-bottom: none;
+}
+
+/* 主要按鈕樣式 */
+.cartCss .btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.cartCss .btn-primary:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+/* 表單控制項 */
+.cartCss .form-control:focus,
+.cartCss .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.25rem rgba(33, 158, 188, 0.25);
+}
+
+.cartCss .spec-popup {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--primary-color) !important;
+}
+
+.cartCss .btn-outline-secondary {
+  border-color: #ddd;
+  color: #666;
+}
+
+.cartCss .btn-outline-secondary:hover {
+  border-color: var(--primary-color);
+  background-color: white;
+  color: var(--primary-color);
+}
+
+.cartCss .btn-outline-secondary.active {
+  background-color: var(--primary-light);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* 新增購物車列樣式 */
+.cartCss .card-body .row:hover {
+  background-color: #fafafa;
+}
+
+.cartCss .text-muted {
+  color: #999 !important;
+}
+
+.cartCss .text-danger {
+  color: var(--primary-color) !important;
+}
+
+/* 調整 checkbox 樣式 */
+.cartCss input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  border-color: var(--primary-color);
+}
+
+.cartCss input[type="checkbox"]:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* 收藏和刪除按鈕樣式 */
+.cartCss .btn.text-muted {
+  font-size: 13px;
+}
+
+.cartCss .btn.text-muted:hover {
+  color: var(--primary-color) !important;
+}
+
+/* 調整垂直間距 */
+.cartCss .py-3 {
+  padding-top: 1.5rem !important;
+  padding-bottom: 1.5rem !important;
+}
+
+/* 添加新的樣式 */
+.cartCss .batch-action {
+  font-size: 13px;
+}
+
+.cartCss .batch-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cartCss .batch-action:not(:disabled):hover {
+  color: var(--primary-color) !important;
+}
+
+.cartCss .selected-count {
+  color: var(--primary-color);
+}
+
+.cartCss .spec-box {
+  border: 1px solid #e8e8e8;
+  padding: 8px 24px 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  min-height: 60px;
+  background: #fff;
+}
+
+.cartCss .spec-box:hover {
+  border-color: var(--primary-color);
+}
+
+.cartCss .spec-content {
+  font-size: 12px;
+}
+
+.cartCss .spec-label {
+  color: #999;
+  margin-bottom: 2px;
+}
+
+.cartCss .spec-value {
+  color: #333;
+}
+
+.cartCss .edit-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 12px;
+  color: #999;
+  background: #f5f5f5;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.cartCss .spec-popup {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.cartCss .spec-option {
+  font-size: 12px;
+  padding: 4px 12px;
+  border-color: #ddd;
+}
+
+.cartCss .spec-option:hover,
+.cartCss .spec-option.active {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background-color: #fff4f4;
+}
+
+.cartCss .spec-display {
+  position: relative;
+  padding: 5px 8px;
+  height: 100px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.cartCss .spec-display:hover {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 1px var(--primary-color);
+}
+
+.cartCss .spec-display:hover .edit-mark {
+  display: block;
+}
+
+.cartCss .spec-row {
+  margin-bottom: 4px;
+}
+
+.cartCss .spec-title {
+  color: #999;
+}
+
+.cartCss .spec-value {
+  color: #333;
+}
+
+.cartCss .edit-mark {
+  display: none;
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: var(--primary-light);
+  padding: 1px 3px;
+  font-size: 12px;
+  color: var(--primary-color);
+  border-radius: 2px;
+}
+
+.cartCss .text-primary {
+  color: var(--primary-color) !important;
+}
+
+.cartCss .btn-outline-primary {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.cartCss .btn-outline-primary:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}

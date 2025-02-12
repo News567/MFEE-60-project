@@ -7,7 +7,6 @@ import styles from "./products.module.css";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "./ProductCard";
 
-
 // API 基礎 URL
 const API_BASE_URL = "http://localhost:3005/api";
 
@@ -40,6 +39,88 @@ export default function ProductList() {
     router.push(`/products?${params.toString()}`);
   };
 
+  // 品牌分類區間
+  const categoryGroups = {
+    A: ["A"],
+    "B・C・D": ["B", "C", "D"],
+    "E・F・G・H・I": ["E", "F", "G", "H", "I"],
+    "L・M・N": ["L", "M", "N"],
+    "O・P・R": ["O", "P", "R"],
+    S: ["S"],
+    "T・V・W": ["T", "V", "W"],
+    "0-9": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+    其他: [],
+  };
+
+  // 品牌分類 State
+  const [brandCategories, setBrandCategories] = useState([]);
+  const [groupedBrands, setGroupedBrands] = useState({});
+  const [hoveredBrandCategory, setHoveredBrandCategory] = useState(null);
+
+  // 取得品牌分類
+  useEffect(() => {
+    axios
+      .get(`${API_BASE_URL}/brands/all`)
+      .then((res) => res.data)
+      .then((result) => {
+        const grouped = groupBrandsByCategory(result);
+        setGroupedBrands(grouped);
+        setBrandCategories(Object.keys(grouped)); // 確保分類名稱正確
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  function groupBrandsByCategory(brands) {
+    const grouped = {};
+
+    // 初始化分類結構，確保所有分類都有 key，避免 undefined
+    Object.keys(categoryGroups).forEach((key) => {
+      grouped[key] = [];
+    });
+    // A: [],
+    // B・C・D: [],
+
+    // 處理撈進來的資料
+    brands.forEach(({ id, name }) => {
+      if (!name) return;
+
+      const initial = name.charAt(0).toUpperCase(); // 表示獲取 name 字符串的第一個字符 然後轉大寫
+      let categoryKey = "其他"; // 預設為 "其他"
+
+      // 找出 initial 所屬的分類區間
+      Object.entries(categoryGroups).forEach(([group, letters]) => {
+        if (letters.includes(initial)) {
+          categoryKey = group;
+        }
+      });
+
+      // 確保 key 存在，避免 undefined 錯誤
+      if (!grouped[categoryKey]) {
+        grouped[categoryKey] = [];
+      }
+
+      grouped[categoryKey].push({ id, name });
+    });
+
+    return grouped;
+  }
+
+  //分類
+  const [bigCategories, setBigCategories] = useState([]);
+  const [smallCategories, setSmallCategories] = useState({});
+  const [hoveredBigCategory, setHoveredBigCategory] = useState(null);
+  // 一次性請求所有分類資料
+  useEffect(() => {
+    axios
+      .get(`${API_BASE_URL}/categories/all`)
+      .then((res) => res.data)
+      .then((result) => {
+        setBigCategories(result.bigCategories);
+        setSmallCategories(result.smallCategories);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
   // 獲取產品資料
   // FIXME - 有依賴問題
   useEffect(() => {
@@ -53,7 +134,7 @@ export default function ProductList() {
       const response = await axios.get(
         `${API_BASE_URL}/products?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}`
       );
-      console.log("API Response:", response.data);
+
       if (response.data.status === "success") {
         setProducts(response.data.data);
         setTotalPages(response.data.pagination.totalPages);
@@ -158,7 +239,7 @@ export default function ProductList() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  if (loading) return <div className="text-center py-4">載入中...</div>;
+  if (loading) return <div className="text-center py-4">...</div>;
   if (error) return <div className="text-center py-4 text-danger">{error}</div>;
 
   return (
@@ -180,165 +261,35 @@ export default function ProductList() {
                 <h5>產品分類</h5>
                 <i className="bi bi-chevron-down"></i>
               </div>
+
               <ul className={styles.classificationMenu}>
-                <li className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleCategoryFilter("面鏡");
-                    }}
+                {bigCategories.map((category) => (
+                  <li
+                    key={category.id}
+                    className={`${styles.categoryItem} ${styles.hasSubmenu}`}
+                    onMouseEnter={() => setHoveredBigCategory(category.id)}
+                    onMouseLeave={() => setHoveredBigCategory(null)}
                   >
-                    面鏡 / 呼吸管
-                  </a>
-                  <ul className={styles.submenu}>
-                    <li>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleCategoryFilter("自由潛水面鏡");
-                        }}
-                      >
-                        自由潛水面鏡
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleCategoryFilter("休閒潛水面鏡");
-                        }}
-                      >
-                        休閒潛水面鏡
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleCategoryFilter("度數鏡片面鏡");
-                        }}
-                      >
-                        度數鏡片面鏡
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleCategoryFilter("呼吸管");
-                        }}
-                      >
-                        呼吸管
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleCategoryFilter("防霧劑 / 清潔劑");
-                        }}
-                      >
-                        防霧劑 / 清潔劑
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleCategoryFilter("面鏡帶 / 面鏡盒 / 扣具");
-                        }}
-                      >
-                        面鏡帶 / 面鏡盒 / 扣具
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-                <li className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleCategoryFilter("蛙鞋");
-                    }}
-                  >
-                    蛙鞋
-                  </a>
-                  <ul className={styles.submenu}>
-                    <li>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleCategoryFilter("開放式蛙鞋");
-                        }}
-                      >
-                        開放式蛙鞋
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleCategoryFilter("全包式蛙鞋");
-                        }}
-                      >
-                        全包式蛙鞋
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-                <li className={styles.categoryItem}>
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleCategoryFilter("潛水配件");
-                    }}
-                  >
-                    潛水配件
-                  </a>
-                </li>
-                <li className={styles.categoryItem}>
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleCategoryFilter("防寒衣物");
-                    }}
-                  >
-                    防寒衣物
-                  </a>
-                </li>
-                <li className={styles.categoryItem}>
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleCategoryFilter("包包攜行");
-                    }}
-                  >
-                    包包攜行
-                  </a>
-                </li>
-                <li className={styles.categoryItem}>
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleCategoryFilter("生活小物");
-                    }}
-                  >
-                    生活小物
-                  </a>
-                </li>
+                    <a href="#" className={styles.categoryLink}>
+                      {category.name}
+                    </a>
+
+                    {/*避免無效渲染 */}
+                    {hoveredBigCategory === category.id && (
+                      <ul className={styles.submenu}>
+                        {smallCategories[category.id] ? (
+                          smallCategories[category.id].map((smallCategory) => (
+                            <li key={smallCategory.id}>
+                              <a href="#">{smallCategory.name}</a>
+                            </li>
+                          ))
+                        ) : (
+                          <li>無小分類</li>
+                        )}
+                      </ul>
+                    )}
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -348,6 +299,7 @@ export default function ProductList() {
                 showBrandClassification ? styles.open : ""
               }`}
             >
+              {/* 品牌分類標題（點擊展開/收合） */}
               <div
                 className={styles.cardTitle}
                 onClick={() =>
@@ -357,139 +309,41 @@ export default function ProductList() {
                 <h5>品牌名稱</h5>
                 <i className="bi bi-chevron-down"></i>
               </div>
+
+              {/* 品牌分類列表 */}
               <ul className={styles.classificationMenu}>
-                <li className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                  <a href="#" className={styles.categoryLink}>
-                    A
-                  </a>
-                  <ul className={styles.submenu}>
-                    <li>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleBrandFilter("Aqua Lung");
-                        }}
-                      >
-                        Aqua Lung
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleBrandFilter("Atomic");
-                        }}
-                      >
-                        Atomic
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-                <li className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                  <a href="#">B、C、D</a>
-                  <ul className={styles.submenu}>
-                    <li>
-                      <a href="#" onClick={() => handleBrandFilter("Beuchat")}>
-                        Beuchat
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#" onClick={() => handleBrandFilter("Cressi")}>
-                        Cressi
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#" onClick={() => handleBrandFilter("DiveR")}>
-                        DiveR
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-                <li className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                  <a href="#">E、F、G、H、I</a>
-                  <ul className={styles.submenu}>
-                    <li>
-                      <a
-                        href="#"
-                        onClick={() => handleBrandFilter("Fourth Element")}
-                      >
-                        Fourth Element
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#" onClick={() => handleBrandFilter("Hollis")}>
-                        Hollis
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-                <li className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                  <a href="#">L、M、N</a>
-                  <ul className={styles.submenu}>
-                    <li>
-                      <a href="#" onClick={() => handleBrandFilter("Mares")}>
-                        Mares
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-                <li className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                  <a href="#">O、P、R</a>
-                  <ul className={styles.submenu}>
-                    <li>
-                      <a href="#" onClick={() => handleBrandFilter("OMER")}>
-                        OMER
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#" onClick={() => handleBrandFilter("Problue")}>
-                        Problue
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-                <li className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                  <a href="#">S</a>
-                  <ul className={styles.submenu}>
-                    <li>
-                      <a href="#" onClick={() => handleBrandFilter("Scubapro")}>
-                        Scubapro
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#" onClick={() => handleBrandFilter("Seac")}>
-                        Seac
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-                <li className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                  <a href="#">T、V、W</a>
-                  <ul className={styles.submenu}>
-                    <li>
-                      <a href="#" onClick={() => handleBrandFilter("Tusa")}>
-                        Tusa
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-                <li className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
-                  <a href="#">0-9、其他</a>
-                  <ul className={styles.submenu}>
-                    <li>
-                      <a href="#" onClick={() => handleBrandFilter("2XU")}>
-                        2XU
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#" onClick={() => handleBrandFilter("其他品牌")}>
-                        其他品牌
-                      </a>
-                    </li>
-                  </ul>
-                </li>
+                {brandCategories.map((category) => (
+                  <li
+                    key={category}
+                    className={`${styles.categoryItem} ${styles.hasSubmenu}`}
+                    onMouseEnter={() => setHoveredBrandCategory(category)}
+                    onMouseLeave={() => setHoveredBrandCategory(null)}
+                  >
+                    <a href="#" className={styles.categoryLink}>
+                      {category}
+                    </a>
+
+                    {/* 只有當 hover 且該分類有品牌時才顯示 */}
+                    {hoveredBrandCategory === category &&
+                      groupedBrands[category]?.length > 0 && (
+                        <ul className={styles.submenu}>
+                          {groupedBrands[category].map((brand) => (
+                            <li key={brand.id}>
+                              <a
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleBrandFilter(brand.name);
+                                }}
+                              >
+                                {brand.name}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                  </li>
+                ))}
               </ul>
             </div>
 
