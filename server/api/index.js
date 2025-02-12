@@ -10,7 +10,11 @@ import createError from "http-errors";
 import productRouter from "../routes/products/index.js";
 import productDetailRouter from "../routes/products/detail.js";
 import favoritesRouter from "../routes/favorites/index.js";
+import cartRouter from "../routes/cart/index.js";
+import categoriesRouter from "../routes/categories/index.js";
+import brandRouter from "../routes/brands/index.js";
 import activityRouter from "../routes/activity/index.js";
+
 // 建立 Express 應用程式
 const app = express();
 
@@ -44,6 +48,15 @@ apiRouter.use("/products", productDetailRouter); // 負責 `/api/products/:id`
 
 // 收藏相關路由
 apiRouter.use("/favorites", favoritesRouter); // 負責 `/api/favorites`
+
+// 購物車相關路由
+apiRouter.use("/cart", cartRouter); // 負責 `/api/cart`
+
+// 分類相關路由
+apiRouter.use("/categories", categoriesRouter); // 負責 `/api/categories`
+
+// 品牌相關路由
+apiRouter.use("/brands", brandRouter); // 負責 `/api/brands`
 
 // 活動相關路由
 apiRouter.use("/activity", activityRouter);

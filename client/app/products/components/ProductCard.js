@@ -50,9 +50,7 @@ export default function ProductCard({ product }) {
             </button>
           </div>
         </div>
-        <div
-          className={`${styles.dFlex} ${styles.justifyContentCenter} ${styles.gap1} my-2`}
-        >
+        <div className={`d-flex justify-content-center gap-1 my-2`}>
           {[...Array(3)].map((_, i) => (
             <div key={i} className={styles.saleCircle}></div>
           ))}
