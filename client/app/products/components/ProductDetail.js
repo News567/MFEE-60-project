@@ -29,6 +29,13 @@ export default function ProductDetail() {
     loading: favoriteLoading,
   } = useFavorite(params.id);
 
+  const handleQuantityChange = (value) => {
+    const newQuantity = quantity + value;
+    if (newQuantity >= 1) {
+      setQuantity(newQuantity);
+    }
+  };
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -46,12 +53,23 @@ export default function ProductDetail() {
         if (response.data.status === "success" && response.data.data) {
           const productData = response.data.data;
           setProduct(productData);
+
           // 設置默認選中的尺寸和顏色
           if (productData.sizes && productData.sizes.length > 0) {
             setSelectedSize(productData.sizes[0]);
           }
           if (productData.colors && productData.colors.length > 0) {
             setSelectedColor(productData.colors[0].name);
+          }
+
+          // 根據選擇的顏色和尺寸更新庫存和價格
+          const variant = productData.variants.find(
+            (v) =>
+              v.color_id === productData.colors[0]?.id &&
+              v.size_id === productData.sizes[0]?.id
+          );
+          if (variant) {
+            setQuantity(Math.min(quantity, variant.stock));
           }
         } else {
           setError("找不到商品");
@@ -69,64 +87,9 @@ export default function ProductDetail() {
     }
   }, [params.id]);
 
-  const handleQuantityChange = (value) => {
-    const newQuantity = quantity + value;
-    if (newQuantity >= 1) {
-      setQuantity(newQuantity);
-    }
-  };
-
   if (loading) return <div>...</div>;
   if (error) return <div>錯誤 {error}</div>;
   if (!product) return <div>未找到商品</div>;
-
-  // 模擬瀏覽記錄數據
-  const historyItems = [
-    { name: "商品1", price: 1999, image: "/images/1.webp" },
-    { name: "商品2", price: 2999, image: "/images/1.webp" },
-    { name: "商品3", price: 3999, image: "/images/1.webp" },
-    { name: "商品4", price: 4999, image: "/images/1.webp" },
-    { name: "商品5", price: 5999, image: "/images/1.webp" },
-  ];
-
-  // 模擬推薦商品數據
-  const recommendedProducts = [
-    {
-      name: "TRYGONS",
-      description: "液態面鏡",
-      originalPrice: "NT$2500",
-      salePrice: "NT$1999",
-      imgSrc: "/images/1.webp",
-    },
-    {
-      name: "商品2",
-      description: "描述2",
-      originalPrice: "NT$3000",
-      salePrice: "NT$2499",
-      imgSrc: "/images/1.webp",
-    },
-    {
-      name: "商品3",
-      description: "描述3",
-      originalPrice: "NT$4000",
-      salePrice: "NT$3499",
-      imgSrc: "/images/1.webp",
-    },
-    {
-      name: "商品4",
-      description: "描述4",
-      originalPrice: "NT$5000",
-      salePrice: "NT$4499",
-      imgSrc: "/images/1.webp",
-    },
-    {
-      name: "商品5",
-      description: "描述5",
-      originalPrice: "NT$6000",
-      salePrice: "NT$5499",
-      imgSrc: "/images/1.webp",
-    },
-  ];
 
   return (
     <div className="container">
@@ -326,13 +289,12 @@ export default function ProductDetail() {
       </div>
 
       {/* 瀏覽記錄 */}
-      <BrowsingHistory historyItems={historyItems} />
+      <BrowsingHistory />
 
       {/* 推薦商品 */}
-      <RecommendedProducts products={recommendedProducts} />
-
+      <RecommendedProducts />
       {/* 社交工具欄 */}
-      <SocialToolbar historyItems={historyItems} />
+      <SocialToolbar />
     </div>
   );
 }
