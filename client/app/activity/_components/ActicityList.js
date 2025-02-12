@@ -6,11 +6,165 @@ import axios from "axios";
 import styles from "./products.module.css";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "./ProductCard";
+import { FaRegCalendar } from "react-icons/fa";
+import Calendar from "react-calendar";
+import "./Calendar.css";
 
 // API 基礎 URL
 const API_BASE_URL = "http://localhost:3005/api";
 
 export default function ProductList() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [showDisplayDropdown, setShowDisplayDropdown] = useState(false);
+    const [selectedSort, setSelectedSort] = useState({
+        text: "排序",
+        value: 1,
+    });
+    const [showClassification, setShowClassification] = useState(false);
+    const [selectedDisplay, setSelectedDisplay] = useState("每頁顯示24件");
+    const [showBrandClassification, setShowBrandClassification] =
+        useState(false);
+
+    // 分頁
+    //parseInt 把字串轉成數字    || 負責設定預設值
+    const [page, setPage] = useState(parseInt(searchParams.get("page")) || 1);
+    const [limit, setLimit] = useState(
+        parseInt(searchParams.get("limit")) || 24
+    );
+    const [totalPages, setTotalPages] = useState(1);
+    // 可以放動畫 先不動
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // 處理 URL 更新
+    const updateURL = (newPage, newLimit) => {
+        const params = new URLSearchParams();
+        params.set("page", newPage.toString());
+        params.set("limit", newLimit.toString());
+        router.push(`/products?${params.toString()}`);
+    };
+
+    // 獲取產品資料
+    // FIXME - 有依賴問題
+    useEffect(() => {
+        fetchProducts(page, limit, selectedSort.value); // 讓 API 依照當前排序方式請求
+    }, [page, limit, selectedSort.value]); // 監聽 selectedSort.value
+
+    // 獲取所有產品
+    const fetchProducts = async (currentPage, itemsPerPage, sortValue) => {
+        try {
+            setLoading(true);
+            const response = await axios.get(
+                `${API_BASE_URL}/products?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}`
+            );
+            console.log("API Response:", response.data);
+            if (response.data.status === "success") {
+                setProducts(response.data.data);
+                setTotalPages(response.data.pagination.totalPages);
+                setPage(response.data.pagination.currentPage);
+                updateURL(response.data.pagination.currentPage, itemsPerPage);
+                console.log("API Response:", response.data.data);
+            } else {
+                setError("獲取產品資料失敗");
+            }
+        } catch (error) {
+            console.error("Error fetching products:", error.response || error);
+            setError("獲取產品資料時發生錯誤");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 每頁顯示按鈕
+    const handleDisplayChange = (newLimit, displayText) => {
+        setSelectedDisplay(displayText);
+        setLimit(newLimit);
+        setPage(1); // 切換顯示數量時重置為第一頁
+        setShowDisplayDropdown(false); //關閉下拉選單
+    };
+
+    // 處理排序
+    const handleSort = async (text, value) => {
+        setSelectedSort({ text, value });
+        setShowDropdown(false); //關閉下拉選單
+
+        const sortedProducts = [...products];
+        switch (value) {
+            case 1: // 綜合
+                sortedProducts.sort((a, b) => a.id - b.id);
+                break;
+            case 2: // 最新上架
+                sortedProducts.sort(
+                    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                );
+                break;
+            case 3: // 價格：由低到高
+                sortedProducts.sort((a, b) => a.price - b.price);
+                break;
+            case 4: // 價格：由高到低
+                sortedProducts.sort((a, b) => b.price - a.price);
+                break;
+            default:
+                break;
+        }
+        fetchProducts(page, limit, value);
+    };
+
+    // 處理品牌篩選
+    const handleBrandFilter = async (brandName) => {
+        try {
+            setLoading(true);
+            const response = await axios.get(
+                `${API_BASE_URL}/products/brand/${brandName}`
+            );
+            if (response.data.status === "success") {
+                setProducts(response.data.data);
+            } else {
+                setError("獲取品牌產品失敗");
+            }
+        } catch (error) {
+            console.error("Error fetching products by brand:", error);
+            setError("獲取品牌產品時發生錯誤");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 處理分類篩選
+    const handleCategoryFilter = async (categoryName) => {
+        try {
+            setLoading(true);
+            const response = await axios.get(
+                `${API_BASE_URL}/products/category/${categoryName}`
+            );
+            if (response.data.status === "success") {
+                setProducts(response.data.data);
+            } else {
+                setError("獲取分類產品失敗");
+            }
+        } catch (error) {
+            console.error("Error fetching products by category:", error);
+            setError("獲取分類產品時發生錯誤");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 處理點擊外部關閉下拉選單
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (!e.target.closest(".dropdown")) {
+                setShowDropdown(false);
+                setShowDisplayDropdown(false);
+            }
+        };
+        document.addEventListener("click", handleClickOutside, true);
+        return () => document.removeEventListener("click", handleClickOutside);
+    }, []);
+
+    // 獲取活動資料
     const [activities, setActivities] = useState([]);
     // console.log(API_BASE_URL + "/activity");
     useEffect(() => {
@@ -288,7 +442,7 @@ export default function ProductList() {
                         {/* 活動篩選 */}
                         <div className={styles.sideCard}>
                             <div className={styles.cardTitle}>
-                                <h5>商品篩選</h5>
+                                <h5>活動篩選</h5>
                             </div>
                             <div className={styles.filterSection}>
                                 <div className={styles.filterTitle}>
@@ -309,9 +463,9 @@ export default function ProductList() {
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            id="brand-omer"
+                                            id="brand-owd"
                                         />
-                                        <label htmlFor="brand-omer">
+                                        <label htmlFor="brand-owd">
                                             需OWD證照 (15)
                                         </label>
                                     </div>
@@ -319,9 +473,9 @@ export default function ProductList() {
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            id="brand-omer"
+                                            id="brand-aowd"
                                         />
-                                        <label htmlFor="brand-omer">
+                                        <label htmlFor="brand-aowd">
                                             需AOWD證照 (15)
                                         </label>
                                     </div>
@@ -334,9 +488,9 @@ export default function ProductList() {
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            id="brand-leaders"
+                                            id="language-english"
                                         />
-                                        <label htmlFor="brand-leaders">
+                                        <label htmlFor="language-english">
                                             英文 (4)
                                         </label>
                                     </div>
@@ -344,9 +498,9 @@ export default function ProductList() {
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            id="brand-omer"
+                                            id="language-chinese"
                                         />
-                                        <label htmlFor="brand-omer">
+                                        <label htmlFor="language-chinese">
                                             中文 (15)
                                         </label>
                                     </div>
@@ -354,9 +508,9 @@ export default function ProductList() {
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            id="brand-omer"
+                                            id="language-jp"
                                         />
-                                        <label htmlFor="brand-omer">
+                                        <label htmlFor="language-jp">
                                             日文 (15)
                                         </label>
                                     </div>
@@ -385,9 +539,9 @@ export default function ProductList() {
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            id="brand-leaders"
+                                            id="duration-less4"
                                         />
-                                        <label htmlFor="brand-leaders">
+                                        <label htmlFor="duration-less4">
                                             少於4小時 (4)
                                         </label>
                                     </div>
@@ -395,9 +549,9 @@ export default function ProductList() {
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            id="brand-omer"
+                                            id="duration-4toDay"
                                         />
-                                        <label htmlFor="brand-omer">
+                                        <label htmlFor="duration-4toDay">
                                             4小時-1日 (15)
                                         </label>
                                     </div>
@@ -424,6 +578,20 @@ export default function ProductList() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* 活動日期選擇 */}
+                        <div className={styles.sideCard}>
+                            <div className={styles.cardTitle}>
+                                <h5 className="d-flex gap-2 align-items-center">
+                                    <FaRegCalendar />
+                                    選擇出發日期
+                                </h5>
+                            </div>
+                            <div className="">
+                                <Calendar />
+                            </div>
+                        </div>
+
                         <button className="btn btn-primary w-100 mb-3">
                             套用篩選(0/20)
                         </button>
@@ -555,29 +723,29 @@ export default function ProductList() {
                         <div className="dropdown">
                             <button
                                 className="btn btn-outline-secondary dropdown-toggle"
-                                // onClick={() =>
-                                //     setShowDisplayDropdown(!showDisplayDropdown)
-                                // }
-                            >
-                                {/* {selectedDisplay} */}
-                                
+                                onClick={() =>
+                                    setShowDisplayDropdown(!showDisplayDropdown)
+                                }>
+                                {selectedDisplay}
                             </button>
-                            <ul className={`dropdown-menu`}>
+                            <ul
+                                className={`dropdown-menu ${
+                                    showDisplayDropdown ? "show" : ""
+                                }`}>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        // onClick={() =>
-                                        //     handleDisplayChange(
-                                        //         24,
-                                        //         "每頁顯示24件"
-                                        //     )
-                                        // }
-                                    >
+                                        onClick={() =>
+                                            handleDisplayChange(
+                                                24,
+                                                "每頁顯示24件"
+                                            )
+                                        }>
                                         每頁顯示24件
                                     </button>
                                 </li>
                                 <li>
-                                    {/* <button
+                                    <button
                                         className="dropdown-item"
                                         onClick={() =>
                                             handleDisplayChange(
@@ -586,10 +754,10 @@ export default function ProductList() {
                                             )
                                         }>
                                         每頁顯示48件
-                                    </button> */}
+                                    </button>
                                 </li>
                                 <li>
-                                    {/* <button
+                                    <button
                                         className="dropdown-item"
                                         onClick={() =>
                                             handleDisplayChange(
@@ -598,7 +766,7 @@ export default function ProductList() {
                                             )
                                         }>
                                         每頁顯示72件
-                                    </button> */}
+                                    </button>
                                 </li>
                             </ul>
                         </div>
@@ -606,58 +774,55 @@ export default function ProductList() {
                         <div className="dropdown">
                             <button
                                 className="btn btn-outline-secondary dropdown-toggle"
-                                // onClick={() => setShowDropdown(!showDropdown)}
-                            >
+                                onClick={() => setShowDropdown(!showDropdown)}>
                                 <i className="bi bi-sort-down-alt me-2"></i>
-                                {/* {selectedSort.text} */}
+                                {selectedSort.text}
                             </button>
-                            <ul className={`dropdown-menu show`}>
+                            <ul
+                                className={`dropdown-menu ${
+                                    showDropdown ? "show" : ""
+                                }`}>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        // onClick={() => handleSort("綜合", 1)}
-                                    >
+                                        onClick={() => handleSort("綜合", 1)}>
                                         綜合
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        // onClick={() =>
-                                        //     handleSort("最新上架", 2)
-                                        // }
-                                    >
+                                        onClick={() =>
+                                            handleSort("最新上架", 2)
+                                        }>
                                         最新上架
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        // onClick={() =>
-                                        //     handleSort("價格：由低到高", 3)
-                                        // }
-                                    >
+                                        onClick={() =>
+                                            handleSort("價格：由低到高", 3)
+                                        }>
                                         價格：由低到高
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        // onClick={() =>
-                                        //     handleSort("價格：由高到低", 4)
-                                        // }
-                                    >
+                                        onClick={() =>
+                                            handleSort("價格：由高到低", 4)
+                                        }>
                                         價格：由高到低
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        // onClick={() =>
-                                        //     handleSort("商品評分最高", 5)
-                                        // }
-                                    >
-                                        活動評分最高
+                                        onClick={() =>
+                                            handleSort("商品評分最高", 5)
+                                        }>
+                                        商品評分最高
                                     </button>
                                 </li>
                             </ul>
@@ -665,9 +830,6 @@ export default function ProductList() {
                     </div>
 
                     {/* 商品列表 */}
-                    {/* <div className="row g-4">
-                        <ProductCard key="1" product="1" />
-                    </div> */}
                     <div className="row g-4">
                         {activities.map((activity) => (
                             <ProductCard key={activity.id} product={activity} />
@@ -675,6 +837,93 @@ export default function ProductList() {
                     </div>
 
                     {/* 分頁 */}
+                    <div className="d-flex justify-content-between align-items-center mt-4">
+                        <div>
+                            第{page}頁/共{totalPages}頁
+                        </div>
+                        <nav aria-label="Page navigation">
+                            <ul className="pagination mb-0">
+                                {/* 上一頁按鈕 */}
+                                <li
+                                    className={`page-item ${
+                                        page === 1 ? "disabled" : ""
+                                    }`}>
+                                    <button
+                                        className="page-link"
+                                        onClick={() =>
+                                            setPage((prev) =>
+                                                Math.max(prev - 1, 1)
+                                            )
+                                        }
+                                        disabled={page === 1}>
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </button>
+                                </li>
+
+                                {/* 動態生成頁碼按鈕 */}
+                                {[...Array(totalPages)].map((_, index) => {
+                                    const pageNumber = index + 1;
+                                    // 只顯示當前頁附近的頁碼
+                                    if (
+                                        pageNumber === 1 || // 第一頁
+                                        pageNumber === totalPages || // 最後一頁
+                                        (pageNumber >= page - 1 &&
+                                            pageNumber <= page + 1) // 當前頁的前後一頁
+                                    ) {
+                                        return (
+                                            <li
+                                                key={pageNumber}
+                                                className={`page-item ${
+                                                    page === pageNumber
+                                                        ? "active"
+                                                        : ""
+                                                }`}>
+                                                <button
+                                                    className="page-link"
+                                                    onClick={() =>
+                                                        setPage(pageNumber)
+                                                    }>
+                                                    {pageNumber}
+                                                </button>
+                                            </li>
+                                        );
+                                    } else if (
+                                        pageNumber === page - 2 ||
+                                        pageNumber === page + 2
+                                    ) {
+                                        // 顯示省略號
+                                        return (
+                                            <li
+                                                key={pageNumber}
+                                                className="page-item disabled">
+                                                <span className="page-link">
+                                                    ...
+                                                </span>
+                                            </li>
+                                        );
+                                    }
+                                    return null;
+                                })}
+
+                                {/* 下一頁按鈕 */}
+                                <li
+                                    className={`page-item ${
+                                        page === totalPages ? "disabled" : ""
+                                    }`}>
+                                    <button
+                                        className="page-link"
+                                        onClick={() =>
+                                            setPage((prev) =>
+                                                Math.min(prev + 1, totalPages)
+                                            )
+                                        }
+                                        disabled={page === totalPages}>
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>

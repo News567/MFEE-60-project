@@ -130,6 +130,8 @@ const MyGallery = () => (
 
 
 export default function Home() {
+    const api = "http://localhost:3005/api"
+    
     return (
         <>
             <main className={styles.main}>
