@@ -2,7 +2,6 @@
 :root {
   --border-color: rgb(228, 228, 228);
   --text-color: #333;
-  --primary-color: #007bff;
   --hover-bg: #f8f9fa;
 }
 
@@ -119,7 +118,7 @@
   text-align: left;
 }
 
-/* 产品分类 */
+/* 產品分類 */
 .productClassification {
   border-radius: 4px;
   overflow: visible;
@@ -191,7 +190,7 @@
   color: var(--primary-color);
 }
 
-/* 价格范围 */
+/* 價格範圍*/
 .priceRange {
   padding: 15px;
 }
@@ -210,7 +209,7 @@
   border-radius: 4px;
 }
 
-/* 产品列表 */
+/* 產品列表 */
 .productGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -252,7 +251,7 @@
   font-size: 1.2em;
 }
 
-/* 分页 */
+/* 分頁 */
 .pagination {
   display: flex;
   justify-content: center;
@@ -280,7 +279,7 @@
   border-color: var(--primary-color);
 }
 
-/* 排序工具栏 */
+/* 排序工具欄 */
 .sortToolbar {
   display: flex;
   justify-content: space-between;
@@ -384,7 +383,7 @@
   font-size: 0.9rem;
 }
 
-/* 销售标记 */
+/* 銷售標記 */
 .saleCircle {
   width: 20px;
   height: 20px;
@@ -393,16 +392,7 @@
   cursor: pointer;
 }
 
-/* 布局工具类 */
-.dFlex {
-  display: flex;
-}
 
-.justifyContentCenter {
-  justify-content: center;
-}
-
-/* 商品篩選相关样式 */
 .filterSection {
   padding: 15px;
 }
@@ -453,7 +443,7 @@
   transform: scale(1.1);
 }
 
-/* 侧边栏商品样式（新品上市和特惠商品） */
+/* 側邊欄商品樣式（新品上市和特惠商品） */
 .sidebarProduct {
   display: flex;
   gap: 12px;
@@ -507,7 +497,7 @@
   font-size: 1rem;
 }
 
-/* 商品卡片链接样式 */
+
 .productLink {
   display: block;
   text-decoration: none;
@@ -523,4 +513,3 @@
   color: inherit;
 }
 
-/* 其他样式可以根据需要继续转换... */

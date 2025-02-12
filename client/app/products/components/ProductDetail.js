@@ -273,11 +273,11 @@ export default function ProductDetail() {
             <div className="d-flex mt-4">
               <button
                 onClick={() => addToCart(product)}
-                className="btn btn-warning addCartButton flex-grow-1"
+                className="btn btn-info addCartButton flex-grow-1"
               >
                 加入購物車
               </button>
-              <button className="btn btn-info buyButton flex-grow-1">
+              <button className="btn btn-warning buyButton flex-grow-1">
                 直接購買
               </button>
             </div>
