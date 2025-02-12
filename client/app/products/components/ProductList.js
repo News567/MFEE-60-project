@@ -88,6 +88,7 @@ export default function ProductList() {
       let categoryKey = "其他"; // 預設為 "其他"
 
       // 找出 initial 所屬的分類區間
+      // entire 物件轉陣列
       Object.entries(categoryGroups).forEach(([group, letters]) => {
         if (letters.includes(initial)) {
           categoryKey = group;
