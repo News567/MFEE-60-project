@@ -145,7 +145,6 @@ CREATE TABLE `product_variant` (
   `color_id` int UNSIGNED NOT NULL,
   `size_id` int UNSIGNED NOT NULL,
   `stock` int DEFAULT '0',
-  `price` decimal(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
