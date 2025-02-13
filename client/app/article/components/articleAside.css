@@ -1,0 +1,136 @@
+/* article-ad-bg 樣式 */
+.article-ad-bg {
+    position: relative;
+    width: 100%;
+    height: 50vh; /* 高度佔視窗高度的 50% */
+    overflow: hidden;
+    margin-bottom: 20px; /* 在這裡設定圖片區塊和下面項目之間的距離 */
+  }
+  
+  .article-ad-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 確保圖片覆蓋整個區域，且不變形 */
+    object-position: 0 25%; /* 讓圖片從高度的20%處開始顯示 */
+  }
+  
+  .article-ad-bg p {
+    position: absolute;
+    font-size: 30px;
+    top: 50%;
+    left: 10%;
+    color: #ffffff;
+    z-index: 2; /* 提高文字層級，確保文字在遮罩層之上 */
+    padding: 5px 10px;
+    border-radius: 5px;
+  }
+  
+  .article-ad-bg::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(90, 204, 245, 0.2); /* 半透明的藍色 */
+    z-index: 1; /* 設置遮罩層的層級 */
+  }
+  
+  /* 麵包屑按鈕 */
+  .breadcrumb-btns {
+    display: flex;
+    align-items: center; 
+    gap: 10px; /* 按鈕間距 */
+  }
+  
+  .breadcrumb-btns .btn {
+    display: inline-block; /* 按鈕為行內區塊元素 */
+    background-color: #029cad; /* 背景顏色 */
+    color: #fff; /* 文字顏色為白色 */
+    text-align: center; /* 文字置中 */
+    font-size: 16px;
+    font-weight: 400;
+    border: none; /* 移除邊框 */
+    border-radius: 4px; /* 圓角邊框 */
+    
+  
+  }
+  
+  .breadcrumb-btns .btn:hover {
+    background-color: #02818b; /* 滑鼠懸停時改變背景顏色 */
+  }
+  
+  /* article aside */
+  
+  .aside-title {
+    background-color: #e5e5e5;
+    font-weight: bold;
+    padding: 15px;
+    color: #000;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  
+  .aside-category-list {
+    border: 2px solid #e5e5e5;
+    padding: 10px 15px;
+  }
+  
+  .aside-category-item {
+    background-color: #ffffff;
+    padding: 6px 0px;
+    color: #000;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  
+  .aside-category-title {
+    font-size: 1rem;
+    font-weight: 500;
+  }
+  
+  .aside-category-amount {
+    color: #898989;
+  }
+  .aside-recent-article-list {
+    border: 2px solid #e5e5e5;
+  }
+  
+  .aside-recent-article {
+    padding: 10px 15px;
+    align-items: flex-start;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .aside-recent-article-title {
+    color: #000;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .aside-recent-article-publish-time {
+    color: #898989;
+    font-size: 12px;
+    font-weight: 400;
+  }
+  
+  .aside-tag-area {
+    padding: 10px 15px;
+    border: 2px solid #e5e5e5;
+    display: flex; /* 使用 Flexbox */
+    flex-wrap: wrap; /* 允許換行 */
+    gap: 10px; /* 標籤間距 */
+  }
+  
+  .aside-popular-tag {
+    display: inline-block; /* 標籤寬度隨內容變化 */
+    white-space: nowrap; /* 避免標籤內文字換行 */
+    padding: 5px;
+    border: 1px solid #dedede;
+    color: #898989;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  

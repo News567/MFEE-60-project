@@ -1,0 +1,150 @@
+
+
+.article-create {
+    padding: 32px 64px;
+    border-top: 6px solid#219ebc;
+    border-right: 2px solid #219ebc;
+    border-bottom: 2px solid #219ebc;
+    border-left: 2px solid #219ebc;
+    min-height: 100%;
+    height: auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  
+  .image-upload-box {
+    display: flex;
+    justify-content: start;
+  }
+  
+  .upload-square {
+    width: 150px;
+    height: 150px;
+    background-color: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    border-radius: 4px;
+  }
+  
+  .upload-square::before {
+    content: "";
+    position: absolute;
+    width: 50px;
+    height: 6px;
+    background-color: #333;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+  }
+  
+  .upload-square::after {
+    content: "";
+    position: absolute;
+    width: 6px;
+    height: 50px;
+    background-color: #333;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+  }
+  
+  .title {
+    color: #000;
+    font-family: "Noto Sans TC";
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+  }
+  
+  .secondaryTitle {
+    color: rgba(0, 0, 0, 0.75);
+    font-size: 12px;
+    font-weight: 400;
+    margin: 20px 0 10px 0;
+  }
+  
+  .tag {
+    margin: 20px 0 10px 0;
+  }
+  
+  .tag1,
+  .tag2 {
+    display: inline-flex; /* 使用flex讓內容並排 */
+    align-items: center; /* 垂直置中標籤內容 */
+    padding: 5px 15px; /* 增加左右內邊距讓標籤內容不會緊貼邊框 */
+    border: 1px solid rgba(0, 0, 0, 0.5); /* 設定黑色邊框 */
+    margin-right: 10px; /* 在標籤之間增加一些間隔 */
+    position: relative; /* 讓叉叉可以絕對定位 */
+  }
+  
+  .close-btn {
+    margin-left: 10px; /* 增加叉叉和文字之間的間距 */
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: black;
+    cursor: pointer;
+  }
+  
+  .close-btn:hover {
+    color: red; /* 叉叉顏色變紅，表示可刪除 */
+  }
+  
+  /* 調整 input 框框的長度 */
+  #tagInput {
+    width: 100%; /* 讓 input 填滿父容器的寬度 */
+    padding: 10px; /* 增加內邊距，讓文字不會緊貼邊框 */
+    border: 1px solid #ccc; /* 可設定邊框顏色 */
+    border-radius: 5px; /* 可選，圓角邊框 */
+    font-size: 14px; /* 設定字體大小 */
+  }
+  
+  /* 調整 select 框框的長度 */
+  .category1,
+  .category2 {
+    width: 25%; /* 讓 select 填滿父容器的寬度 */
+    padding: 10px; /* 增加內邊距 */
+    border: 1px solid #ccc; /* 設定邊框顏色 */
+    border-radius: 5px; /* 可選，圓角邊框 */
+    font-size: 14px; /* 設定字體大小 */
+  }
+  
+  .form-item {
+    width: 100%; /* 確保 form-item 內的所有元素都能佔滿寬度 */
+  }
+  
+  /* 讓 btnarea 內的按鈕置中 */
+  .btnarea {
+    display: flex; /* 使用flex布局 */
+    justify-content: center; /* 讓按鈕水平置中 */
+    align-items: center; /* 讓按鈕垂直置中 */
+    gap: 10px; /* 在按鈕之間增加間距 */
+  }
+  
+  /* 設定按鈕的樣式 */
+  .btnarea .article-create-btn {
+    display: inline-block; /* 按鈕為行內區塊元素 */
+    margin-top: 8px; /* 上邊距 */
+    padding: 8px 12px; /* 內邊距 */
+    background-color: #029cad; /* 背景顏色 */
+    color: #fff; /* 文字顏色為白色 */
+    text-align: center; /* 文字置中 */
+    font-size: 14px; /* 字體大小 */
+    border: none; /* 移除邊框 */
+    border-radius: 4px; /* 圓角邊框 */
+    cursor: pointer; /* 設置為點擊樣式 */
+    box-sizing: border-box; /* 讓內邊距和邊框算在內 */
+  }
+  
+  /* 設定按鈕懸停時的效果 */
+  .btnarea .article-create-btn:hover {
+    background-color: #02818b; /* 滑鼠懸停時改變背景顏色 */
+    color: #fff; /* 文字顏色為白色 */
+  }
+  
