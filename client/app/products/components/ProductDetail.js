@@ -15,13 +15,13 @@ import { useCart } from "@/hooks/cartContext";
 const API_BASE_URL = "http://localhost:3005/api";
 export default function ProductDetail() {
   const params = useParams();
-  const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
-  const [activeTab, setActiveTab] = useState("description");
   const [product, setProduct] = useState(null);
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("description");
   const { addToCart } = useCart();
   const {
     isFavorite,
@@ -29,11 +29,99 @@ export default function ProductDetail() {
     loading: favoriteLoading,
   } = useFavorite(params.id);
 
+  // 取得當前選擇的變體
+  const getCurrentVariant = () => {
+    if (!product || !selectedColor || !selectedSize) return null;
+
+    // 從 sizes 陣列中找到對應的尺寸物件
+    const sizeObj = product.sizes.find((s) => s.name === selectedSize);
+    if (!sizeObj) return null;
+
+    // 使用 size_id 和 color_id 來找到對應的變體
+    return product.variants.find(
+      (v) => v.color_id === selectedColor.id && v.size_id === sizeObj.id
+    );
+  };
+
+  // 處理數量變更
   const handleQuantityChange = (value) => {
+    const currentVariant = getCurrentVariant();
     const newQuantity = quantity + value;
+
     if (newQuantity >= 1) {
-      setQuantity(newQuantity);
+      if (currentVariant) {
+        if (newQuantity <= currentVariant.stock) {
+          setQuantity(newQuantity);
+        } else {
+          alert("超過庫存數量！");
+        }
+      } else {
+        setQuantity(newQuantity);
+      }
     }
+  };
+
+  // 加入購物車
+  const handleAddToCart = async () => {
+    if (!selectedColor || !selectedSize) {
+      alert("請選擇商品尺寸和顏色");
+      return;
+    }
+
+    const currentVariant = getCurrentVariant();
+    if (!currentVariant) {
+      alert("找不到對應的商品規格");
+      return;
+    }
+
+    try {
+      // 1. 先呼叫後端 API
+      const cartData = {
+        userId: 1,
+        productId: product.id,
+        variantId: currentVariant.id,
+        rentalId: null,
+        activityId: null,
+        quantity: quantity,
+        rentalPeriod: null,
+        participants: null,
+      };
+
+      const response = await axios.post(`${API_BASE_URL}/cart/add`, cartData);
+
+      if (response.data.success) {
+        // 2. 如果後端成功，再更新前端的購物車狀態
+        const cartItem = {
+          id: product.id,
+          variant_id: currentVariant.id,
+          name: product.name,
+          price: product.price,
+          color: selectedColor.name,
+          size: selectedSize,
+          quantity: quantity,
+          image: product.images[0],
+        };
+
+        addToCart(cartItem); // 使用 context 的 addToCart
+        alert("成功加入購物車！");
+      } else {
+        alert(response.data.message || "加入購物車失敗");
+      }
+    } catch (error) {
+      console.error("加入購物車失敗:", error);
+      alert("加入購物車失敗，請稍後再試");
+    }
+  };
+
+  // 修改尺寸選擇的處理
+  const handleSizeSelect = (size) => {
+    setSelectedSize(size.name); // 儲存尺寸名稱
+  };
+
+  // 修改顏色選擇的處理
+  const handleColorSelect = (color) => {
+    console.log("Selected color:", color);
+    setSelectedColor(color);
   };
 
   useEffect(() => {
@@ -56,20 +144,10 @@ export default function ProductDetail() {
 
           // 設置默認選中的尺寸和顏色
           if (productData.sizes && productData.sizes.length > 0) {
-            setSelectedSize(productData.sizes[0]);
+            setSelectedSize(productData.sizes[0].name);
           }
           if (productData.colors && productData.colors.length > 0) {
-            setSelectedColor(productData.colors[0].name);
-          }
-
-          // 根據選擇的顏色和尺寸更新庫存和價格
-          const variant = productData.variants.find(
-            (v) =>
-              v.color_id === productData.colors[0]?.id &&
-              v.size_id === productData.sizes[0]?.id
-          );
-          if (variant) {
-            setQuantity(Math.min(quantity, variant.stock));
+            setSelectedColor(productData.colors[0]);
           }
         } else {
           setError("找不到商品");
@@ -98,7 +176,7 @@ export default function ProductDetail() {
         <div className="col-md-6">
           <div className="product-img">
             <Image
-              src={product.images[0]}
+              src={`/img/product/${product.images[0]}`}
               alt={product.name}
               width={500}
               height={500}
@@ -114,7 +192,7 @@ export default function ProductDetail() {
             {product.images.map((image, index) => (
               <div key={index} className="box">
                 <Image
-                  src={image}
+                  src={`/img/product/${image}`}
                   alt={`${product.name}-${index + 1}`}
                   width={100}
                   height={100}
@@ -146,9 +224,9 @@ export default function ProductDetail() {
                   disabled={favoriteLoading}
                 >
                   {isFavorite ? (
-                    <AiFillHeart color="red" size={24} />
+                    <AiFillHeart color="red" size={40} />
                   ) : (
-                    <AiOutlineHeart size={24} />
+                    <AiOutlineHeart size={40} />
                   )}
                 </button>
               </div>
@@ -180,13 +258,15 @@ export default function ProductDetail() {
             {/* 尺寸選擇 */}
             <div className="my-2">產品尺寸</div>
             <div className="d-flex gap-2">
-              {product.sizes.map((size) => (
+              {product?.sizes.map((size) => (
                 <div
-                  key={size}
-                  className={`sizeBox ${selectedSize === size ? "active" : ""}`}
-                  onClick={() => setSelectedSize(size)}
+                  key={size.id}
+                  className={`sizeBox ${
+                    selectedSize === size.name ? "active" : ""
+                  }`}
+                  onClick={() => handleSizeSelect(size)}
                 >
-                  {size}
+                  {size.name}
                 </div>
               ))}
             </div>
@@ -194,29 +274,37 @@ export default function ProductDetail() {
             {/* 顏色選擇 */}
             <div className="my-2">產品顏色</div>
             <div className="d-flex gap-2 flex-wrap">
-              {product.colors.map((color) => (
+              {product?.colors.map((color) => (
                 <div
                   key={color.id}
                   className={`circle ${
-                    selectedColor === color.name ? "active" : ""
+                    selectedColor?.id === color.id ? "active" : ""
                   }`}
                   style={{
-                    backgroundColor: `#${color.code.replace("#", "")}`,
+                    backgroundColor: color.code,
                   }}
-                  onClick={() => setSelectedColor(color.name)}
+                  onClick={() => handleColorSelect(color)}
                   title={color.name}
                 ></div>
               ))}
             </div>
 
             {/* 數量選擇 */}
-            <div className="my-2">產品數量</div>
+            <div className="my-2">
+              產品數量
+              {getCurrentVariant() && (
+                <span className="text-muted ms-2">
+                  (庫存: {getCurrentVariant().stock})
+                </span>
+              )}
+            </div>
             <div className="buttonCount">
               <button
                 className="button-left"
                 onClick={() => handleQuantityChange(-1)}
+                disabled={quantity <= 1}
               >
-                -
+                <span>-</span>
               </button>
               <input
                 type="text"
@@ -227,16 +315,20 @@ export default function ProductDetail() {
               <button
                 className="button-right"
                 onClick={() => handleQuantityChange(1)}
+                disabled={
+                  getCurrentVariant() && quantity >= getCurrentVariant().stock
+                }
               >
-                +
+                <span>+</span>
               </button>
             </div>
 
             {/* 購買按鈕 */}
             <div className="d-flex mt-4">
               <button
-                onClick={() => addToCart(product)}
+                onClick={handleAddToCart}
                 className="btn btn-info addCartButton flex-grow-1"
+                disabled={!selectedColor || !selectedSize}
               >
                 加入購物車
               </button>
@@ -289,10 +381,10 @@ export default function ProductDetail() {
       </div>
 
       {/* 瀏覽記錄 */}
-      <BrowsingHistory />
+      {/* <BrowsingHistory /> */}
 
       {/* 推薦商品 */}
-      <RecommendedProducts />
+      {/* <RecommendedProducts /> */}
       {/* 社交工具欄 */}
       <SocialToolbar />
     </div>
