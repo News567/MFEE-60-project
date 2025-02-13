@@ -131,7 +131,24 @@ const MyGallery = () => (
 
 export default function Home() {
     const api = "http://localhost:3005/api"
-    
+    // 獲取活動資料
+    const [activities, setActivities] = useState([]);
+    // console.log(API_BASE_URL + "/activity");
+    useEffect(() => {
+        const getList = async () => {
+            await axios
+                .get(API_BASE_URL + "/activity")
+                .then((res) => {
+                    if (res.data.status !== "success")
+                        throw new Error("讀取資料失敗");
+                    setActivities(res.data.data);
+                })
+                .catch((error) => {
+                    console.error("載入活動失敗:", error);
+                });
+        };
+        getList();
+    }, []);
     return (
         <>
             <main className={styles.main}>
