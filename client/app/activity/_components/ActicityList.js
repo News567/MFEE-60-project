@@ -53,29 +53,30 @@ export default function ProductList() {
     }, [page, limit, selectedSort.value]); // 監聽 selectedSort.value
 
     // 獲取所有產品
-    const fetchProducts = async (currentPage, itemsPerPage, sortValue) => {
-        try {
-            setLoading(true);
-            const response = await axios.get(
-                `${API_BASE_URL}/products?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}`
-            );
-            console.log("API Response:", response.data);
-            if (response.data.status === "success") {
-                setProducts(response.data.data);
-                setTotalPages(response.data.pagination.totalPages);
-                setPage(response.data.pagination.currentPage);
-                updateURL(response.data.pagination.currentPage, itemsPerPage);
-                console.log("API Response:", response.data.data);
-            } else {
-                setError("獲取產品資料失敗");
-            }
-        } catch (error) {
-            console.error("Error fetching products:", error.response || error);
-            setError("獲取產品資料時發生錯誤");
-        } finally {
-            setLoading(false);
-        }
-    };
+    // const fetchProducts = async (currentPage, itemsPerPage, sortValue) => {
+    //     try {
+    //         setLoading(true);
+    //         const response = await axios.get(
+    //             `${API_BASE_URL}/products?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}`
+    //         );
+    //         console.log("API Response:", response.data);
+    //         if (response.data.status === "success") {
+    //             setProducts(response.data.data);
+    //             setTotalPages(response.data.pagination.totalPages);
+    //             setPage(response.data.pagination.currentPage);
+    //             updateURL(response.data.pagination.currentPage, itemsPerPage);
+    //             console.log("API Response:", response.data.data);
+    //         } else {
+    //             setError("獲取產品資料失敗");
+    //         }
+    //     } catch (error) {
+    //         console.error("Error fetching products:", error.response || error);
+    //         setError("獲取產品資料時發生錯誤");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
 
     // 每頁顯示按鈕
     const handleDisplayChange = (newLimit, displayText) => {
@@ -90,7 +91,7 @@ export default function ProductList() {
         setSelectedSort({ text, value });
         setShowDropdown(false); //關閉下拉選單
 
-        const sortedProducts = [...products];
+        const sortedProducts = [...activities];
         switch (value) {
             case 1: // 綜合
                 sortedProducts.sort((a, b) => a.id - b.id);
@@ -182,6 +183,29 @@ export default function ProductList() {
         };
         getList();
     }, []);
+    const fetchProducts = async (currentPage, itemsPerPage, sortValue) => {
+        try {
+            setLoading(true);
+            const response = await axios.get(
+                `${API_BASE_URL}/products?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}`
+            );
+            console.log("API Response:", response.data);
+            if (response.data.status === "success") {
+                setProducts(response.data.data);
+                setTotalPages(response.data.pagination.totalPages);
+                setPage(response.data.pagination.currentPage);
+                updateURL(response.data.pagination.currentPage, itemsPerPage);
+                console.log("API Response:", response.data.data);
+            } else {
+                setError("獲取產品資料失敗");
+            }
+        } catch (error) {
+            console.error("Error fetching products:", error.response || error);
+            setError("獲取產品資料時發生錯誤");
+        } finally {
+            setLoading(false);
+        }
+    };
     useEffect(() => {
         console.log("資料更新:", activities);
     }, [activities]); // 當 activities 更新時才會執行 console.log
