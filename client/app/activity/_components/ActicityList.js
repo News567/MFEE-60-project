@@ -14,6 +14,8 @@ import "./Calendar.css";
 const API_BASE_URL = "http://localhost:3005/api";
 
 export default function ProductList() {
+    // 撈取資料
+    const [products, setProducts] = useState([]);
     const router = useRouter();
     const searchParams = useSearchParams();
     const [showDropdown, setShowDropdown] = useState(false);
@@ -39,44 +41,19 @@ export default function ProductList() {
     const [error, setError] = useState(null);
 
     // 處理 URL 更新
-    const updateURL = (newPage, newLimit) => {
+    const updateURL = (newPage, newLimit, newSort) => {
         const params = new URLSearchParams();
         params.set("page", newPage.toString());
         params.set("limit", newLimit.toString());
-        router.push(`/products?${params.toString()}`);
+        params.set("sort", newSort.toString()); // 加入排序條件
+        router.push(`/activity?${params.toString()}`);
     };
 
     // 獲取產品資料
-    // FIXME - 有依賴問題
+    // FIXME: - 有依賴問題
     useEffect(() => {
-        fetchProducts(page, limit, selectedSort.value); // 讓 API 依照當前排序方式請求
+        fetchActivity(page, limit, selectedSort.value); // 讓 API 依照當前排序方式請求
     }, [page, limit, selectedSort.value]); // 監聽 selectedSort.value
-
-    // 獲取所有產品
-    // const fetchProducts = async (currentPage, itemsPerPage, sortValue) => {
-    //     try {
-    //         setLoading(true);
-    //         const response = await axios.get(
-    //             `${API_BASE_URL}/products?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}`
-    //         );
-    //         console.log("API Response:", response.data);
-    //         if (response.data.status === "success") {
-    //             setProducts(response.data.data);
-    //             setTotalPages(response.data.pagination.totalPages);
-    //             setPage(response.data.pagination.currentPage);
-    //             updateURL(response.data.pagination.currentPage, itemsPerPage);
-    //             console.log("API Response:", response.data.data);
-    //         } else {
-    //             setError("獲取產品資料失敗");
-    //         }
-    //     } catch (error) {
-    //         console.error("Error fetching products:", error.response || error);
-    //         setError("獲取產品資料時發生錯誤");
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
 
     // 每頁顯示按鈕
     const handleDisplayChange = (newLimit, displayText) => {
@@ -87,9 +64,9 @@ export default function ProductList() {
     };
 
     // 處理排序
-    const handleSort = async (text, value) => {
+    const handleSort = (text, value) => {
         setSelectedSort({ text, value });
-        setShowDropdown(false); //關閉下拉選單
+        setShowDropdown(false); // 關閉下拉選單
 
         const sortedProducts = [...activities];
         switch (value) {
@@ -110,48 +87,14 @@ export default function ProductList() {
             default:
                 break;
         }
-        fetchProducts(page, limit, value);
+        fetchActivity(page, limit, value);
+        updateURL(page, limit, value); // ✅ 更新 URL
     };
 
-    // 處理品牌篩選
-    const handleBrandFilter = async (brandName) => {
-        try {
-            setLoading(true);
-            const response = await axios.get(
-                `${API_BASE_URL}/products/brand/${brandName}`
-            );
-            if (response.data.status === "success") {
-                setProducts(response.data.data);
-            } else {
-                setError("獲取品牌產品失敗");
-            }
-        } catch (error) {
-            console.error("Error fetching products by brand:", error);
-            setError("獲取品牌產品時發生錯誤");
-        } finally {
-            setLoading(false);
-        }
-    };
+    // TODO:處理活動地點篩選
+    const handleLocation = ()=>{
 
-    // 處理分類篩選
-    const handleCategoryFilter = async (categoryName) => {
-        try {
-            setLoading(true);
-            const response = await axios.get(
-                `${API_BASE_URL}/products/category/${categoryName}`
-            );
-            if (response.data.status === "success") {
-                setProducts(response.data.data);
-            } else {
-                setError("獲取分類產品失敗");
-            }
-        } catch (error) {
-            console.error("Error fetching products by category:", error);
-            setError("獲取分類產品時發生錯誤");
-        } finally {
-            setLoading(false);
-        }
-    };
+    }
 
     // 處理點擊外部關閉下拉選單
     useEffect(() => {
@@ -165,29 +108,11 @@ export default function ProductList() {
         return () => document.removeEventListener("click", handleClickOutside);
     }, []);
 
-    // 獲取活動資料
-    const [activities, setActivities] = useState([]);
-    // console.log(API_BASE_URL + "/activity");
-    useEffect(() => {
-        const getList = async () => {
-            await axios
-                .get(API_BASE_URL + "/activity")
-                .then((res) => {
-                    if (res.data.status !== "success")
-                        throw new Error("讀取資料失敗");
-                    setActivities(res.data.data);
-                })
-                .catch((error) => {
-                    console.error("載入活動失敗:", error);
-                });
-        };
-        getList();
-    }, []);
-    const fetchProducts = async (currentPage, itemsPerPage, sortValue) => {
+    const fetchActivity = async (currentPage, itemsPerPage, sortValue) => {
         try {
             setLoading(true);
             const response = await axios.get(
-                `${API_BASE_URL}/products?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}`
+                `${API_BASE_URL}/activity?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}`
             );
             console.log("API Response:", response.data);
             if (response.data.status === "success") {
@@ -197,18 +122,15 @@ export default function ProductList() {
                 updateURL(response.data.pagination.currentPage, itemsPerPage);
                 console.log("API Response:", response.data.data);
             } else {
-                setError("獲取產品資料失敗");
+                setError("獲取活動資料失敗");
             }
         } catch (error) {
             console.error("Error fetching products:", error.response || error);
-            setError("獲取產品資料時發生錯誤");
+            setError("獲取活動資料時發生錯誤");
         } finally {
             setLoading(false);
         }
     };
-    useEffect(() => {
-        console.log("資料更新:", activities);
-    }, [activities]); // 當 activities 更新時才會執行 console.log
 
     return (
         <div className="container py-4">
@@ -855,7 +777,7 @@ export default function ProductList() {
 
                     {/* 商品列表 */}
                     <div className="row g-4">
-                        {activities.map((activity) => (
+                        {products.map((activity) => (
                             <ProductCard key={activity.id} product={activity} />
                         ))}
                     </div>
