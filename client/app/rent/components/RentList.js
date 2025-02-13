@@ -51,10 +51,10 @@ export default function RentList() {
   return (
     <div>
       {/* 主內容 */}
-      <div className="container-fluid justify-content-center">
+      <div className="container py-4 mx-auto">
         <div className="row">
           {/* 麵包屑 */}
-          <div className="col-12 col-md-9 mx-auto bread">
+          <div className="bread">
             <nav aria-label="breadcrumb">
               <ol className="m-0 breadcrumb breadcrumb-list">
                 <li className="breadcrumb-item">
@@ -69,11 +69,10 @@ export default function RentList() {
             </nav>
           </div>
 
-          {/* 網頁內容區塊 */}
-          <div className="col-12 col-md-9 mx-auto">
+
             <div className="row">
               {/* Sidebar */}
-              <div className="px-3 col-12 col-md-3 order-2 order-md-1 d-flex flex-column sidebar">
+              <div className="col-12 col-lg-3 col-md-4 order-2 order-md-1 d-flex flex-column sidebar">
                 {/* 1. 產品分類區塊 */}
                 <div className="d-flex flex-column sidebar-lists product-category">
                   <div className="d-flex justify-content-between align-items-center sidebar-lists-title">
@@ -326,7 +325,7 @@ export default function RentList() {
               </div>
 
               {/* Main Content */}
-              <div className="px-3 col-12 col-md-9 order-1 order-md-2 d-flex flex-column main">
+              <div className="col-12 col-lg-9 col-md-8 order-1 order-md-2 d-flex flex-column main">
                 {/* Main Top */}
                 <div className="main-top w-100">
                   <h4 className="fw-bold">隨租隨用體驗，潛享無限自由</h4>
@@ -542,7 +541,6 @@ export default function RentList() {
                 </div>
               </div>
             </div>
-          </div>
         </div>
       </div>
     </div>
