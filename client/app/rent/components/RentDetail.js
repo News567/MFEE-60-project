@@ -1,21 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic"; // 動態導入，動態加載 flatpickr，從而避免伺服器端渲染時的問題
 // import { useRouter } from "next/router";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import flatpickr from "flatpickr";
-import './flatpickr.css'
+import "flatpickr/dist/flatpickr.min.css";
+import "./flatpickr.css"; // 我定義的小日曆css
 import "./RentDetail.css";
 import "../../../public/globals.css";
+
+const Flatpickr = dynamic(() => import("flatpickr"), { ssr: false });
 
 export default function RentProductDetail() {
   // const router = useRouter();
   // const { id } = router.query;
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
-
+  const [activeTab, setActiveTab] = useState("description"); // 商品描述區塊切換tab
   // 模擬從 API 獲取商品資料
   useEffect(() => {
     // if (!router.isReady) return; // 如果 router 未準備好，直接返回
@@ -49,21 +53,24 @@ export default function RentProductDetail() {
 
   // 初始化 Flatpickr
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (
+      typeof window !== "undefined" &&
+      document.querySelector("#fixed-calendar")
+    ) {
       flatpickr("#fixed-calendar", {
         mode: "range",
         dateFormat: "Y年m月d日",
         minDate: "today",
         inline: true,
         locale: {
-          firstDayOfWeek: 1, // 星期一為第一天
+          firstDayOfWeek: 1,
           weekdays: {
             shorthand: ["週日", "週一", "週二", "週三", "週四", "週五", "週六"],
             longhand: ["週日", "週一", "週二", "週三", "週四", "週五", "週六"],
           },
           months: {
             shorthand: [
-              "a1月",
+              "1月",
               "2月",
               "3月",
               "4月",
@@ -114,12 +121,12 @@ export default function RentProductDetail() {
         },
       });
     }
-  }, []);
+  }, [product]);
 
   if (!product) return <div>Loading...</div>;
 
   return (
-    <div className="container-fluid">
+    <div className="container py-4 mx-auto">
       <Head>
         <title>租借商品詳情</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -137,32 +144,9 @@ export default function RentProductDetail() {
         />
       </Head>
 
-      {/* 麵包屑 */}
-      <div className="row">
-        <div className="col-9 mx-auto bread">
-          <nav aria-label="breadcrumb">
-            <ol className="m-0 breadcrumb breadcrumb-list">
-              <li className="breadcrumb-item">
-                <a className="a" href="#">
-                  首頁
-                </a>
-              </li>
-              <li className="breadcrumb-item">
-                <a className="a" href="#">
-                  租借商品列表
-                </a>
-              </li>
-              <li className="breadcrumb-item active" aria-current="page">
-                租借商品詳情
-              </li>
-            </ol>
-          </nav>
-        </div>
-      </div>
-
       {/* 商品詳細資訊 */}
       <div className="row">
-        <div className="col-9 mx-auto d-flex flex-row">
+        <div className="col-12 d-flex flex-row">
           <div className="main-details d-flex flex-row justify-content-between align-items-start">
             {/* 圖片區域 */}
             <div className="px-3 col-12 col-md-6 col-lg-6 mx-auto d-flex flex-column">
@@ -291,8 +275,9 @@ export default function RentProductDetail() {
       </div>
 
       {/* 商品描述及品牌介紹 */}
-      <div className="col-9 mx-auto d-flex flex-column mt-4 under-details">
-        <div className="under-detail">
+      <div className="col-12 d-flex flex-column mt-4 under-details">
+      <div></div>
+        {/* <div className="under-detail">
           <p className="under-details-title">商品描述</p>
           <div className="d-flex flex-column under-details-content">
             <p>{product.description}</p>
@@ -303,11 +288,11 @@ export default function RentProductDetail() {
           <div className="d-flex flex-column under-details-brand">
             來自義大利的複合材料製造商C4創立於1986年，初始研發的是自行車使用之碳纖維材料，隨後將這樣的材料技術延伸至自由潛水/水中漁獵的裝備；卓越的性能與粗獷的外型，受到許多專業玩家的喜愛。
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* 你可能會喜歡 */}
-      <div className="col-9 mx-auto d-flex flex-column mt-4 you-may-likes">
+      <div className="col-12 d-flex flex-column mt-4 you-may-likes">
         <div className="you-may-like">
           <h3 className="you-may-like-title">你可能會喜歡</h3>
         </div>
