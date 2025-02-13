@@ -54,22 +54,7 @@ export default function RentList() {
       <div className="container py-4 mx-auto">
         <div className="row">
           {/* 麵包屑 */}
-          <div className="bread">
-            <nav aria-label="breadcrumb">
-              <ol className="m-0 breadcrumb breadcrumb-list">
-                <li className="breadcrumb-item">
-                  <a className="a" href="#">
-                    首頁
-                  </a>
-                </li>
-                <li className="breadcrumb-item active" aria-current="page">
-                  租借商品列表
-                </li>
-              </ol>
-            </nav>
-          </div>
-
-
+          
             <div className="row">
               {/* Sidebar */}
               <div className="col-12 col-lg-3 col-md-4 order-2 order-md-1 d-flex flex-column sidebar">
