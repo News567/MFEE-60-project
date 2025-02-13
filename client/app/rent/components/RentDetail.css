@@ -21,7 +21,7 @@
 }
 
 * {
-  font-family: 'Noto Sans TC', serif;
+  font-family: "Noto Sans TC", serif;
   font-size: 16px;
 }
 
@@ -45,13 +45,21 @@
 }
 
 .main-details .small-images {
-  padding: 30px 0px;
+  height: 100%;
+  display: flex;
+  padding: 0px 0px 30px 0px;
+  cursor: pointer;
+}
+.main-details .small-images > div {
+  flex: 1;
+  height: 100%;
+  /* overflow: hidden; */
 }
 
-.main-details .small-images img {
-  width: 25%;
+.main-details .small-images Image {
+  width: 100%;
   max-width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: cover;
 }
 
@@ -93,6 +101,37 @@
   color: var(--gray-600-color);
   font-size: 24px;
   font-weight: 700;
+}
+.main-details .details-titles .product-name-fav {
+  position: relative;
+}
+.main-details .details-titles .product-name-fav .heart-icon,
+.main-details .details-titles .product-name-fav .heart-icon-fill {
+  font-size: 24;
+  transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+.main-details .details-titles .product-name-fav .heart-icon {
+  color: var(--black);
+  opacity: 1; /* 默認顯示空心為收藏 */
+}
+.main-details .details-titles .product-name-fav .heart-icon-fill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: var(--primary-color);
+  opacity: 0;
+  transform: scale(0); /* 初始縮小 */
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+/* 懸停時切換圖標 */
+.main-details .details-titles .product-name-fav:hover .heart-icon {
+  opacity: 0; /* 隱藏空心愛心 */
+}
+
+.main-details .details-titles .product-name-fav:hover .heart-icon-fill {
+  opacity: 1; /* 顯示填充愛心 */
+  transform: scale(1); /* 懸停時恢復原始大小 */
 }
 
 .main-details .details-titles .product-name {
@@ -218,11 +257,15 @@
   border: 1px solid var(--gray-300-color);
 }
 
-.under-detail {
-  text-align: center;
+.tab-buttons {
+  gap: 25px;
 }
 
-.under-detail .under-details-title {
+.tab-button {
+  border: 0;
+  background-color: transparent;
+}
+.tab-button .under-details-title {
   margin: 0;
   display: inline-block;
   color: var(--black);
@@ -234,6 +277,14 @@
 }
 
 .under-detail .under-details-content {
+  margin: 0;
+  color: var(--black);
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+  padding: 15px;
+}
+.under-comments .under-comments-content {
   margin: 0;
   color: var(--black);
   font-size: 14px;
@@ -306,7 +357,12 @@
   gap: 6px;
 }
 
-.you-may-like-products .you-may-like-product .card .card-body .product-color .color-box {
+.you-may-like-products
+  .you-may-like-product
+  .card
+  .card-body
+  .product-color
+  .color-box {
   width: 15px;
   height: 15px;
   border: 0.5px solid var(--gray-200-color);
@@ -338,4 +394,42 @@
 .you-may-likes nav .pagination .page-item .page-link {
   border: none;
   color: var(--black);
+}
+
+.you-may-likes .you-may-like-products .card .card-body .icon-container {
+  position: absolute;
+  bottom: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  gap: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.you-may-likes .you-may-like-products .card .card-body .icon-container .icon {
+  background-color: var(--white);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.you-may-likes .you-may-like-products .card .card-body .icon-container .icon i {
+  font-size: 16px;
+  color: var(--black);
+}
+
+.you-may-likes .you-may-like-products .card:hover .icon-container {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+  color: var(--white);
+}
+
+.you-may-likes .you-may-like-products .card:hover .icon-container .icon:hover {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+.you-may-likes .you-may-like-products.card:hover .icon-container .icon i:hover {
+  color: var(--white);
 }

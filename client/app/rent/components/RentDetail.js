@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import dynamic from "next/dynamic"; // 動態導入，動態加載 flatpickr，從而避免伺服器端渲染時的問題
 // import { useRouter } from "next/router";
 import Head from "next/head";
 import Image from "next/image";
-import Link from "next/link";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import "./flatpickr.css"; // 我定義的小日曆css
@@ -18,8 +17,14 @@ export default function RentProductDetail() {
   // const router = useRouter();
   // const { id } = router.query;
   const [product, setProduct] = useState(null);
+  // 商品圖片
+  const [mainImage, setMainImage] = useState(product?.images?.[0] || ""); // 商品大圖切換
+  const containerRef = useRef(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description"); // 商品描述區塊切換tab
+
   // 模擬從 API 獲取商品資料
   useEffect(() => {
     // if (!router.isReady) return; // 如果 router 未準備好，直接返回
@@ -35,7 +40,7 @@ export default function RentProductDetail() {
       brand: "C4",
       name: "PLASMA 低容積面鏡",
       rating: 4,
-      pricePerDay: 145,
+      price: 145,
       description: "超耐磨鋼化玻璃，良好的視野和低內部容積...",
       stock: 2,
       colors: ["#4d4244", "#403f6f", "white", "pink"],
@@ -120,10 +125,19 @@ export default function RentProductDetail() {
           }
         },
       });
+      if (product?.images?.length) {
+        setMainImage(product.images[0]); // 當 product 變更時，重新設置大圖
+      }
     }
   }, [product]);
 
-  if (!product) return <div>Loading...</div>;
+  useEffect(() => {
+    if (containerRef.current) {
+      setContainerWidth(containerRef.current.offsetWidth);
+    }
+  }, []);
+
+  if (!product) return <div>商品載入中...</div>;
 
   return (
     <div className="container py-4 mx-auto">
@@ -146,35 +160,55 @@ export default function RentProductDetail() {
 
       {/* 商品詳細資訊 */}
       <div className="row">
-        <div className="col-12 d-flex flex-row">
-          <div className="main-details d-flex flex-row justify-content-between align-items-start">
+        <div className="main-details d-flex flex-row justify-content-between align-items-start">
+          <div className="row">
             {/* 圖片區域 */}
-            <div className="px-3 col-12 col-md-6 col-lg-6 mx-auto d-flex flex-column">
+            <div className="px-3 col-12 col-md-6 col-lg-6 order-1 mx-auto d-flex flex-column">
               <div className="main-image">
                 <Image
-                  src={product.images[0]}
+                  src={mainImage} // 動態設置大圖的 src
                   className="img-fluid"
                   alt="商品主圖"
-                  width={360} // 設定圖片的寬度
-                  height={360} // 設定圖片的高度
+                  width={360}
+                  height={360}
                   layout="responsive"
                   priority
                   unoptimized
                 />
               </div>
-              <div className="small-images d-flex flex-row justify-content-between align-items-center">
-                {product.images.map((img, index) => (
-                  <Image
-                    key={index}
-                    src={img}
-                    className="img-fluid"
-                    alt={`小圖${index + 1}`}
-                    width={90} // 設定圖片的寬度
-                    height={90} // 設定圖片的高度
-                    priority
-                    unoptimized
-                  />
-                ))}
+              <div
+                className="small-images d-flex flex-row justify-content-between align-items-center"
+                ref={containerRef}
+              >
+                {product.images.map((img, index) => {
+                  const containerWidth = 600; // 小圖總容器
+                  const gap = 10;
+                  const imageCount = product.images.length;
+                  const imageWidth =
+                    (containerWidth - (imageCount - 1) * gap) / imageCount;
+                  const imageHeight = 120;
+
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => setMainImage(img)}
+                      style={{
+                        width: imageWidth,
+                        height: imageHeight,
+                      }}
+                    >
+                      <Image
+                        src={img}
+                        className="img-fluid"
+                        alt={`小圖${index + 1}`}
+                        width={imageWidth}
+                        height={imageHeight}
+                        priority
+                        unoptimized
+                      />
+                    </div>
+                  );
+                })}
               </div>
               <div className="rent-rules d-flex flex-column">
                 <p className="rules-title">租借規則</p>
@@ -187,12 +221,13 @@ export default function RentProductDetail() {
             </div>
 
             {/* 文字區域 */}
-            <div className="px-3 col-12 col-md-6 col-lg-6 mx-auto d-flex flex-column details-text">
+            <div className="px-3 col-12 col-md-6 col-lg-6 order-2 mx-auto d-flex flex-column details-text">
               <div className="details-titles d-flex flex-column">
                 <p className="product-brand">{product.brand}</p>
                 <div className="product-name-fav d-flex flex-row justify-content-between align-items-center">
                   <p className="product-name">{product.name}</p>
-                  <i className="bi bi-heart"></i>
+                  <i className="bi bi-heart heart-icon"></i>
+                  <i className="bi bi-heart-fill heart-icon-fill"></i>
                 </div>
                 <div className="stars d-flex flex-row">
                   {[...Array(5)].map((_, index) => (
@@ -206,9 +241,7 @@ export default function RentProductDetail() {
                 </div>
               </div>
               <div className="subdetails-titles d-flex flex-column">
-                <p className="product-price-perday">
-                  NT${product.pricePerDay}/日
-                </p>
+                <p className="product-price">NT${product.price}/日</p>
                 <p className="product-description">{product.description}</p>
               </div>
               <div className="details-select d-flex flex-column">
@@ -256,7 +289,9 @@ export default function RentProductDetail() {
                     <div id="fixed-calendar"></div>
                     <div className="d-flex flex-column selected-date-range w-100">
                       <p id="date-range-text"></p>
-                      <p id="total-cost-text">總費用 xxx 元</p>
+                      <p id="total-cost-text">
+                        總費用 {product.price * quantity} 元
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -276,19 +311,47 @@ export default function RentProductDetail() {
 
       {/* 商品描述及品牌介紹 */}
       <div className="col-12 d-flex flex-column mt-4 under-details">
-      <div></div>
-        {/* <div className="under-detail">
-          <p className="under-details-title">商品描述</p>
-          <div className="d-flex flex-column under-details-content">
-            <p>{product.description}</p>
-          </div>
+        {/* 分頁按鈕 */}
+        <div className="d-flex flex-row justify-content-center align-items-center tab-buttons">
+          <button
+            className={`tab-button ${
+              activeTab === "description" ? "active" : ""
+            }`}
+            onClick={() => setActiveTab("description")}
+          >
+            <p className="under-details-title">商品描述</p>
+          </button>
+          <button
+            className={`tab-button ${activeTab === "comments" ? "active" : ""}`}
+            onClick={() => setActiveTab("comments")}
+          >
+            <p className="under-details-title">會員評價</p>
+          </button>
         </div>
-        <div className="d-flex flex-column under-brand">
-          <p className="product-brand">品牌介紹</p>
-          <div className="d-flex flex-column under-details-brand">
-            來自義大利的複合材料製造商C4創立於1986年，初始研發的是自行車使用之碳纖維材料，隨後將這樣的材料技術延伸至自由潛水/水中漁獵的裝備；卓越的性能與粗獷的外型，受到許多專業玩家的喜愛。
-          </div>
-        </div> */}
+        {/* 分頁內容 */}
+        <div className="tab-content">
+          {activeTab === "description" && (
+            <div className="under-detail">
+              <div className="d-flex flex-column under-details-content">
+                <p>{product.description}</p>
+              </div>
+              <div className="d-flex flex-column under-brand">
+                <p className="product-brand">品牌介紹</p>
+                <div className="d-flex flex-column under-details-brand">
+                  來自義大利的複合材料製造商C4創立於1986年，初始研發的是自行車使用之碳纖維材料，隨後將這樣的材料技術延伸至自由潛水/水中漁獵的裝備；卓越的性能與粗獷的外型，受到許多專業玩家的喜愛。
+                </div>
+              </div>
+            </div>
+          )}
+          {activeTab === "comments" && (
+            <div className="under-comments">
+              <div className="d-flex flex-column under-comments-content">
+                {/* 這裡放會員評價的內容 */}
+                <p>切版用：暫無評價。</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 你可能會喜歡 */}
@@ -331,6 +394,16 @@ export default function RentProductDetail() {
                       className="color-box"
                       style={{ backgroundColor: "white" }}
                     ></span>
+                  </div>
+
+                  {/* 右上角hover */}
+                  <div className="icon-container d-flex flex-row">
+                    <div className="icon d-flex justify-content-center align-items-center">
+                      <i className="bi bi-heart"></i>
+                    </div>
+                    <div className="icon d-flex justify-content-center align-items-center">
+                      <i className="bi bi-cart"></i>
+                    </div>
                   </div>
                 </div>
               </div>
