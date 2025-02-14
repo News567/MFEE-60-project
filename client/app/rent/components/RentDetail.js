@@ -17,8 +17,8 @@ export default function RentProductDetail() {
   // const router = useRouter();
   // const { id } = router.query;
   const [product, setProduct] = useState(null);
-  // 商品圖片
-  const [mainImage, setMainImage] = useState(product?.images?.[0] || ""); // 商品大圖切換
+  // 商品圖片 大圖切換
+  const [mainImage, setMainImage] = useState(product?.images?.[0] || "");
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
@@ -181,12 +181,12 @@ export default function RentProductDetail() {
                 ref={containerRef}
               >
                 {product.images.map((img, index) => {
-                  const containerWidth = 600; // 小圖總容器
+                  const containerWidth = 538; // 小圖總容器
                   const gap = 10;
                   const imageCount = product.images.length;
                   const imageWidth =
                     (containerWidth - (imageCount - 1) * gap) / imageCount;
-                  const imageHeight = 120;
+                  const imageHeight = imageWidth; // 正方形
 
                   return (
                     <div
