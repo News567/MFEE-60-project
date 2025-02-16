@@ -11,10 +11,12 @@
   "dependencies": {
     "@headlessui/react": "^2.2.0",
     "@popperjs/core": "^2.11.8",
+    "antd": "^5.24.0",
     "axios": "^1.7.9",
     "bootstrap": "^5.3.3",
     "flatpickr": "^4.6.13",
     "gsap": "^3.12.7",
+    "lodash": "^4.17.21",
     "next": "15.1.6",
     "react": "^19.0.0",
     "react-calendar": "^5.1.0",
@@ -22,7 +24,8 @@
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",
     "react-photoswipe-gallery": "^3.0.2",
-    "sass": "^1.83.4"
+    "sass": "^1.83.4",
+    "swiper": "^11.2.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
