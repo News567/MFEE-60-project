@@ -1,14 +1,33 @@
 "use client";
-
-import React from 'react';
+import React, { useEffect, useState } from "react";
 import "./articleList.css";
 import "./articleAside.css";
 
-const ArticleListPage = () => {
-  return (
-    
-    
 
+import ArticleCard from "./articleCard";
+
+const API_BASE_URL = "http://localhost:3005/api";
+
+const ArticleListPage = () => {
+  const [articles, setArticles] = useState([]);
+
+  useEffect(() => {
+    // 客戶端請求文章資料
+    const fetchArticles = async () => {
+      const res = await fetch("http://localhost:3005/api/article");
+
+      const data = await res.json();
+      setArticles(data.data); // 根據後端返回的結構設定
+    };
+
+    fetchArticles();
+  }, []);
+
+  if (!articles) {
+    return <div>載入中...</div>;
+  }
+
+  return (
     <div className="container mt-4">
       {/* Grid Layout */}
       <div className="row">
@@ -95,10 +114,14 @@ const ArticleListPage = () => {
               <div className="aside-title">最近文章</div>
               {[1, 2, 3].map((index) => (
                 <div className="aside-recent-article" key={index}>
-                  <div className={`aside-recent-article-title aside-recent-article-title${index}`}>
+                  <div
+                    className={`aside-recent-article-title aside-recent-article-title${index}`}
+                  >
                     體驗潛水體驗潛水體驗潛水體驗潛水體驗潛水體驗潛水體驗潛水
                   </div>
-                  <div className={`aside-recent-article-publish-time aside-recent-article-publish-time${index}`}>
+                  <div
+                    className={`aside-recent-article-publish-time aside-recent-article-publish-time${index}`}
+                  >
                     2024-09-10
                   </div>
                 </div>
@@ -119,34 +142,8 @@ const ArticleListPage = () => {
 
         {/* Right Article List (3/4) */}
         <div className="article-list col-9">
-          {[1, 2, 3, 4, 5, 6].map((index) => (
-            <div className="article-list-card" key={index}>
-              <img
-                className="article-list-card-photo img-fluid"
-                src="./img/article/article-ex-main-photo.jpeg"
-                alt="Article Thumbnail"
-              />
-              <div className="article-list-card-title">旅遊潛水</div>
-              <div className="article-list-card-info">
-                <div className="article-list-card-author">
-                  <i className="fa-solid fa-user"></i>vicky
-                </div>
-                <div className="article-list-card-publishtime">
-                  <i className="fa-solid fa-calendar-days"></i>202412123
-                </div>
-                <div className="article-list-card-comment">
-                  <i className="fa-regular fa-comment-dots"></i>13則評論
-                </div>
-              </div>
-              <div className="article-list-card-content">
-                初次嘗試潛水的緊張與期待<br /><br />
-                報名潛水課程時，我其實有些猶豫，因為我並不是游泳高手，甚至對深水有一點點恐懼。但教練的耐心解說以及身邊朋友的鼓勵，讓我決定跨出這一步。<br /><br />
-                在正式潛水前，我參加了一次體驗潛水活動。教練先在泳池中向我們介紹裝備的使用，像是面鏡、調節器與蛙鞋，並教導我們如何進行耳壓平衡。這些準備讓我安心了不少，也讓我對正式下水充滿期待。
-              </div>
-              <div className="article-list-card-btn">
-                <button className="btn">更多</button>
-              </div>
-            </div>
+          {articles.map((article) => (
+            <ArticleCard key={article.id} article={article} />
           ))}
 
           {/* Pagination */}
