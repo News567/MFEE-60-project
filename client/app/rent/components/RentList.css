@@ -451,9 +451,25 @@
   font-size: 10px;
 }
 
+.clear-sort-icon {
+  font-size: 16px;
+  color: var(--gray-600-color);
+  padding: 0 4px; /* 調整內邊距 */
+}
+
+.clear-sort-icon:hover {
+  color: var(--primary-color);
+}
+
 .main .product-lists .card {
   position: relative;
   overflow: hidden;
+}
+.main .product-lists .card .img-container {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* 確保所有圖片為正方形 */
+  position: relative;
+  overflow: hidden; /* 隱藏超出部分 */
 }
 
 .main .product-lists .card .card-body .product-brand,
@@ -470,6 +486,10 @@
 
 .main .product-lists .card .card-body .product-name {
   font-size: 14px;
+  text-align: center;
+  height: 40px; /* 固定高度 */
+  line-height: 20px; /* 控制最多兩行 */
+  -webkit-line-clamp: 2; /* 限制最多2行 */
 }
 
 .main .product-lists .card .card-body .product-price,
@@ -479,6 +499,7 @@
 
 .main .product-lists .card .card-body .product-color {
   gap: 6px;
+  height: 20px;
 }
 
 .main .product-lists .card .card-body .product-color .color-box {
@@ -486,7 +507,7 @@
   height: 15px;
   border: 0.5px solid var(--gray-200-color);
   border-radius: 50%;
-  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.06));
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.4));
 }
 
 .main .product-lists .card .card-body .icon-container {
@@ -550,6 +571,11 @@
 
 .main .pagination .page-link:hover {
   background-color: var(--primary-light-color);
+}
+
+.main .pagination .ellipsis {
+  cursor: default; /* 禁用滑鼠指針 */
+  background-color: transparent;
 }
 
 .dropdown .dropdown-item:hover {
