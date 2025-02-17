@@ -490,6 +490,7 @@
   height: 40px; /* 固定高度 */
   line-height: 20px; /* 控制最多兩行 */
   -webkit-line-clamp: 2; /* 限制最多2行 */
+  line-clamp: 2;
 }
 
 .main .product-lists .card .card-body .product-price,

@@ -27,10 +27,10 @@ import articleDetailRouter from "../routes/article/detail.js";
 const app = express();
 // 設定 CORS
 app.use(
-    cors({
-        origin: "http://localhost:3000", // 只允許前端的域名
-        credentials: true,
-    })
+  cors({
+    origin: ['http://localhost:3000', 'http://localhost:3001'], // 只允許前端的域名
+    credentials: true,
+  })
 );
 // 中間件
 app.use(logger("dev"));
