@@ -1,72 +1,112 @@
-import RentDetailUI from './RentDetailUI'
-import Image from 'next/image'
-import React from 'react'
-import '../../../../styles/rent-product.css'
-import '@/styles/global.scss'
+import express from "express";
+import { pool } from "../../config/mysql.js";
 
-// 假設這是從 API 獲取的產品數據
-const fetchProductData = async (id) => {
-  // 這裡可以替換為實際的 API 請求
-  const products = {
-    1: {
-      id: 1,
-      brand: 'C4',
-      name: 'PLASMA 低容積面鏡',
-      pricePerDay: 145,
-      description:
-        '超耐磨鋼化玻璃，良好的視野和低內部容積<br>裙邊採柔軟矽膠製成，密合度佳<br>搭配同色系呼吸管，帥度再上一層',
-      stock: 2,
-      colors: ['#4d4244', '#403f6f', 'white', 'pink'],
-      images: [
-        '../../images/rent/1733124689_8081.jpg',
-        '../../images/rent/1733124703_2778.jpg',
-        '../../images/rent/1733124689_3585.jpg',
-        '../../images/rent/1733124689_2281.jpg',
-      ],
-      rating: 4, // 評分（滿分5分）
-      rules: [
-        '租借本人出示潛水證',
-        '租用需先付款，並提供個人證件一張',
-        '完成租借表單並完成簽名',
-        '如有遺失或損害，需修復原有狀況或是全新賠償',
-        '租借與歸還時間限每日上午8:00至 下午5:00，過時則以多借一天計算',
-        '以天計價，非24小時制度。例如: 12/18日下午2點租借，12/19下午2點歸還，則算兩天',
-      ],
-    },
-  }
-  return products[id] || null
-}
+const router = express.Router();
 
-// Server Component
-const RentProductDetail = async ({ params }) => {
-  const { id } = params
-  const product = await fetchProductData(id)
+// 根據 ID 獲取單個租借商品
+router.get("/:id", async (req, res) => {
+  const { id } = req.params;
 
-  if (!product) {
-    return (
-      <div className="center-container d-flex flex-column">
-        <Image
-          src="/images/rent-product-not-found.png"
-          alt="此商品不存在"
-          className="m-3"
-          width={300}
-          height={193}
-          priority
-        />
-        <button
-          type="button"
-          className="btn goBackBtn d-flex align-items-center justify-content-center mt-3 gap-2"
-          // 設定router以後要回來修改導回租借商品列表
-          // onClick={() => (window.location.href = '/rent/page.js')}
-        >
-          <i className="bi bi-arrow-left-circle"></i>返回租借商品列表
-        </button>
-      </div>
-    )
+    // 打印收到的 id，確保其正確
+    console.log("Request ID: ", id);
+
+  // 1. 驗證 ID 是否為有效數字
+  if (isNaN(id) || id <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "無效的商品 ID ！ 商品 ID 需為正數！",
+    });
   }
 
-  // 將數據傳遞給 Client Component
-  return <RentDetailUI product={product} />
-}
+  try {
+    // 2. 查詢商品基本信息
+    const [rows] = await pool.query(
+      `
+      SELECT 
+        ri.id, ri.name, ri.price, ri.price2, ri.description, ri.description2,
+        ri.stock, ri.created_at, ri.update_at, ri.deposit, ri.is_like,
+        rcs.name AS category_small, rcb.name AS category_big,
+        b.id AS brand_id,  -- 取得品牌 ID
+        b.name AS brand_name,  -- 取得品牌名稱
+        GROUP_CONCAT(DISTINCT c.name ORDER BY c.id ASC) AS color_name,  -- 顏色名稱
+        GROUP_CONCAT(DISTINCT c.rgb ORDER BY c.id ASC) AS color_rgb  -- 顏色 RGB 值
+      FROM rent_item ri
+      JOIN rent_category_small rcs ON ri.rent_category_small_id = rcs.id
+      JOIN rent_category_big rcb ON rcs.rent_category_big_id = rcb.id
+      LEFT JOIN rent_specification rs ON ri.id = rs.rent_item_id AND rs.is_deleted = FALSE
+      LEFT JOIN brand b ON rs.brand_id = b.id  -- 連接 brand 表
+      LEFT JOIN color c ON rs.color_id = c.id  -- 連接 color 表
+      WHERE ri.id = ? AND ri.is_deleted = FALSE
+      GROUP BY ri.id  -- 只按商品 ID 分組
+    `,
+      [id]
+    );
 
-export default RentProductDetail
+    // 打印查詢結果，確認查詢是否成功
+    console.log("Database rows: ", rows);
+
+    // 3. 檢查商品是否存在
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "找不到該商品",
+      });
+    }
+
+    const product = rows[0];
+
+    // 4. 查詢商品圖片
+    const [images] = await pool.query(
+      `
+     SELECT img_url, is_main
+      FROM rent_image
+      WHERE rent_item_id = ?
+      ORDER BY is_main DESC  -- 主圖排在最前面
+      `,
+      [id]
+    );
+
+    // 5. 查詢商品規格
+    const [specifications] = await pool.query(
+      `
+    SELECT 
+        rs.id, 
+        c.name AS color, 
+        c.rgb AS color_rgb, 
+        t.name AS thickness,
+        b.id AS brand_id,  -- 品牌 ID
+        b.name AS brand_name  -- 品牌名稱
+      FROM rent_specification rs
+      LEFT JOIN color c ON rs.color_id = c.id
+      LEFT JOIN thickness t ON rs.thickness_id = t.id
+      LEFT JOIN brand b ON rs.brand_id = b.id
+      WHERE rs.rent_item_id = ? AND rs.is_deleted = FALSE
+      `,
+      [id]
+    );
+
+    // 6. 將圖片和規格附加到商品對象中
+    product.images = images;
+    product.specifications = specifications;
+
+    // 7. 打印商品資料以檢查結構
+    console.log("Product:", product);
+
+    // 8. 返回標準化回應
+    res.status(200).json({
+      success: true,
+      data: product,
+    });
+  } catch (err) {
+    console.error("Error fetching product details:", err);
+
+    // 9. 返回標準化錯誤回應
+    res.status(500).json({
+      success: false,
+      message: "伺服器錯誤，無法取得商品詳情！",
+      error: err.message || err, // 顯示具體錯誤訊息
+    });
+  }
+});
+
+export default router;

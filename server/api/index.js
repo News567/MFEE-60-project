@@ -18,6 +18,8 @@ import activityDetailRouter from "../routes/activity/detail.js";
 import groupRouter from "../routes/group/index.js";
 import groupListRouter from "../routes/group/list.js";
 import groupDetailRouter from "../routes/group/detail.js";
+import rentRouter from "../routes/rent/index.js";
+import rentDetailRouter from "../routes/rent/detail.js";
 
 // 建立 Express 應用程式
 const app = express();
@@ -70,6 +72,10 @@ apiRouter.use("/activity", activityDetailRouter);
 apiRouter.use("/group", groupRouter)
 apiRouter.use("/group", groupListRouter)
 apiRouter.use("/group", groupDetailRouter)
+
+// 租借相關路由
+apiRouter.use("/rent", rentRouter); // 負責 `/api/rent`
+apiRouter.use("/rent", rentDetailRouter); // 負責 `/api/rent/:id`
 
 // 捕捉 404 錯誤
 app.use((req, res, next) => {
