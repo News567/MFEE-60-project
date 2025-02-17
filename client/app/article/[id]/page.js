@@ -1,12 +1,11 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React from "react";
+import ArticleDetail from "../components/articleDetail";
+import Sidebar from "../components/sidebar";
 import "./article.css";
 import "../components/articleAside.css";
 
-import ArticleDetail from "../components/articleDetail";
-import Sidebar from "../components/sidebar";
-
-const ArticlePage = () => {
+export default function ArticlePage() {
   return (
     <div className="container mt-4">
       {/* Grid Layout */}
@@ -16,13 +15,9 @@ const ArticlePage = () => {
 
         {/* Right Article List (3/4) */}
         <div className="article col-9">
-          {articles.map((article) => (
-            <ArticleDetail key={article.id} article={article} />
-          ))}
+          <ArticleDetail /> {/* 渲染 ArticleDetail 組件 */}
         </div>
       </div>
     </div>
   );
-};
-
-export default ArticlePage;
+}

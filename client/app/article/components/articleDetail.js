@@ -1,32 +1,34 @@
 "use client";
-import Image from "next/image";
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import axios from "axios";
 import "./articleList.css";
 
-
 export default function ArticleDetail() {
-  const router = useRouter();
-  const [article, setArticle] = useState(null);
+  const { id } = useParams(); // 從 URL 中獲取文章 ID
+  const [article, setArticle] = useState(null); // 文章數據
+  const [loading, setLoading] = useState(true); // 加載狀態
+  const [error, setError] = useState(null); // 錯誤狀態
 
   useEffect(() => {
-    const articleId = router.query.articleId;
-    if (articleId) {
-      fetchArticleData(articleId);
-    }
-  }, [router.query.articleId]);
+    // 從 API 獲取文章數據
+    const fetchArticle = async () => {
+      try {
+        const res = await axios.get(`http://localhost:3005/api/article/${id}`);
+        setArticle(res.data); // 設置文章數據
+      } catch (err) {
+        setError(err.message); // 設置錯誤訊息
+      } finally {
+        setLoading(false); // 加載完成
+      }
+    };
 
-  const fetchArticleData = async (id) => {
-    try {
-      const res = await axios.get(`/api/article/detail/${id}`);
-      setArticle(res.data);
-    } catch (error) {
-      console.error("Failed to fetch article data:", error);
-    }
-  };
+    fetchArticle();
+  }, [id]);
 
-  if (!article) return <div>Loading...</div>;
+  if (loading) return <div>Loading...</div>; // 加載中顯示 Loading
+  if (error) return <div>Error: {error}</div>; // 錯誤時顯示錯誤訊息
+  if (!article) return <div>No article found</div>; // 如果沒有數據，顯示提示
   return (
     <div className="articleDetail">
       <div className="title">
@@ -35,7 +37,8 @@ export default function ArticleDetail() {
           <i className="fa-solid fa-user"></i>Tom{article.author}
         </div>
         <div className="publishTimeArea">
-          <i className="fa-solid fa-calendar-days"></i>2024.12.13 14:05{article.publishTime}
+          <i className="fa-solid fa-calendar-days"></i>2024.12.13 14:05
+          {article.publishTime}
         </div>
       </div>
       <div className="main-photo">
