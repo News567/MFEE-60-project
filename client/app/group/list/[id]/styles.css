@@ -35,13 +35,16 @@ aside {
     } */
     
     .img-container {
-        object-fit: cover;
+        object-fit: fill;
         overflow: hidden;
         height: 394px;
         border-radius: 6px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         .img {
-            max-width: 100%;
-            min-height: 100%;        
+            width: 100%;
+            min-height: 100%;
         }
     }
     .group-info {
