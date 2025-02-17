@@ -112,8 +112,8 @@ export default function Home() {
             }}>
             <div className={`row g-2`}>
                 <Item
-                    original={`/image/activity/${img[0]}`}
-                    thumbnail={`/image/activity/${img[0]}`}
+                    original={`/image/activity/${activities?.[0]?.id}/${img[0]}`}
+                    thumbnail={`/image/activity/${activities?.[0]?.id}/${img[0]}`}
                     width="1024"
                     height="768">
                     {({ ref, open }) => (
@@ -121,7 +121,7 @@ export default function Home() {
                             className={`col-6`}
                             ref={ref}
                             onClick={open}
-                            src={`/image/activity/${img[0]}`}
+                            src={`/image/activity/${activities?.[0]?.id}/${img[0]}`}
                         />
                     )}
                 </Item>
@@ -129,8 +129,8 @@ export default function Home() {
                     <div
                         className={`d-flex flex-column justify-content-between gap-2`}>
                         <Item
-                            original={`/image/activity/${img[1]}`}
-                            thumbnail={`/image/activity/${img[1]}`}
+                            original={`/image/activity/${activities?.[0]?.id}/${img[1]}`}
+                            thumbnail={`/image/activity/${activities?.[0]?.id}/${img[1]}`}
                             width="1024"
                             height="768">
                             {({ ref, open }) => (
@@ -140,13 +140,13 @@ export default function Home() {
                                     className=""
                                     ref={ref}
                                     onClick={open}
-                                    src={`/image/activity/${img[1]}`}
+                                    src={`/image/activity/${activities?.[0]?.id}/${img[1]}`}
                                 />
                             )}
                         </Item>
                         <Item
-                            original={`/image/activity/${img[2]}`}
-                            thumbnail={`/image/activity/${img[2]}`}
+                            original={`/image/activity/${activities?.[0]?.id}/${img[2]}`}
+                            thumbnail={`/image/activity/${activities?.[0]?.id}/${img[2]}`}
                             width="1024"
                             height="768">
                             {({ ref, open }) => (
@@ -156,7 +156,7 @@ export default function Home() {
                                     className=""
                                     ref={ref}
                                     onClick={open}
-                                    src={`/image/activity/${img[2]}`}
+                                    src={`/image/activity/${activities?.[0]?.id}/${img[2]}`}
                                 />
                             )}
                         </Item>
@@ -164,8 +164,8 @@ export default function Home() {
                     <div
                         className={`d-flex flex-column justify-content-between gap-2`}>
                         <Item
-                            original={`/image/activity/${img[3]}`}
-                            thumbnail={`/image/activity/${img[3]}`}
+                            original={`/image/activity/${activities?.[0]?.id}/${img[3]}`}
+                            thumbnail={`/image/activity/${activities?.[0]?.id}/${img[3]}`}
                             width="1024"
                             height="768">
                             {({ ref, open }) => (
@@ -175,13 +175,13 @@ export default function Home() {
                                     className=""
                                     ref={ref}
                                     onClick={open}
-                                    src={`/image/activity/${img[3]}`}
+                                    src={`/image/activity/${activities?.[0]?.id}/${img[3]}`}
                                 />
                             )}
                         </Item>
                         <Item
-                            original={`/image/activity/${img[4]}`}
-                            thumbnail={`/image/activity/${img[4]}`}
+                            original={`/image/activity/${activities?.[0]?.id}/${img[4]}`}
+                            thumbnail={`/image/activity/${activities?.[0]?.id}/${img[4]}`}
                             width="1024"
                             height="768">
                             {({ ref, open }) => (
@@ -191,7 +191,7 @@ export default function Home() {
                                     className=""
                                     ref={ref}
                                     onClick={open}
-                                    src={`/image/activity/${img[4]}`}
+                                    src={`/image/activity/${activities?.[0]?.id}/${img[4]}`}
                                 />
                             )}
                         </Item>
