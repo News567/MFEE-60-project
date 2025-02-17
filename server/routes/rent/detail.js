@@ -26,16 +26,16 @@ router.get("/:id", async (req, res) => {
         ri.id, ri.name, ri.price, ri.price2, ri.description, ri.description2,
         ri.stock, ri.created_at, ri.update_at, ri.deposit, ri.is_like,
         rcs.name AS category_small, rcb.name AS category_big,
-        b.id AS brand_id,  -- 取得品牌 ID
-        b.name AS brand_name,  -- 取得品牌名稱
-        GROUP_CONCAT(DISTINCT c.name ORDER BY c.id ASC) AS color_name,  -- 顏色名稱
-        GROUP_CONCAT(DISTINCT c.rgb ORDER BY c.id ASC) AS color_rgb  -- 顏色 RGB 值
+        rb.id AS brand_id,  -- 取得品牌 ID
+        rb.name AS brand_name,  -- 取得品牌名稱
+        GROUP_CONCAT(DISTINCT rc.name ORDER BY rc.id ASC) AS color_name,  -- 顏色名稱
+        GROUP_CONCAT(DISTINCT rc.rgb ORDER BY rc.id ASC) AS color_rgb  -- 顏色 RGB 值
       FROM rent_item ri
       JOIN rent_category_small rcs ON ri.rent_category_small_id = rcs.id
       JOIN rent_category_big rcb ON rcs.rent_category_big_id = rcb.id
       LEFT JOIN rent_specification rs ON ri.id = rs.rent_item_id AND rs.is_deleted = FALSE
-      LEFT JOIN brand b ON rs.brand_id = b.id  -- 連接 brand 表
-      LEFT JOIN color c ON rs.color_id = c.id  -- 連接 color 表
+      LEFT JOIN rent_brand rb ON rs.brand_id = rb.id  -- 連接 rent_brand 表
+      LEFT JOIN rent_color rc ON rs.color_id = rc.id  -- 連接 rent_color 表
       WHERE ri.id = ? AND ri.is_deleted = FALSE
       GROUP BY ri.id  -- 只按商品 ID 分組
     `,
@@ -71,15 +71,15 @@ router.get("/:id", async (req, res) => {
       `
     SELECT 
         rs.id, 
-        c.name AS color, 
-        c.rgb AS color_rgb, 
-        t.name AS thickness,
-        b.id AS brand_id,  -- 品牌 ID
-        b.name AS brand_name  -- 品牌名稱
+        rc.name AS color, 
+        rc.rgb AS color_rgb, 
+        rt.name AS thickness,
+        rb.id AS brand_id,  -- 品牌 ID
+        rb.name AS brand_name  -- 品牌名稱
       FROM rent_specification rs
-      LEFT JOIN color c ON rs.color_id = c.id
-      LEFT JOIN thickness t ON rs.thickness_id = t.id
-      LEFT JOIN brand b ON rs.brand_id = b.id
+      LEFT JOIN rent_color rc ON rs.color_id = rc.id
+      LEFT JOIN rent_thickness rt ON rs.thickness_id = rt.id
+      LEFT JOIN rent_brand rb ON rs.brand_id = rb.id
       WHERE rs.rent_item_id = ? AND rs.is_deleted = FALSE
       `,
       [id]

@@ -168,29 +168,54 @@
 .main-details .details-titles .product-name-fav .heart-icon-fill {
   font-size: 24;
   transition: opacity 0.3s ease, color 0.3s ease;
-}
-
-.main-details .details-titles .product-name-fav .heart-icon {
-  color: var(--black);
-  opacity: 1; /* 默認顯示空心為收藏 */
-}
-.main-details .details-titles .product-name-fav .heart-icon-fill {
+  /* 使兩個圖標重疊 */
   position: absolute;
   top: 0;
   right: 0;
+  z-index: 1;
+}
+
+/* 默認顯示 */
+.main-details .details-titles .product-name-fav .heart-icon {
+  color: var(--black);
+  opacity: 1; /* 顯示空心愛心 */
+  transform: scale(1); /* 確保顯示為正常大小 */
+}
+.main-details .details-titles .product-name-fav .heart-icon-fill {
   color: var(--primary-color);
   opacity: 0;
-  transform: scale(0); /* 初始縮小 */
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: scale(0); /* 初始為縮小 */
+  z-index: 0; /* 確保隱藏的圖標不會覆蓋空心愛心 */
 }
-/* 懸停時切換圖標 */
+
+/* hover的時候的效果 */
 .main-details .details-titles .product-name-fav:hover .heart-icon {
   opacity: 0; /* 隱藏空心愛心 */
 }
 
 .main-details .details-titles .product-name-fav:hover .heart-icon-fill {
   opacity: 1; /* 顯示填充愛心 */
-  transform: scale(1); /* 懸停時恢復原始大小 */
+  transform: scale(1); /* 放大並恢復大小 */
+}
+
+/* 點擊後固定顯示填充愛心，並保持大小 */
+.main-details .details-titles .product-name-fav:active .heart-icon {
+  opacity: 0; /* 隱藏空心愛心 */
+}
+
+.main-details .details-titles .product-name-fav:active .heart-icon-fill {
+  opacity: 1; /* 顯示填充愛心 */
+  transform: scale(1); /* 保持填充愛心的大小 */
+}
+
+/* 點擊後不再觸發 hover 效果 */
+.main-details .details-titles .product-name-fav:active:hover .heart-icon-fill {
+  opacity: 1;
+  transform: scale(1); /* 確保點擊後仍保持填充愛心狀態 */
+}
+
+.main-details .details-titles .product-name-fav:active:hover .heart-icon {
+  opacity: 0; /* 確保空心愛心隱藏 */
 }
 
 .main-details .details-titles .product-name {
@@ -214,13 +239,13 @@
 }
 
 /* 劃掉樣式 */
-.product-price.strikethrough {
+.main-details .subdetails-titles .product-price.strikethrough {
   color: var(--gray-600-color);
   text-decoration: line-through;
 }
 
 /* 特價樣式 */
-.product-price2 {
+.main-details .subdetails-titles .product-price2 {
   font-size: 24px;
   font-weight: 700;
 }

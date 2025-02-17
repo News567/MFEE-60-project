@@ -22,6 +22,7 @@ export default function RentProductDetail() {
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0); // 當前顯示的圖片索引
+  const [isFavorite, setIsFavorite] = useState(false); // 愛心收藏功能
   const [selectedDates, setSelectedDates] = useState([]); // 讓我知道會員選擇了多少天數（動態計算價格用
 
   const [quantity, setQuantity] = useState(1);
@@ -72,7 +73,10 @@ export default function RentProductDetail() {
 
     // 如果產品沒有特價，隱藏特價欄位並恢復原價樣式
     if (!product?.price2) {
-      if (price2) price2.classList.add("hidden"); // 隱藏特價欄位
+      if (price2) {
+        price2.classList.add("hidden");
+        // price2.style.margin = "0";
+      } // 隱藏特價欄位
       if (price) {
         price.classList.remove("strikethrough"); // 移除劃線樣式
       }
@@ -80,7 +84,7 @@ export default function RentProductDetail() {
       // 如果產品有特價，改變原價樣式
       if (price) {
         price.classList.add("strikethrough"); // 添加劃線樣式
-        price.style.margin = "0";
+        price2.style.margin = "0";
       }
     }
   }, [product]); // 當 product 更新時執行
@@ -248,6 +252,11 @@ export default function RentProductDetail() {
   const showPrevButton = currentImageIndex > 0;
   const showNextButton = currentImageIndex + 3 < product.images.length;
 
+  // 判斷收藏的愛心狀態
+  const handleClick = () => {
+    setIsFavorite(!isFavorite);
+  };
+
   return (
     <div className="container py-4 mx-auto">
       <Head>
@@ -388,8 +397,10 @@ export default function RentProductDetail() {
                 </p>
                 <div className="product-name-fav d-flex flex-row justify-content-between align-items-center">
                   <p className="product-name">{product.name}</p>
-                  <i className="bi bi-heart heart-icon"></i>
-                  <i className="bi bi-heart-fill heart-icon-fill"></i>
+                  <div className="product-name-fav" onClick={handleClick}>
+                    <i className={`bi bi-heart heart-icon ${isFavorite ? 'd-none' : ''}`}></i>
+                    <i className={`bi bi-heart-fill heart-icon-fill ${isFavorite ? '' : 'd-none'}`}></i>
+                  </div>
                 </div>
                 <div className="stars d-flex flex-row">
                   {[...Array(5)].map((_, index) => (
@@ -403,10 +414,10 @@ export default function RentProductDetail() {
                 </div>
               </div>
               <div className="subdetails-titles d-flex flex-column">
-                <p className="product-price">NT${product.price}/日</p>
                 {product.price2 && (
                   <p className="product-price2">NT${product.price2}/日</p>
                 )}
+                <p className="product-price">NT${product.price}/日</p>
                 <p className="product-description">{product.description}</p>
               </div>
               <div className="details-select d-flex flex-column">
