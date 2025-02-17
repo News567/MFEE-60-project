@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"; // useState 儲存從後端獲取的資料，並使用 useEffect 在組件加載時發送請求
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+// import Link from "next/link";
 import "./RentList.css";
 import "../../../public/globals.css";
 
@@ -14,6 +16,8 @@ export default function RentList() {
   const [sort, setSort] = useState(""); // 當前排序方式
   const [selectedSort, setSelectedSort] = useState("下拉選取排序條件"); // 當前選擇的排序條件
   const [showClearSort, setShowClearSort] = useState(false); // 是否顯示清除排序的「×」符號
+
+  const router = useRouter();
 
   // // 從後端獲取商品資料
   // useEffect(() => {
@@ -63,6 +67,11 @@ export default function RentList() {
   useEffect(() => {
     fetchProducts(currentPage, sort); // 根據當前頁數和排序方式加載資料
   }, [currentPage, sort]); // 當 currentPage 或 sort 變化時重新加載資料
+
+  // 處理商品卡片點擊事件
+  const handleProductClick = (productId) => {
+    router.push(`/rent/${productId}`); // 使用 router.push 跳轉到商品詳細頁面
+  };
 
   // 處理排序
   const handleSort = (sortType) => {
@@ -513,7 +522,7 @@ export default function RentList() {
                       }}
                       style={{ cursor: "pointer" }} // 設置滑鼠指針樣式
                     >
-                      <i class="bi bi-x"></i>
+                      <i className="bi bi-x"></i>
                     </span>
                   )}
                 </div>
@@ -562,7 +571,8 @@ export default function RentList() {
                 ) : (
                   Array.isArray(products) &&
                   products.map((product) => (
-                    <div className="col" key={product.id}>
+                    <div className="col" key={product.id} onClick={() => handleProductClick(product.id)} style={{ cursor: "pointer" }}>
+                      {/* <Link href={`/rent/${product.id}`} passHref> */}
                       <div className="card border-0 h-100 ">
                         <div className="d-flex justify-content-center align-items-center img-container">
                           <Image
@@ -626,6 +636,7 @@ export default function RentList() {
                           </div>
                         </div>
                       </div>
+                      {/* </Link> */}
                     </div>
                   ))
                 )}
