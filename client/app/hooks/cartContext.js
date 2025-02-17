@@ -12,8 +12,23 @@ export const CartProvider = ({ children }) => {
 
   // 加入商品到購物車
   const addToCart = (product) => {
-    setCart((prevCart) => [...prevCart, product]);
+    setCart((prevCart) => {
+      const existingItemIndex = prevCart.findIndex(
+        (item) => item.variant_id === product.variant_id
+      );
+  
+      if (existingItemIndex !== -1) {
+        // 如果已存在，更新數量
+        const updatedCart = [...prevCart];
+        updatedCart[existingItemIndex].quantity += product.quantity;
+        return updatedCart;
+      } else {
+        // 否則新增
+        return [...prevCart, product];
+      }
+    });
   };
+  
 
   // 移除商品
   const removeFromCart = (productId) => {
