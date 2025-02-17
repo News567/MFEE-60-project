@@ -30,7 +30,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("description");
-  const { addToCart } = useCart();
+  const { addToCart, fetchCart } = useCart();
   const {
     isFavorite,
     toggleFavorite,
@@ -38,7 +38,6 @@ export default function ProductDetail() {
   } = useFavorite(params.id);
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [currentStock, setCurrentStock] = useState(0);
-  const [currentImages, setCurrentImages] = useState([]);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [currentOriginalPrice, setCurrentOriginalPrice] = useState(0);
   const [allImages, setAllImages] = useState([]);
@@ -93,7 +92,7 @@ export default function ProductDetail() {
     }
 
     try {
-      // 1. 先呼叫後端 API
+      // 1️⃣ 發送購物車請求
       const cartData = {
         userId: 1,
         productId: product.id,
@@ -108,19 +107,8 @@ export default function ProductDetail() {
       const response = await axios.post(`${API_BASE_URL}/cart/add`, cartData);
 
       if (response.data.success) {
-        // 2. 如果後端成功，再更新前端的購物車狀態
-        const cartItem = {
-          id: product.id,
-          variant_id: currentVariant.id,
-          name: product.name,
-          price: product.price,
-          color: selectedColor.name,
-          size: selectedSize,
-          quantity: quantity,
-          image: product.images[0],
-        };
-
-        addToCart(cartItem); // 使用 context 的 addToCart
+        //讓購物車重新從後端獲取最新數據，而不是自己組裝 cartItem
+        fetchCart(1);
         alert("成功加入購物車！");
       } else {
         alert(response.data.message || "加入購物車失敗");

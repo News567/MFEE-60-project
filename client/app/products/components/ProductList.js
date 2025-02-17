@@ -280,17 +280,20 @@ export default function ProductList() {
   // 修改 applyFilters 函数
   const applyFilters = async () => {
     if (loading) return;
-    setPage(1);
-    setShowFilters(true); // 应用筛选时显示标签
+    setShowFilters(true);
 
+    // 構建查詢參數
     const params = new URLSearchParams();
     params.set("page", "1");
     params.set("limit", limit.toString());
+    params.set("sort", selectedSort.value.toString());
 
+    // 添加顏色篩選
     if (tempFilters.colors.length > 0) {
       params.set("color_id", tempFilters.colors.join(","));
     }
 
+    // 添加價格篩選
     if (tempFilters.price.min) {
       params.set("min_price", tempFilters.price.min);
     }
@@ -298,80 +301,39 @@ export default function ProductList() {
       params.set("max_price", tempFilters.price.max);
     }
 
+    // 保留分類/品牌相關參數
+    if (currentQuery.type === "category") {
+      params.set("category_id", currentQuery.id);
+    } else if (currentQuery.type === "bigCategory") {
+      params.set("big_category_id", currentQuery.id);
+    } else if (currentQuery.type === "brand") {
+      params.set("brand_id", currentQuery.id);
+    }
+
     router.replace(`/products?${params.toString()}`);
-    await debouncedFetchProducts(1, limit, selectedSort.value);
+    await fetchProducts({
+      page: 1,
+      colors: tempFilters.colors,
+      min_price: tempFilters.price.min,
+      max_price: tempFilters.price.max,
+    });
   };
 
   // 獲取產品資料
   // FIXME - 有依賴問題
   useEffect(() => {
-    debouncedFetchProducts(page, limit, selectedSort.value);
-  }, [page, limit, selectedSort.value]);
-
-  const [productsCache, setProductsCache] = useState({});
-
-  // 修改统一的数据获取函数
-  const fetchProducts = async (params = {}) => {
-    try {
-      setLoading(true);
-      let url = `${API_BASE_URL}/products`; // 基础 URL
-
-      // 合并默认参数
-      const queryParams = {
-        page: params.page || page,
-        limit: params.limit || limit,
-        sort: params.sort || selectedSort.value,
-      };
-
-      // 添加颜色筛选
-      if (tempFilters.colors.length > 0) {
-        queryParams.color_id = tempFilters.colors.join(",");
-      }
-
-      // 添加价格筛选
-      if (tempFilters.price.min) {
-        queryParams.min_price = tempFilters.price.min;
-      }
-      if (tempFilters.price.max) {
-        queryParams.max_price = tempFilters.price.max;
-      }
-
-      // 根据查询类型构建正确的 API 路径
-      if (currentQuery.type === "category") {
-        url = `${API_BASE_URL}/products/category/${currentQuery.id}`;
-      } else if (currentQuery.type === "bigCategory") {
-        url = `${API_BASE_URL}/products/category/big/${currentQuery.id}`;
-      } else if (currentQuery.type === "brand") {
-        url = `${API_BASE_URL}/products/brand/${currentQuery.id}`;
-      }
-
-      console.log("Fetching URL:", url, "with params:", queryParams); // 调试用
-
-      const response = await axios.get(url, { params: queryParams });
-
-      if (response.data.status === "success") {
-        setProducts(response.data.data);
-        setTotalPages(response.data.pagination.totalPages);
-        if (params.page) setPage(params.page);
-        if (params.limit) setLimit(params.limit);
-      }
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setError("获取产品数据时发生错误");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 监听 URL 参数变化
-  useEffect(() => {
+    // 從 URL 獲取所有篩選參數
     const categoryId = searchParams.get("category_id");
     const bigCategoryId = searchParams.get("big_category_id");
     const brandName = searchParams.get("brand_name");
     const pageParam = parseInt(searchParams.get("page")) || 1;
     const limitParam = parseInt(searchParams.get("limit")) || 24;
+    const colorIds = searchParams.get("color_id")?.split(",").map(Number) || [];
+    const minPrice = searchParams.get("min_price");
+    const maxPrice = searchParams.get("max_price");
+    const sortParam = parseInt(searchParams.get("sort")) || 1;
 
-    // 更新查询状态
+    // 更新查詢狀態
     if (categoryId) {
       setCurrentQuery({ type: "category", id: categoryId, name: null });
     } else if (bigCategoryId) {
@@ -380,14 +342,93 @@ export default function ProductList() {
       setCurrentQuery({ type: "brand", id: null, name: brandName });
     }
 
-    // 获取数据
-    fetchProducts({ page: pageParam, limit: limitParam });
-  }, [searchParams]); // 依赖于 URL 参数变化
+    // 更新篩選狀態
+    setTempFilters((prev) => ({
+      ...prev,
+      colors: colorIds,
+      price: {
+        min: minPrice || "",
+        max: maxPrice || "",
+      },
+    }));
+
+    // 如果有任何篩選條件，顯示篩選標籤
+    if (colorIds.length > 0 || minPrice || maxPrice) {
+      setShowFilters(true);
+    }
+
+    // 獲取數據
+    fetchProducts({
+      page: pageParam,
+      limit: limitParam,
+      colors: colorIds,
+      min_price: minPrice,
+      max_price: maxPrice,
+      sort: sortParam,
+    });
+  }, [searchParams]); // 只依賴 searchParams
+
+  const [productsCache, setProductsCache] = useState({});
+
+  // 修改统一的数据获取函数
+  const fetchProducts = async (params = {}) => {
+    try {
+      setLoading(true);
+      let url = `${API_BASE_URL}/products`;
+
+      // 構建查詢參數
+      const queryParams = {
+        page: params.page || page,
+        limit: params.limit || limit,
+        sort: params.sort || selectedSort.value,
+      };
+
+      // 添加顏色篩選
+      if (params.colors?.length > 0) {
+        queryParams.color_id = params.colors.join(",");
+      }
+
+      // 添加價格篩選
+      if (params.min_price) {
+        queryParams.min_price = params.min_price;
+      }
+      if (params.max_price) {
+        queryParams.max_price = params.max_price;
+      }
+
+      // 根據當前查詢類型選擇正確的 API 端點
+      if (currentQuery.type === "category") {
+        url = `${API_BASE_URL}/products/category/${currentQuery.id}`;
+      } else if (currentQuery.type === "bigCategory") {
+        url = `${API_BASE_URL}/products/category/big/${currentQuery.id}`;
+      } else if (currentQuery.type === "brand") {
+        url = `${API_BASE_URL}/products/brand/${currentQuery.id}`;
+      }
+
+      const response = await axios.get(url, { params: queryParams });
+
+      if (response.data.status === "success") {
+        setProducts(response.data.data);
+        setTotalPages(response.data.pagination.totalPages);
+        if (params.page) setPage(params.page);
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setError("獲取產品數據時發生錯誤");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 修改每頁顯示按鈕
   const handleDisplayChange = async (newLimit, displayText) => {
     setSelectedDisplay(displayText);
-    updateURL(1, newLimit);
+
+    const params = new URLSearchParams(window.location.search);
+    params.set("limit", newLimit.toString());
+    params.set("page", "1");
+
+    router.replace(`/products?${params.toString()}`);
   };
 
   // 處理排序
@@ -395,61 +436,10 @@ export default function ProductList() {
     setSelectedSort({ text, value });
     setShowDropdown(false);
 
-    try {
-      setLoading(true);
-      let response;
+    const params = new URLSearchParams(window.location.search);
+    params.set("sort", value.toString());
 
-      // 构建查询参数
-      const params = {
-        page,
-        limit,
-        sort: value,
-        color_id: tempFilters.colors.join(","),
-      };
-
-      // 添加价格筛选参数
-      if (tempFilters.price.min) {
-        params.min_price = tempFilters.price.min;
-      }
-      if (tempFilters.price.max) {
-        params.max_price = tempFilters.price.max;
-      }
-
-      // 根据当前查询状态决定 API
-      switch (currentQuery.type) {
-        case "category":
-          response = await axios.get(
-            `${API_BASE_URL}/products/category/${currentQuery.id}`,
-            { params }
-          );
-          break;
-        case "bigCategory":
-          response = await axios.get(
-            `${API_BASE_URL}/products/category/big/${currentQuery.id}`,
-            { params }
-          );
-          break;
-        case "brand":
-          response = await axios.get(
-            `${API_BASE_URL}/products/brand/${currentQuery.id}`,
-            { params }
-          );
-          break;
-        default:
-          response = await axios.get(`${API_BASE_URL}/products`, { params });
-      }
-
-      if (response.data.status === "success") {
-        setProducts(response.data.data);
-        setTotalPages(response.data.pagination.totalPages);
-        updateURL(page, limit);
-      }
-    } catch (error) {
-      console.error("Error sorting products:", error);
-      setError("排序時發生錯誤");
-    } finally {
-      setLoading(false);
-    }
+    router.replace(`/products?${params.toString()}`);
   };
 
   // 添加标题状态
@@ -530,8 +520,6 @@ export default function ProductList() {
   }, []);
 
   // 使用 debounce 包裝 fetchProducts
-  const debouncedFetchProducts = debounce(fetchProducts, 300);
-
   const fetchWithRetry = async (fn, retries = 3) => {
     try {
       return await fn();
@@ -546,24 +534,19 @@ export default function ProductList() {
 
   // 修改清除所有筛选函数
   const clearAllFilters = async () => {
-    setShowFilters(false); // 清除筛选时隐藏标签
+    // 重置所有篩選條件
     setTempFilters({
       colors: [],
-      price: {
-        min: "",
-        max: "",
-      },
+      price: { min: "", max: "" },
     });
+    setShowFilters(false);
 
-    // 重置页码
-    setPage(1);
-
-    // 构建基础 URL 参数
+    // 構建基礎 URL 參數，只保留必要的參數
     const params = new URLSearchParams();
     params.set("page", "1");
     params.set("limit", limit.toString());
 
-    // 根据当前查询类型保留必要的参数
+    // 保留分類/品牌相關參數
     if (currentQuery.type === "category") {
       params.set("category_id", currentQuery.id);
     } else if (currentQuery.type === "bigCategory") {
@@ -572,43 +555,12 @@ export default function ProductList() {
       params.set("brand_id", currentQuery.id);
     }
 
-    // 更新 URL，但保持在当前分类/品牌下
+    // 更新 URL 並重新獲取數據
     router.replace(`/products?${params.toString()}`);
-
-    try {
-      setLoading(true);
-      // 构建查询参数
-      const queryParams = {
-        page: 1,
-        limit,
-        sort: selectedSort.value,
-      };
-
-      // 根据当前查询状态决定 API 路径
-      let url = `${API_BASE_URL}/products`;
-      if (currentQuery.type === "category") {
-        url = `${API_BASE_URL}/products/category/${currentQuery.id}`;
-      } else if (currentQuery.type === "bigCategory") {
-        url = `${API_BASE_URL}/products/category/big/${currentQuery.id}`;
-      } else if (currentQuery.type === "brand") {
-        url = `${API_BASE_URL}/products/brand/${currentQuery.id}`;
-      }
-
-      const response = await axios.get(url, { params: queryParams });
-
-      if (response.data.status === "success") {
-        setProducts(response.data.data);
-        setTotalPages(response.data.pagination.totalPages);
-      }
-    } catch (error) {
-      console.error("Error clearing filters:", error);
-      setError("清除筛选时发生错误");
-    } finally {
-      setLoading(false);
-    }
+    await fetchProducts({ page: 1 });
   };
 
-  // 修改单个颜色移除函数
+  // 修改單個顏色移除函數
   const removeColorFilter = async (colorId) => {
     const newColors = tempFilters.colors.filter((id) => id !== colorId);
 
@@ -617,7 +569,6 @@ export default function ProductList() {
       colors: newColors,
     }));
 
-    // 如果没有任何筛选条件，隐藏标签区域
     if (
       newColors.length === 0 &&
       !tempFilters.price.min &&
@@ -626,42 +577,64 @@ export default function ProductList() {
       setShowFilters(false);
     }
 
-    // 自动应用筛选
     const params = new URLSearchParams(window.location.search);
     params.set("page", "1");
+
     if (newColors.length > 0) {
       params.set("color_id", newColors.join(","));
     } else {
       params.delete("color_id");
     }
 
+    // 保留其他篩選參數
+    if (tempFilters.price.min) params.set("min_price", tempFilters.price.min);
+    if (tempFilters.price.max) params.set("max_price", tempFilters.price.max);
+    if (currentQuery.type === "category")
+      params.set("category_id", currentQuery.id);
+    if (currentQuery.type === "bigCategory")
+      params.set("big_category_id", currentQuery.id);
+    if (currentQuery.type === "brand") params.set("brand_id", currentQuery.id);
+
     router.replace(`/products?${params.toString()}`);
-    await debouncedFetchProducts(1, limit, selectedSort.value);
+    await fetchProducts({
+      page: 1,
+      colors: newColors,
+      min_price: tempFilters.price.min,
+      max_price: tempFilters.price.max,
+    });
   };
 
-  // 修改价格筛选清除函数
+  // 修改價格篩選清除函數
   const clearPriceFilter = async () => {
     setTempFilters((prev) => ({
       ...prev,
-      price: {
-        min: "",
-        max: "",
-      },
+      price: { min: "", max: "" },
     }));
 
-    // 如果没有任何筛选条件，隐藏标签区域
     if (tempFilters.colors.length === 0) {
       setShowFilters(false);
     }
 
-    // 自动应用筛选
     const params = new URLSearchParams(window.location.search);
     params.set("page", "1");
     params.delete("min_price");
     params.delete("max_price");
 
+    // 保留其他篩選參數
+    if (tempFilters.colors.length > 0) {
+      params.set("color_id", tempFilters.colors.join(","));
+    }
+    if (currentQuery.type === "category")
+      params.set("category_id", currentQuery.id);
+    if (currentQuery.type === "bigCategory")
+      params.set("big_category_id", currentQuery.id);
+    if (currentQuery.type === "brand") params.set("brand_id", currentQuery.id);
+
     router.replace(`/products?${params.toString()}`);
-    await debouncedFetchProducts(1, limit, selectedSort.value);
+    await fetchProducts({
+      page: 1,
+      colors: tempFilters.colors,
+    });
   };
 
   // 辅助函数：判断颜色是否为浅色

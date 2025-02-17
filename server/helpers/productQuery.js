@@ -114,6 +114,5 @@ export function buildProductQuery({
     LIMIT ${limit} OFFSET ${offset};
   `;
 
-
   return { sql, queryParams, whereClause };
 }

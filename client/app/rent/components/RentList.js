@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react"; // useState 儲存從後端獲取的資料，並使用 useEffect 在組件加載時發送請求
+import { useCallback, useEffect, useState } from "react"; // useState 儲存從後端獲取的資料，並使用 useEffect 在組件加載時發送請求
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+// import Link from "next/link";
 import "./RentList.css";
 import "../../../public/globals.css";
 
@@ -14,6 +16,9 @@ export default function RentList() {
   const [sort, setSort] = useState(""); // 當前排序方式
   const [selectedSort, setSelectedSort] = useState("下拉選取排序條件"); // 當前選擇的排序條件
   const [showClearSort, setShowClearSort] = useState(false); // 是否顯示清除排序的「×」符號
+  const [itemsPerPage, setItemsPerPage] = useState(16); // 預設每頁顯示16個
+
+  const router = useRouter();
 
   // // 從後端獲取商品資料
   // useEffect(() => {
@@ -33,36 +38,53 @@ export default function RentList() {
   //   fetchProducts();
   // }, []);
   // 從後端獲取商品資料
-  const fetchProducts = async (page = 1, sort = "") => {
-    try {
-      const response = await fetch(
-        `http://localhost:3005/api/rent?page=${page}&limit=16&sort=${sort}`
-      );
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
+  const fetchProducts = useCallback(
+    async (page = 1, sort = "", limit = itemsPerPage) => {
+      try {
+        // 連到後端 API
+        const API_BASE_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
 
-      const result = await response.json(); // 先將結果存到變數中
-      console.log("API 返回的完整資料:", result); // 檢查 API 返回的完整資料
+        const response = await fetch(
+          `${API_BASE_URL}/api/rent?page=${page}&limit=${limit}&sort=${sort}`
+        );
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
 
-      if (result && result.data) {
-        setProducts(result.data); // 更新商品資料
-        setCurrentPage(result.page); // 更新當前頁數
-        setTotalPages(result.totalPages); // 更新總頁數
-        setTotalProducts(result.total); // 更新總商品數量
-      } else {
-        console.error("API 返回的資料格式不正確:", result);
+        const result = await response.json(); // 先將結果存到變數中
+        console.log("API 返回的完整資料:", result); // 檢查 API 返回的完整資料
+
+        if (result && result.data) {
+          setProducts(result.data); // 更新商品資料
+          setCurrentPage(result.page); // 更新當前頁數
+          setTotalPages(result.totalPages); // 更新總頁數
+          setTotalProducts(result.total); // 更新總商品數量
+        } else {
+          console.error("API 返回的資料格式不正確:", result);
+        }
+      } catch (error) {
+        console.error("租借商品資料獲取失敗:", error);
+      } finally {
+        setLoading(false); // 結束加載狀態
       }
-    } catch (error) {
-      console.error("租借商品資料獲取失敗:", error);
-    } finally {
-      setLoading(false); // 結束加載狀態
-    }
-  };
+    },
+    [itemsPerPage] // 如果 itemsPerPage 改變，fetchProducts 函數才會重新創建
+  );
 
   useEffect(() => {
-    fetchProducts(currentPage, sort); // 根據當前頁數和排序方式加載資料
-  }, [currentPage, sort]); // 當 currentPage 或 sort 變化時重新加載資料
+    fetchProducts(currentPage, sort, itemsPerPage); // 根據當前頁數、排序方式和每頁顯示數量加載資料
+  }, [currentPage, sort, itemsPerPage]); // 當 currentPage、sort 或 itemsPerPage 變化時重新加載資料
+
+  const handleItemsPerPageChange = (limit) => {
+    setItemsPerPage(limit); // 更新每頁顯示數量
+    setCurrentPage(1); // 重置為第一頁
+  };
+
+  // 處理商品卡片點擊事件
+  const handleProductClick = (productId) => {
+    router.push(`/rent/${productId}`); // 使用 router.push 跳轉到商品詳細頁面
+  };
 
   // 處理排序
   const handleSort = (sortType) => {
@@ -513,7 +535,7 @@ export default function RentList() {
                       }}
                       style={{ cursor: "pointer" }} // 設置滑鼠指針樣式
                     >
-                      <i class="bi bi-x"></i>
+                      <i className="bi bi-x"></i>
                     </span>
                   )}
                 </div>
@@ -527,7 +549,7 @@ export default function RentList() {
                   >
                     <span className="showPerPageText pe-2">
                       <i className="bi bi-view-list pe-2"></i>
-                      每頁顯示16個
+                      每頁顯示{itemsPerPage}個
                       <i className="bi bi-caret-down-fill ps-2"></i>
                     </span>
                   </button>
@@ -536,17 +558,38 @@ export default function RentList() {
                     aria-labelledby="showPerPageBtn"
                   >
                     <li>
-                      <a className="dropdown-item" href="#">
+                      <a
+                        className="dropdown-item"
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleItemsPerPageChange(16);
+                        }}
+                      >
                         每頁顯示16個
                       </a>
                     </li>
                     <li>
-                      <a className="dropdown-item" href="#">
+                      <a
+                        className="dropdown-item"
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleItemsPerPageChange(24);
+                        }}
+                      >
                         每頁顯示24個
                       </a>
                     </li>
                     <li>
-                      <a className="dropdown-item" href="#">
+                      <a
+                        className="dropdown-item"
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleItemsPerPageChange(32);
+                        }}
+                      >
                         每頁顯示32個
                       </a>
                     </li>
@@ -562,7 +605,13 @@ export default function RentList() {
                 ) : (
                   Array.isArray(products) &&
                   products.map((product) => (
-                    <div className="col" key={product.id}>
+                    <div
+                      className="col"
+                      key={product.id}
+                      onClick={() => handleProductClick(product.id)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {/* <Link href={`/rent/${product.id}`} passHref> */}
                       <div className="card border-0 h-100 ">
                         <div className="d-flex justify-content-center align-items-center img-container">
                           <Image
@@ -626,6 +675,7 @@ export default function RentList() {
                           </div>
                         </div>
                       </div>
+                      {/* </Link> */}
                     </div>
                   ))
                 )}
@@ -634,8 +684,8 @@ export default function RentList() {
               {/* Main Page */}
               <div className="py-3 d-flex flex-column flex-md-row justify-content-between align-items-center main-page">
                 <div className="px-3 show-page text-center text-md-start">
-                  顯示 第 {(currentPage - 1) * 16 + 1}-
-                  {Math.min(currentPage * 16, totalProducts)} 件 / 共{" "}
+                  顯示 第 {(currentPage - 1) * itemsPerPage + 1}-
+                  {Math.min(currentPage * itemsPerPage, totalProducts)} 件 / 共{" "}
                   {totalProducts} 件 商品
                 </div>
                 <nav aria-label="Page navigation">

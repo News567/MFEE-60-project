@@ -71,7 +71,7 @@ router.get("/:id", async (req, res) => {
     product.variants = variants;
 
     const imagesSql = `
-    SELECT pi.image_url, pi.varient_id
+    SELECT pi.image_url, pi.variant_id
     FROM product_images pi
     WHERE pi.product_id = ?
     ORDER BY pi.is_main DESC, pi.sort_order ASC
@@ -81,10 +81,10 @@ router.get("/:id", async (req, res) => {
     // 建立一個變體對應的圖片 Map
     const variantImageMap = new Map();
     images.forEach((img) => {
-      if (!variantImageMap.has(img.varient_id)) {
-        variantImageMap.set(img.varient_id, []);
+      if (!variantImageMap.has(img.variant_id)) {
+        variantImageMap.set(img.variant_id, []);
       }
-      variantImageMap.get(img.varient_id).push(img.image_url);
+      variantImageMap.get(img.variant_id).push(img.image_url);
     });
 
     // 把圖片加入對應變體

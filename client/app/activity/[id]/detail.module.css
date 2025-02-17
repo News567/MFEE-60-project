@@ -194,7 +194,15 @@ body{
             }
         }
     }
-    .recommendCard {
+    .recommendCardA{
+        text-decoration: none;
+        color: #000;
+        &:hover{
+            .recommendCardText {
+                color: var(--primary-color);
+            }
+        }
+        .recommendCard {
         width: 277px;
         display: flex;
         flex-direction: column;
@@ -251,6 +259,8 @@ body{
             text-decoration-line: line-through;
         }
     }
+    }
+    
     .circleButton {
         width: 40px;
         height: 40px;

@@ -41,19 +41,30 @@
 
 .main-details .main-image {
   width: 100%;
+  aspect-ratio: 1; /* 保持正方形比例（高與寬相等） */
+  overflow: hidden; /* 隱藏超出部分 */
+}
+.main-details .main-image Image {
+  width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
 .main-details .small-images {
-  height: 100%;
+  position: relative;
   display: flex;
-  padding: 0px 0px 30px 0px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
   cursor: pointer;
+  overflow: hidden;
 }
 .main-details .small-images > div {
-  flex: 1;
-  height: 100%;
-  /* overflow: hidden; */
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0; /* 防止圖片縮小 */
 }
 
 .main-details .small-images Image {
@@ -61,6 +72,54 @@
   max-width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 設置空白元素的樣式 */
+.empty-image {
+  background-color: transparent;
+  border: none;
+  flex-shrink: 0;
+}
+
+.main-details .small-images .btn-prev,
+.main-details .small-images .btn-next {
+  position: absolute; /* 絕對定位 */
+  top: 50%; /* 垂直居中 */
+  transform: translateY(-50%); /* 垂直居中 */
+  background-color: var(--primary-color);
+  color: var(--white);
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  opacity: 0; /* 預設隱藏 */
+  transition: opacity 0.3s ease; /* 淡入淡出效果 */
+  z-index: 1;
+}
+
+.main-details .small-images .btn-prev {
+  left: 10; /* 第一張圖片的左側 */
+}
+
+.main-details .small-images .btn-next {
+  right: 10; /* 第三張圖片的右側 */
+}
+
+/* 滑鼠 hover 時顯示按鈕 */
+.main-details .small-images:hover .btn-prev,
+.main-details .small-images:hover .btn-next {
+  opacity: 1; /* 顯示按鈕 */
+}
+
+.main-details .small-images .btn-prev i,
+.main-details .small-images .btn-next i {
+  font-size: 20px;
+  color: var(--white);
 }
 
 .main-details .rent-rules {
@@ -146,11 +205,22 @@
 }
 
 .main-details .subdetails-titles {
-  gap: 5px;
+  gap: -15px;
 }
 
-.main-details .subdetails-titles .product-price-perday {
-  margin: 0;
+.main-details .subdetails-titles .product-price {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* 劃掉樣式 */
+.product-price.strikethrough {
+  color: var(--gray-600-color);
+  text-decoration: line-through;
+}
+
+/* 特價樣式 */
+.product-price2 {
   font-size: 24px;
   font-weight: 700;
 }
@@ -175,6 +245,7 @@
   margin: 0;
   color: var(--gray-600-color);
   font-weight: 700;
+  margin-bottom: 10px;
 }
 
 .main-details .details-select .product-color .colors {
@@ -182,9 +253,17 @@
 }
 
 .main-details .details-select .product-color .colors .color-box {
-  width: 38px;
-  height: 38px;
+  width: 33px;
+  height: 33px;
   border-radius: 100px;
+  display: inline-block;
+  margin-right: 8px;
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.4));
+}
+
+.no-colors {
+  color: var(--gray-600-color);
+  font-style: italic;
 }
 
 .main-details .product-amount .amount-title {
@@ -227,6 +306,7 @@
   margin: 0;
   color: var(--gray-600-color);
   font-weight: 700;
+  margin-bottom: 10px;
 }
 
 .main-details .product-btns {

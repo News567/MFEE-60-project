@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import dynamic from "next/dynamic"; // 動態導入，動態加載 flatpickr，從而避免伺服器端渲染時的問題
-// import { useRouter } from "next/router";
+import { useParams } from "next/navigation"; // 獲取 url 當中的 id
 import Head from "next/head";
 import Image from "next/image";
 import flatpickr from "flatpickr";
@@ -14,55 +14,144 @@ import "../../../public/globals.css";
 const Flatpickr = dynamic(() => import("flatpickr"), { ssr: false });
 
 export default function RentProductDetail() {
-  // const router = useRouter();
-  // const { id } = router.query;
+  const { id } = useParams(); // 取得動態路由參數
   const [product, setProduct] = useState(null);
-  // 商品圖片 大圖切換
-  const [mainImage, setMainImage] = useState(product?.images?.[0] || "");
+  const [mainImage, setMainImage] = useState(""); // 商品大張圖片（要做大圖切換
+  const [loading, setLoading] = useState(true); // 加載狀態
+  const [error, setError] = useState(null); // 錯誤狀態
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0); // 當前顯示的圖片索引
+  const [selectedDates, setSelectedDates] = useState([]); // 讓我知道會員選擇了多少天數（動態計算價格用
 
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description"); // 商品描述區塊切換tab
 
-  // 模擬從 API 獲取商品資料
+  // 從後端獲取商品數據
   useEffect(() => {
-    // if (!router.isReady) return; // 如果 router 未準備好，直接返回
-    const mockProduct = {
-      id: 1,
-      mainImage: "/img/rent/fit/1733124689_8081.jpg",
-      images: [
-        "/img/rent/fit/1733124689_8081.jpg",
-        "/img/rent/fit/1733124703_2778.jpg",
-        "/img/rent/fit/1733124689_3585.jpg",
-        "/img/rent/fit/1733124689_2281.jpg",
-      ],
-      brand: "C4",
-      name: "PLASMA 低容積面鏡",
-      rating: 4,
-      price: 145,
-      description: "超耐磨鋼化玻璃，良好的視野和低內部容積...",
-      stock: 2,
-      colors: ["#4d4244", "#403f6f", "white", "pink"],
-      rules: [
-        "租借本人出示潛水證",
-        "租用需先付款，並提供個人證件一張",
-        "完成租借表單並完成簽名",
-        "如有遺失或損害，需修復原有狀況或是全新賠償",
-        "租借與歸還時間限每日上午8:00至 下午5:00，過時則以多借一天計算",
-        "以天計價，非24小時制度。例如: 12/18日下午2點租借，12/19下午2點歸還，則算兩天",
-      ],
-    };
-    setProduct(mockProduct);
-  }, []); //router.isReady, id
+    if (!id) return; // 如果 id 不存在，直接返回
 
-  // 初始化 Flatpickr
+    const fetchProduct = async () => {
+      try {
+        const API_BASE_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
+
+        const response = await fetch(`${API_BASE_URL}/api/rent/${id}`);
+        if (!response.ok) {
+          throw new Error("無法獲取商品數據");
+        }
+        const result = await response.json(); // 解析後端返回的 JSON
+        const data = result.data; // 提取 data 物件
+
+        console.log("後端返回的資料:", data); // 檢查資料結構
+        setProduct(data);
+
+        // 設置預設大圖
+        const images = data.images || [];
+        const mainImage =
+          (images && images.find((img) => img.is_main === 1)?.img_url) ||
+          (images && images[0]?.img_url) ||
+          "/rent/no-img.png"; // 如果沒有圖片，顯示"本商品暫時沒有圖片"的預設圖片
+        setMainImage(mainImage);
+
+        console.log("Product images:", images); // 調試訊息
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  // 新增邏輯：根據是否有特價動態調整價格樣式
+  useEffect(() => {
+    const price = document.querySelector(".product-price");
+    const price2 = document.querySelector(".product-price2");
+
+    // 如果產品沒有特價，隱藏特價欄位並恢復原價樣式
+    if (!product?.price2) {
+      if (price2) price2.classList.add("hidden"); // 隱藏特價欄位
+      if (price) {
+        price.classList.remove("strikethrough"); // 移除劃線樣式
+      }
+    } else {
+      // 如果產品有特價，改變原價樣式
+      if (price) {
+        price.classList.add("strikethrough"); // 添加劃線樣式
+        price.style.margin = "0";
+      }
+    }
+  }, [product]); // 當 product 更新時執行
+
   useEffect(() => {
     if (
       typeof window !== "undefined" &&
       document.querySelector("#fixed-calendar")
     ) {
-      flatpickr("#fixed-calendar", {
+      // 定義一個函式來計算並更新價格
+      const updatePriceDetails = (selectedDates, instance) => {
+        const dateRangeText = document.querySelector("#date-range-text");
+        const totalCostText = document.querySelector("#total-cost-text");
+        const priceDetailsText = document.querySelector("#price-details-text");
+        const startDate = selectedDates[0];
+        const endDate = selectedDates[1];
+
+        if (startDate && endDate) {
+          const formattedStartDate = instance.formatDate(
+            startDate,
+            "Y年m月d日"
+          );
+          const formattedEndDate = instance.formatDate(endDate, "Y年m月d日");
+
+          // 計算租賃天數
+          const timeDiff = endDate.getTime() - startDate.getTime();
+          const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // +1是因為要包含起始日
+
+          // 動態單價（如果有 price2 則使用 price2，否則使用 price）
+          const price = product.price; // 原價
+          const price2 = product.price2; // 特價
+          const unitPrice = Number(price2 ? price2 : price);
+
+          // 動態數量（假設 quantity 是使用者選擇的數量）
+          const quantity =
+            parseInt(document.querySelector("#quantity").value, 10) || 1;
+
+          // 計算押金（單價的 3 折）
+          const deposit = Number(unitPrice * 0.3);
+
+          // 計算總費用
+          const totalCost = unitPrice * quantity * daysDiff + deposit;
+
+          // 更新日期範圍文字的顯示
+          dateRangeText.textContent = `租賃日期： 自 ${formattedStartDate} 至 ${formattedEndDate}`;
+
+          // 更新價格明細
+          priceDetailsText.innerHTML = `
+            <div>單價：${unitPrice.toLocaleString("zh-TW")} 元</div>
+            <div>數量：${quantity} 個</div>
+            <div>天數：${daysDiff} 天</div>
+            <div>押金：${deposit.toLocaleString("zh-TW")} 元</div>
+          `;
+
+          // 更新總費用文字
+          totalCostText.textContent = `總費用：${totalCost.toLocaleString()} 元`;
+
+          // 顯示區塊
+          dateRangeText.style.display = "block";
+          totalCostText.style.display = "block";
+          priceDetailsText.style.display = "block";
+        } else {
+          // 如果沒有選擇完整的日期範圍，隱藏區塊
+          dateRangeText.style.display = "none";
+          totalCostText.style.display = "none";
+          priceDetailsText.style.display = "none";
+        }
+      };
+
+      // 初始化 Flatpickr
+      const calendar = flatpickr("#fixed-calendar", {
         mode: "range",
         dateFormat: "Y年m月d日",
         minDate: "today",
@@ -106,27 +195,25 @@ export default function RentProductDetail() {
         },
         disableMobile: true,
         onChange: function (selectedDates, dateStr, instance) {
-          const dateRangeText = document.querySelector("#date-range-text");
-          const totalCostText = document.querySelector("#total-cost-text");
-          const startDate = selectedDates[0];
-          const endDate = selectedDates[1];
-
-          if (startDate && endDate) {
-            const formattedStartDate = instance.formatDate(
-              startDate,
-              "Y年m月d日"
-            );
-            const formattedEndDate = instance.formatDate(endDate, "Y年m月d日");
-            dateRangeText.textContent = `租賃 ${formattedStartDate} 至 ${formattedEndDate}`;
-            totalCostText.style.display = "block";
-          } else {
-            dateRangeText.textContent = "";
-            totalCostText.style.display = "none";
-          }
+          // 當日期變化時，更新價格明細
+          updatePriceDetails(selectedDates, instance);
         },
       });
+
+      // 監聽數量輸入框的變化
+      const quantityInput = document.querySelector("#quantity");
+      if (quantityInput) {
+        quantityInput.addEventListener("input", () => {
+          const selectedDates = calendar.selectedDates;
+          if (selectedDates.length === 2) {
+            // 如果有選擇完整的日期範圍，更新價格明細
+            updatePriceDetails(selectedDates, calendar);
+          }
+        });
+      }
+
       if (product?.images?.length) {
-        setMainImage(product.images[0]); // 當 product 變更時，重新設置大圖
+        setMainImage(product.images[0]?.img_url || ""); // 當 product 變更時，重新設置大圖
       }
     }
   }, [product]);
@@ -137,7 +224,29 @@ export default function RentProductDetail() {
     }
   }, []);
 
-  if (!product) return <div>商品載入中...</div>;
+  // 處理小圖上一頁按鈕點擊
+  const handlePrevClick = () => {
+    setCurrentImageIndex((prevIndex) => Math.max(prevIndex - 3, 0));
+  };
+  // 處理小圖下一頁按鈕點擊
+  const handleNextClick = () => {
+    setCurrentImageIndex((prevIndex) =>
+      Math.min(prevIndex + 3, product.images.length - 3)
+    );
+  };
+
+  if (loading) return <div>商品載入中...</div>;
+  if (error) return <div>錯誤：{error}</div>;
+  if (!product) return <div>未找到商品</div>;
+
+  // 這個用來做最多三張小圖
+  const visibleImages = product.images.slice(
+    currentImageIndex,
+    currentImageIndex + 3
+  );
+  // 判斷是否顯示小圖的上一頁和下一頁按鈕
+  const showPrevButton = currentImageIndex > 0;
+  const showNextButton = currentImageIndex + 3 < product.images.length;
 
   return (
     <div className="container py-4 mx-auto">
@@ -163,7 +272,7 @@ export default function RentProductDetail() {
         <div className="main-details d-flex flex-row justify-content-between align-items-start">
           <div className="row">
             {/* 圖片區域 */}
-            <div className="px-3 col-12 col-md-6 col-lg-6 order-1 mx-auto d-flex flex-column">
+            <div className="px-3 col-12 col-md-6 col-lg-6 order-1 mx-auto d-flex flex-column gap-5">
               <div className="main-image">
                 <Image
                   src={mainImage} // 動態設置大圖的 src
@@ -180,42 +289,93 @@ export default function RentProductDetail() {
                 className="small-images d-flex flex-row justify-content-between align-items-center"
                 ref={containerRef}
               >
-                {product.images.map((img, index) => {
-                  const containerWidth = 538; // 小圖總容器
-                  const gap = 10;
-                  const imageCount = product.images.length;
-                  const imageWidth =
-                    (containerWidth - (imageCount - 1) * gap) / imageCount;
-                  const imageHeight = imageWidth; // 正方形
+                {product.images?.length > 0 ? (
+                  <>
+                    {/* 上一頁按鈕 */}
+                    {showPrevButton && (
+                      <button className="btn-prev" onClick={handlePrevClick}>
+                        <i className="bi bi-caret-left-fill"></i>
+                      </button>
+                    )}
 
-                  return (
-                    <div
-                      key={index}
-                      onClick={() => setMainImage(img)}
-                      style={{
-                        width: imageWidth,
-                        height: imageHeight,
-                      }}
-                    >
-                      <Image
-                        src={img}
-                        className="img-fluid"
-                        alt={`小圖${index + 1}`}
-                        width={imageWidth}
-                        height={imageHeight}
-                        priority
-                        unoptimized
-                      />
-                    </div>
-                  );
-                })}
+                    {/* 小圖片顯示 */}
+                    {visibleImages.map((img, index) => {
+                      const containerWidth = 538; // 小圖總容器
+                      const gap = 10;
+                      const imageCount = visibleImages.length;
+                      {
+                        /* const imageWidth =
+                        (containerWidth - (imageCount - 1) * gap) / imageCount; */
+                      }
+                      const imageWidth = (containerWidth - (3 - 1) * gap) / 3;
+                      const imageHeight = imageWidth; // 正方形
+
+                      return (
+                        <div
+                          key={index}
+                          onClick={() => setMainImage(img.img_url)}
+                          style={{ width: imageWidth, height: imageHeight }}
+                        >
+                          <Image
+                            src={img.img_url}
+                            className="img-fluid"
+                            alt={`小圖${index + 1}`}
+                            width={imageWidth}
+                            height={imageHeight}
+                            priority
+                            unoptimized
+                          />
+                        </div>
+                      );
+                    })}
+                    {/* 如果不足3張圖片則填充空白元素 */}
+                    {Array.from({
+                      length: 3 - visibleImages.length, // 最多顯示 3 張小圖
+                    }).map((_, index) => {
+                      const containerWidth = 538; // 小圖總容器
+                      const gap = 10;
+                      const imageCount = 3; // 最多顯示 3 張小圖
+                      {
+                        /* const imageWidth =
+                        (containerWidth - (imageCount - 1) * gap) / imageCount; */
+                      }
+                      const imageWidth = (containerWidth - (3 - 1) * gap) / 3;
+                      const imageHeight = imageWidth; // 正方形
+
+                      return (
+                        <div
+                          key={`empty-${index}`}
+                          className="empty-image"
+                          style={{ width: imageWidth, height: imageHeight }}
+                        ></div>
+                      );
+                    })}
+                    {/* 下一頁按鈕 */}
+                    {showNextButton && (
+                      <button className="btn-next" onClick={handleNextClick}>
+                        <i className="bi bi-caret-right-fill"></i>
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div>無圖片</div>
+                )}
               </div>
               <div className="rent-rules d-flex flex-column">
                 <p className="rules-title">租借規則</p>
                 <ul className="rules-content">
-                  {product.rules.map((rule, index) => (
-                    <li key={index}>{rule}</li>
-                  ))}
+                  <li>租借本人出示潛水證</li>
+                  <li>租用需先付款，並提供個人證件一張</li>
+                  <li>完成租借表單並完成簽名</li>
+                  <li>如有遺失或損害，需修復原有狀況或是全新賠償</li>
+                  <li>
+                    租借與歸還時間限每日上午8:00至
+                    下午5:00，過時則以多借一天計算
+                  </li>
+                  <li>
+                    以天計價，非24小時制度。例如:
+                    12/18日下午2點租借，12/19下午2點歸還，則算兩天
+                  </li>
                 </ul>
               </div>
             </div>
@@ -223,7 +383,9 @@ export default function RentProductDetail() {
             {/* 文字區域 */}
             <div className="px-3 col-12 col-md-6 col-lg-6 order-2 mx-auto d-flex flex-column details-text">
               <div className="details-titles d-flex flex-column">
-                <p className="product-brand">{product.brand}</p>
+                <p className="product-brand">
+                  {product?.brand_name ? product.brand_name : "未知品牌"}
+                </p>
                 <div className="product-name-fav d-flex flex-row justify-content-between align-items-center">
                   <p className="product-name">{product.name}</p>
                   <i className="bi bi-heart heart-icon"></i>
@@ -242,6 +404,9 @@ export default function RentProductDetail() {
               </div>
               <div className="subdetails-titles d-flex flex-column">
                 <p className="product-price">NT${product.price}/日</p>
+                {product.price2 && (
+                  <p className="product-price2">NT${product.price2}/日</p>
+                )}
                 <p className="product-description">{product.description}</p>
               </div>
               <div className="details-select d-flex flex-column">
@@ -249,13 +414,23 @@ export default function RentProductDetail() {
                 <div className="product-color">
                   <p className="color-title">產品顏色</p>
                   <div className="colors d-flex flex-row">
-                    {product.colors.map((color, index) => (
-                      <span
-                        key={index}
-                        className="color-box"
-                        style={{ backgroundColor: color }}
-                      ></span>
-                    ))}
+                    {product.specifications &&
+                    product.specifications.some((spec) => spec.color_rgb) ? (
+                      <div className="product-colors">
+                        {product.specifications.map(
+                          (spec, index) =>
+                            spec.color_rgb && (
+                              <span
+                                key={index}
+                                className="color-box"
+                                style={{ backgroundColor: spec.color_rgb }}
+                              ></span>
+                            )
+                        )}
+                      </div>
+                    ) : (
+                      <p className="no-colors">本商品暫無其他顏色</p>
+                    )}
                   </div>
                 </div>
                 <div className="product-amount">
@@ -271,6 +446,7 @@ export default function RentProductDetail() {
                     </button>
                     <input
                       type="text"
+                      id="quantity"
                       className="quantity-input"
                       value={quantity}
                       readOnly
@@ -288,10 +464,15 @@ export default function RentProductDetail() {
                   <div className="booking-calendar d-flex flex-column align-items-center">
                     <div id="fixed-calendar"></div>
                     <div className="d-flex flex-column selected-date-range w-100">
-                      <p id="date-range-text"></p>
-                      <p id="total-cost-text">
-                        總費用 {product.price * quantity} 元
-                      </p>
+                      <p id="date-range-text" style={{ display: "none" }}></p>
+                      <div
+                        id="price-details-text"
+                        style={{ display: "none" }}
+                      ></div>
+                      <div
+                        id="total-cost-text"
+                        style={{ display: "none" }}
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -333,7 +514,7 @@ export default function RentProductDetail() {
           {activeTab === "description" && (
             <div className="under-detail">
               <div className="d-flex flex-column under-details-content">
-                <p>{product.description}</p>
+                <p>{product.description2 || product.description}</p>
               </div>
               <div className="d-flex flex-column under-brand">
                 <p className="product-brand">品牌介紹</p>
