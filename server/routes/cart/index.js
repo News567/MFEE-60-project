@@ -3,85 +3,115 @@ import { pool } from "../../config/mysql.js";
 
 const router = express.Router();
 
+// 等會員好 要寫token驗證 不從資料庫去比對user 允許後端處理
+
 // **加入購物車**
 router.post("/add", async (req, res) => {
-  const {
-    userId,
-    productId,
-    rentalId,
-    activityId,
-    quantity,
-    rentalPeriod,
-    participants,
-  } = req.body;
+  const { userId, variantId, quantity } = req.body;
 
   try {
-    // 確保active的 `cart_id`
+    // 1️. 檢查 `variant_id` 是否有效
+    const [variantCheck] = await pool.execute(
+      "SELECT * FROM product_variant WHERE id = ?",
+      [variantId]
+    );
+    console.log(typeof variantCheck);
+    // console.log(variantCheck); variantCheck 是陣列
+
+    // 如果 variantCheck 是空陣列，表示找不到商品變體 因為空陣列是 truthy
+    if (variantCheck.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "找不到商品變體" });
+    }
+
+    // 2️. 確保購物車存在
     let [cart] = await pool.execute(
       "SELECT id FROM carts WHERE user_id = ? AND status = 'active'",
       [userId]
     );
-
+    console.log(cart);
     let cartId = cart.length > 0 ? cart[0].id : null;
 
+    // 如果 cartId 不存在，則建立新的購物車
     if (!cartId) {
       const [result] = await pool.execute(
         "INSERT INTO carts (user_id, status) VALUES (?, 'active')",
         [userId]
       );
+      console.log("建立購物車結果:", result);
       cartId = result.insertId;
     }
 
-    // 插入購物車
-    await pool.execute(
-      "INSERT INTO cart_items (cart_id, product_id, rental_id, activity_id, quantity, rental_period, participants) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [
-        cartId,
-        productId,
-        rentalId,
-        activityId,
-        quantity,
-        rentalPeriod,
-        participants,
-      ]
+    // 決定更新數量or插入新商品
+    const [existingItem] = await pool.execute(
+      "SELECT id, quantity FROM cart_items WHERE cart_id = ? AND variant_id = ?",
+      [cartId, variantId]
     );
 
-    res.status(200).json({ success: true, message: "加入購物車成功" });
+    if (existingItem.length > 0) {
+      // 更新數量
+      const updateResult = await pool.execute(
+        "UPDATE cart_items SET quantity = quantity + ? WHERE id = ?",
+        [quantity, existingItem[0].id]
+      );
+      console.log("更新商品數量:", updateResult);
+    } else {
+      // 插入新商品
+      const insertResult = await pool.execute(
+        "INSERT INTO cart_items (cart_id, variant_id, quantity) VALUES (?, ?, ?)",
+        [cartId, variantId, quantity]
+      );
+      console.log("插入商品結果:", insertResult);
+    }
+
+    // 重新查詢購物車內容
+    const [cartItems] = await pool.execute(
+      `SELECT ci.id, ci.quantity, pv.price, p.name AS product_name
+       FROM cart_items ci
+       JOIN product_variant pv ON ci.variant_id = pv.id
+       JOIN product p ON pv.product_id = p.id
+       WHERE ci.cart_id = ?`,
+      [cartId]
+    );
+
+    console.log("🛒 購物車內容:", cartItems);
+    res.status(200).json({ success: true, cartItems });
   } catch (error) {
-    console.error("加入購物車失敗:", error);
+    console.error("❌ 加入購物車失敗:", error);
     res.status(500).json({ success: false, message: "加入購物車失敗" });
   }
 });
 
-// **取得購物車內容**
+// 查詢購物車內容
 router.get("/:userId", async (req, res) => {
   const { userId } = req.params;
 
   try {
+    // 1 取得用戶的 `active` 購物車
     const [cart] = await pool.execute(
       "SELECT id FROM carts WHERE user_id = ? AND status = 'active'",
       [userId]
     );
 
     if (cart.length === 0) {
-      return res.json({ success: true, cartItems: [] });
+      return res.json({ success: true, cartItems: [] }); // 🛑 沒有購物車時回傳空
     }
 
     const cartId = cart[0].id;
 
-    // 查詢購物車內容，包含商品、租賃、活動的當前價格
+    //  計算購物車內的商品、價格、優惠券
     const [cartItems] = await pool.execute(
-      `SELECT ci.id, ci.quantity, ci.rental_period, ci.participants,
-              p.name AS product_name, p.price AS product_price,
-              r.name AS rental_name, r.price AS rental_price,
-              a.name AS activity_name, a.price AS activity_price
+      `SELECT ci.id, ci.quantity, pv.price AS price, p.name AS product_name,
+              (ci.quantity * pv.price) AS total_price
        FROM cart_items ci
-       LEFT JOIN product p ON ci.product_id = p.id
-       LEFT JOIN rent_item r ON ci.rental_id = r.id
-       LEFT JOIN activity a ON ci.activity_id = a.id
+       JOIN product_variant pv ON ci.variant_id = pv.id
+       JOIN product p ON pv.product_id = p.id
        WHERE ci.cart_id = ?`,
       [cartId]
     );
+
+    console.log("購物車內容:", cartItems); // ✅ 確保 SQL 有查到東西
 
     res.status(200).json({ success: true, cartItems });
   } catch (error) {
@@ -90,15 +120,28 @@ router.get("/:userId", async (req, res) => {
   }
 });
 
-// **更新購物車商品**
+// 更新購物車商品
 router.put("/update", async (req, res) => {
-  const { cartItemId, quantity, rentalPeriod, participants } = req.body;
+  const { cartItemId, quantity } = req.body;
 
   try {
-    await pool.execute(
-      "UPDATE cart_items SET quantity = ?, rental_period = ?, participants = ? WHERE id = ?",
-      [quantity, rentalPeriod, participants, cartItemId]
+    // 檢查 cartItemId 是否存在
+    const [existingItem] = await pool.execute(
+      "SELECT id FROM cart_items WHERE id = ?",
+      [cartItemId]
     );
+
+    if (existingItem.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "購物車商品不存在" });
+    }
+
+    // 更新購物車數量
+    await pool.execute("UPDATE cart_items SET quantity = ? WHERE id = ?", [
+      quantity,
+      cartItemId,
+    ]);
 
     res.status(200).json({ success: true, message: "購物車商品已更新" });
   } catch (error) {
@@ -107,16 +150,15 @@ router.put("/update", async (req, res) => {
   }
 });
 
-// 刪除特定商品
+// **刪除購物車商品**
 router.delete("/remove", async (req, res) => {
   const { userId, cartItemId } = req.body;
 
   try {
-    // 直接刪除並確認影響的行數
     const [result] = await pool.execute(
       `DELETE ci FROM cart_items ci
-         JOIN carts c ON ci.cart_id = c.id
-         WHERE ci.id = ? AND c.user_id = ?`,
+       JOIN carts c ON ci.cart_id = c.id
+       WHERE ci.id = ? AND c.user_id = ?`,
       [cartItemId, userId]
     );
 
@@ -126,10 +168,9 @@ router.delete("/remove", async (req, res) => {
         .json({ success: false, message: "無權刪除此商品" });
     }
 
-    // 檢查購物車是否已空
-    // 先內層查詢 在外層查詢
+    // 檢查購物車是否為空
     const [ifItems] = await pool.execute(
-      "SELECT COUNT(*) AS count FROM cart_items WHERE cart_id = (SELECT carts.id FROM carts WHERE user_id = ? AND status = 'active')",
+      "SELECT COUNT(*) AS count FROM cart_items WHERE cart_id = (SELECT id FROM carts WHERE user_id = ? AND status = 'active')",
       [userId]
     );
 
@@ -147,7 +188,7 @@ router.delete("/remove", async (req, res) => {
   }
 });
 
-// **購物車結帳**
+// **購物車結帳**  在裡到時候要塞coupon_id的資料
 router.post("/checkout", async (req, res) => {
   const { userId } = req.body;
 
@@ -165,10 +206,31 @@ router.post("/checkout", async (req, res) => {
 
     const cartId = cart[0].id;
 
-    // 更新購物車狀態為 "checked_out"
-    await pool.execute("UPDATE carts SET status = 'checked_out' WHERE id = ?", [
-      cartId,
-    ]);
+    // 建立訂單
+    const [orderResult] = await pool.execute(
+      "INSERT INTO orders (user_id, total_price, status) VALUES (?, 0, 'pending')",
+      [userId]
+    );
+    const orderId = orderResult.insertId;
+
+    // 將購物車內容轉為訂單項目
+    await pool.execute(
+      `INSERT INTO order_items (order_id, variant_id, quantity, price, createdAt)
+       SELECT ?, variant_id, quantity, pv.price, NOW()
+       FROM cart_items ci
+       JOIN product_variant pv ON ci.variant_id = pv.id
+       WHERE ci.cart_id = ?`,
+      [orderId, cartId]
+    );
+
+    // 計算總價並更新訂單
+    await pool.execute(
+      "UPDATE orders SET total_price = (SELECT SUM(quantity * price) FROM order_items WHERE order_id = ?) WHERE id = ?",
+      [orderId, orderId]
+    );
+
+    // 清空購物車
+    await pool.execute("DELETE FROM carts WHERE id = ?", [cartId]);
 
     res.status(200).json({ success: true, message: "結帳成功" });
   } catch (error) {
@@ -178,14 +240,3 @@ router.post("/checkout", async (req, res) => {
 });
 
 export default router;
-
-// 新增購物車
-// {
-//     "userId": 1,
-//     "productId": 32,
-//     "rentalId": null,
-//     "activityId": null,
-//     "quantity": 2,
-//     "rentalPeriod": null,
-//     "participants": null
-//   }
