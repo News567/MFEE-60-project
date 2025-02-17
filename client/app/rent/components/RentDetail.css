@@ -158,64 +158,27 @@
 .main-details .details-titles .product-brand {
   margin: 0;
   color: var(--gray-600-color);
-  font-size: 24px;
+  /* font-size: 24px; */
   font-weight: 700;
 }
-.main-details .details-titles .product-name-fav {
+/* .main-details .details-titles .product-name-fav {
   position: relative;
-}
-.main-details .details-titles .product-name-fav .heart-icon,
-.main-details .details-titles .product-name-fav .heart-icon-fill {
-  font-size: 24;
-  transition: opacity 0.3s ease, color 0.3s ease;
-  /* 使兩個圖標重疊 */
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 1;
-}
+} */
 
-/* 默認顯示 */
 .main-details .details-titles .product-name-fav .heart-icon {
+  font-size: 24;
   color: var(--black);
-  opacity: 1; /* 顯示空心愛心 */
-  transform: scale(1); /* 確保顯示為正常大小 */
-}
-.main-details .details-titles .product-name-fav .heart-icon-fill {
-  color: var(--primary-color);
-  opacity: 0;
-  transform: scale(0); /* 初始為縮小 */
-  z-index: 0; /* 確保隱藏的圖標不會覆蓋空心愛心 */
+  cursor: pointer;
+  transition: color 0.3s ease;
 }
 
 /* hover的時候的效果 */
-.main-details .details-titles .product-name-fav:hover .heart-icon {
-  opacity: 0; /* 隱藏空心愛心 */
+.main-details .details-titles .product-name-fav .heart-icon:hover {
+  color: var(--primary-color);
 }
-
-.main-details .details-titles .product-name-fav:hover .heart-icon-fill {
-  opacity: 1; /* 顯示填充愛心 */
-  transform: scale(1); /* 放大並恢復大小 */
-}
-
-/* 點擊後固定顯示填充愛心，並保持大小 */
-.main-details .details-titles .product-name-fav:active .heart-icon {
-  opacity: 0; /* 隱藏空心愛心 */
-}
-
-.main-details .details-titles .product-name-fav:active .heart-icon-fill {
-  opacity: 1; /* 顯示填充愛心 */
-  transform: scale(1); /* 保持填充愛心的大小 */
-}
-
-/* 點擊後不再觸發 hover 效果 */
-.main-details .details-titles .product-name-fav:active:hover .heart-icon-fill {
-  opacity: 1;
-  transform: scale(1); /* 確保點擊後仍保持填充愛心狀態 */
-}
-
-.main-details .details-titles .product-name-fav:active:hover .heart-icon {
-  opacity: 0; /* 確保空心愛心隱藏 */
+/* fill的時候的效果 */
+.main-details .details-titles .product-name-fav .heart-icon.filled {
+  color: var(--primary-color);
 }
 
 .main-details .details-titles .product-name {
@@ -230,10 +193,11 @@
 }
 
 .main-details .subdetails-titles {
-  gap: -15px;
+  gap: 10px;
 }
 
 .main-details .subdetails-titles .product-price {
+  margin: 0;
   font-size: 24px;
   font-weight: 700;
 }
@@ -246,6 +210,7 @@
 
 /* 特價樣式 */
 .main-details .subdetails-titles .product-price2 {
+  margin: 0;
   font-size: 24px;
   font-weight: 700;
 }
@@ -262,8 +227,15 @@
 
 .main-details .details-select .product-stock {
   margin: 0;
-  font-style: 17px;
-  font-weight: 700;
+  margin-left: 10;
+  color: var(--gray-600-color);
+  /* font-style: italic; */
+}
+.main-details .details-select .stock-available {
+  margin: 0;
+  margin-left: 10;
+  color: var(--gray-600-color);
+  /* font-style: italic; */
 }
 
 .main-details .details-select .product-color .color-title {
@@ -298,7 +270,6 @@
 }
 
 .main-details .product-amount .amounts {
-  width: 45px;
   padding: 14px 9px;
 }
 

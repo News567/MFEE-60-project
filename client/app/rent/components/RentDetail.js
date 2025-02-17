@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
+import axios from "axios";
 import dynamic from "next/dynamic"; // 動態導入，動態加載 flatpickr，從而避免伺服器端渲染時的問題
 import { useParams } from "next/navigation"; // 獲取 url 當中的 id
 import Head from "next/head";
@@ -10,6 +11,7 @@ import "flatpickr/dist/flatpickr.min.css";
 import "./flatpickr.css"; // 我定義的小日曆css
 import "./RentDetail.css";
 import "../../../public/globals.css";
+import HeartIcon from "./HeartIcon";
 
 const Flatpickr = dynamic(() => import("flatpickr"), { ssr: false });
 
@@ -22,7 +24,7 @@ export default function RentProductDetail() {
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0); // 當前顯示的圖片索引
-  const [isFavorite, setIsFavorite] = useState(false); // 愛心收藏功能
+  const [isFavorite, setIsFavorite] = useState(0); // 愛心收藏功能
   const [selectedDates, setSelectedDates] = useState([]); // 讓我知道會員選擇了多少天數（動態計算價格用
 
   const [quantity, setQuantity] = useState(1);
@@ -66,7 +68,22 @@ export default function RentProductDetail() {
     fetchProduct();
   }, [id]);
 
-  // 新增邏輯：根據是否有特價動態調整價格樣式
+  // 判斷收藏的愛心狀態
+  const handleClick = () => {
+    const newIsFavorite = isFavorite === 0 ? 1 : 0;
+    setIsFavorite(newIsFavorite);
+
+    // 這裡可以加入後端 API 呼叫，更新 is_like 狀態
+    // axios.post(`/api/rent-item/${id}/update-favorite`, { isLike: newIsFavorite })
+    //   .then(response => {
+    //     console.log("後端更新成功:", response.data);
+    //   })
+    //   .catch(error => {
+    //     console.error("後端更新失敗:", error);
+    //   });
+  };
+
+  // 根據是否有特價動態調整價格樣式
   useEffect(() => {
     const price = document.querySelector(".product-price");
     const price2 = document.querySelector(".product-price2");
@@ -84,7 +101,8 @@ export default function RentProductDetail() {
       // 如果產品有特價，改變原價樣式
       if (price) {
         price.classList.add("strikethrough"); // 添加劃線樣式
-        price2.style.margin = "0";
+        price.style.fontSize = "16px";
+        price.style.fontWeight = "400";
       }
     }
   }, [product]); // 當 product 更新時執行
@@ -252,11 +270,6 @@ export default function RentProductDetail() {
   const showPrevButton = currentImageIndex > 0;
   const showNextButton = currentImageIndex + 3 < product.images.length;
 
-  // 判斷收藏的愛心狀態
-  const handleClick = () => {
-    setIsFavorite(!isFavorite);
-  };
-
   return (
     <div className="container py-4 mx-auto">
       <Head>
@@ -398,8 +411,7 @@ export default function RentProductDetail() {
                 <div className="product-name-fav d-flex flex-row justify-content-between align-items-center">
                   <p className="product-name">{product.name}</p>
                   <div className="product-name-fav" onClick={handleClick}>
-                    <i className={`bi bi-heart heart-icon ${isFavorite ? 'd-none' : ''}`}></i>
-                    <i className={`bi bi-heart-fill heart-icon-fill ${isFavorite ? '' : 'd-none'}`}></i>
+                    <HeartIcon isFavorite={isFavorite} onClick={handleClick} />
                   </div>
                 </div>
                 <div className="stars d-flex flex-row">
@@ -421,7 +433,6 @@ export default function RentProductDetail() {
                 <p className="product-description">{product.description}</p>
               </div>
               <div className="details-select d-flex flex-column">
-                <p className="product-stock">庫存僅剩 {product.stock} 件</p>
                 <div className="product-color">
                   <p className="color-title">產品顏色</p>
                   <div className="colors d-flex flex-row">
@@ -468,6 +479,14 @@ export default function RentProductDetail() {
                     >
                       <i className="bi bi-plus"></i>
                     </button>
+                    {/* 庫存判斷 */}
+                    {product.stock && product.stock > 0 ? (
+                      <p className="product-stock">
+                        庫存僅剩 {product.stock} 件
+                      </p>
+                    ) : (
+                      <p className="stock-available">庫存餘量充足</p>
+                    )}
                   </div>
                 </div>
                 <div className="booking-date">
