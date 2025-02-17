@@ -33,7 +33,10 @@ export default function RentProductDetail() {
 
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`http://localhost:3005/api/rent/${id}`); // API 端點
+        const API_BASE_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
+
+        const response = await fetch(`${API_BASE_URL}/api/rent/${id}`);
         if (!response.ok) {
           throw new Error("無法獲取商品數據");
         }

@@ -23,7 +23,7 @@ const app = express();
 // 設定 CORS
 app.use(
   cors({
-    origin: "http://localhost:3000", // 只允許前端的域名
+    origin: ['http://localhost:3000', 'http://localhost:3001'], // 只允許前端的域名
     credentials: true,
   })
 );
