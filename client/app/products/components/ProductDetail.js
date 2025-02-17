@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
@@ -11,54 +11,71 @@ import RecommendedProducts from "./RecommendedProducts";
 import SocialToolbar from "./SocialToolbar";
 import useFavorite from "@/hooks/useFavorite";
 import { useCart } from "@/hooks/cartContext";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { FreeMode, Navigation, Thumbs } from "swiper/modules";
+//使用swiper
+import "swiper/css";
+import "swiper/css/free-mode";
+import "swiper/css/navigation";
+import "swiper/css/thumbs";
+
 // API 基礎 URL
 const API_BASE_URL = "http://localhost:3005/api";
 export default function ProductDetail() {
   const params = useParams();
   const [product, setProduct] = useState(null);
-  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("description");
-  const { addToCart } = useCart();
+  const { addToCart, fetchCart } = useCart();
   const {
     isFavorite,
     toggleFavorite,
     loading: favoriteLoading,
   } = useFavorite(params.id);
+  const [thumbsSwiper, setThumbsSwiper] = useState(null);
+  const [currentStock, setCurrentStock] = useState(0);
+  const [currentPrice, setCurrentPrice] = useState(0);
+  const [currentOriginalPrice, setCurrentOriginalPrice] = useState(0);
+  const [allImages, setAllImages] = useState([]);
+  const mainSwiperRef = useRef(null);
+
+  // 當顏色或尺寸改變時，更新庫存
+  useEffect(() => {
+    const variant = getCurrentVariant();
+    if (variant) {
+      setCurrentStock(variant.stock);
+    }
+  }, [selectedColor, selectedSize]);
 
   // 取得當前選擇的變體
   const getCurrentVariant = () => {
     if (!product || !selectedColor || !selectedSize) return null;
 
-    // 從 sizes 陣列中找到對應的尺寸物件
-    const sizeObj = product.sizes.find((s) => s.name === selectedSize);
-    if (!sizeObj) return null;
-
-    // 使用 size_id 和 color_id 來找到對應的變體
     return product.variants.find(
-      (v) => v.color_id === selectedColor.id && v.size_id === sizeObj.id
+      (v) => v.color_id === selectedColor.id && v.size_id === selectedSize.id
     );
   };
 
   // 處理數量變更
   const handleQuantityChange = (value) => {
-    const currentVariant = getCurrentVariant();
-    const newQuantity = quantity + value;
+    setQuantity((prevQuantity) => {
+      const newQuantity = prevQuantity + value;
+      const variant = getCurrentVariant();
 
-    if (newQuantity >= 1) {
-      if (currentVariant) {
-        if (newQuantity <= currentVariant.stock) {
-          setQuantity(newQuantity);
+      if (newQuantity >= 1 && variant) {
+        if (newQuantity <= variant.stock) {
+          return newQuantity;
         } else {
           alert("超過庫存數量！");
+          return prevQuantity;
         }
-      } else {
-        setQuantity(newQuantity);
       }
-    }
+      return prevQuantity;
+    });
   };
 
   // 加入購物車
@@ -75,7 +92,7 @@ export default function ProductDetail() {
     }
 
     try {
-      // 1. 先呼叫後端 API
+      // 1️⃣ 發送購物車請求
       const cartData = {
         userId: 1,
         productId: product.id,
@@ -90,19 +107,8 @@ export default function ProductDetail() {
       const response = await axios.post(`${API_BASE_URL}/cart/add`, cartData);
 
       if (response.data.success) {
-        // 2. 如果後端成功，再更新前端的購物車狀態
-        const cartItem = {
-          id: product.id,
-          variant_id: currentVariant.id,
-          name: product.name,
-          price: product.price,
-          color: selectedColor.name,
-          size: selectedSize,
-          quantity: quantity,
-          image: product.images[0],
-        };
-
-        addToCart(cartItem); // 使用 context 的 addToCart
+        //讓購物車重新從後端獲取最新數據，而不是自己組裝 cartItem
+        fetchCart(1);
         alert("成功加入購物車！");
       } else {
         alert(response.data.message || "加入購物車失敗");
@@ -115,13 +121,62 @@ export default function ProductDetail() {
 
   // 修改尺寸選擇的處理
   const handleSizeSelect = (size) => {
-    setSelectedSize(size.name); // 儲存尺寸名稱
+    setSelectedSize(size);
+    setQuantity(1);
+
+    if (selectedColor) {
+      const variant = product.variants.find(
+        (v) => v.color_id === selectedColor.id && v.size_id === size.id
+      );
+      if (variant) {
+        setCurrentPrice(variant.price);
+        setCurrentOriginalPrice(variant.original_price);
+        setCurrentStock(variant.stock);
+
+        // 如果變體有圖片，切換到對應圖片
+        if (variant.images?.[0]) {
+          const imageIndex = allImages.findIndex(
+            (img) => img === variant.images[0]
+          );
+          if (imageIndex !== -1 && mainSwiperRef.current) {
+            mainSwiperRef.current.slideTo(imageIndex);
+            if (thumbsSwiper) {
+              thumbsSwiper.slideTo(imageIndex);
+            }
+          }
+        }
+      }
+    }
   };
 
   // 修改顏色選擇的處理
   const handleColorSelect = (color) => {
-    console.log("Selected color:", color);
     setSelectedColor(color);
+    setQuantity(1);
+
+    if (selectedSize) {
+      const variant = product.variants.find(
+        (v) => v.color_id === color.id && v.size_id === selectedSize.id
+      );
+      if (variant) {
+        setCurrentPrice(variant.price);
+        setCurrentOriginalPrice(variant.original_price);
+        setCurrentStock(variant.stock);
+
+        // 如果變體有圖片，切換到對應圖片
+        if (variant.images?.[0]) {
+          const imageIndex = allImages.findIndex(
+            (img) => img === variant.images[0]
+          );
+          if (imageIndex !== -1 && mainSwiperRef.current) {
+            mainSwiperRef.current.slideTo(imageIndex);
+            if (thumbsSwiper) {
+              thumbsSwiper.slideTo(imageIndex);
+            }
+          }
+        }
+      }
+    }
   };
 
   useEffect(() => {
@@ -140,14 +195,52 @@ export default function ProductDetail() {
 
         if (response.data.status === "success" && response.data.data) {
           const productData = response.data.data;
+
+          // 收集所有變體的圖片
+          const variantImages = productData.variants.flatMap(
+            (variant) => variant.images || []
+          );
+          // 合併主圖片和變體圖片
+          const images = [...productData.images, ...variantImages];
+
+          setAllImages(images);
           setProduct(productData);
 
-          // 設置默認選中的尺寸和顏色
-          if (productData.sizes && productData.sizes.length > 0) {
-            setSelectedSize(productData.sizes[0].name);
-          }
-          if (productData.colors && productData.colors.length > 0) {
-            setSelectedColor(productData.colors[0]);
+          // 設置初始選中的尺寸和顏色
+          if (productData.sizes?.length > 0 && productData.colors?.length > 0) {
+            const initialSize = productData.sizes[0];
+            const initialColor = productData.colors[0];
+
+            setSelectedSize(initialSize);
+            setSelectedColor(initialColor);
+
+            // 找到對應的變體
+            const initialVariant = productData.variants.find(
+              (v) =>
+                v.color_id === initialColor.id && v.size_id === initialSize.id
+            );
+
+            if (initialVariant) {
+              setCurrentPrice(initialVariant.price);
+              setCurrentOriginalPrice(initialVariant.original_price);
+              setCurrentStock(initialVariant.stock);
+
+              // 如果初始變體有圖片，設置初始圖片位置
+              if (initialVariant.images?.[0]) {
+                const imageIndex = images.findIndex(
+                  (img) => img === initialVariant.images[0]
+                );
+                // 等待 Swiper 初始化完成後再設置位置
+                setTimeout(() => {
+                  if (imageIndex !== -1 && mainSwiperRef.current) {
+                    mainSwiperRef.current.slideTo(imageIndex);
+                    if (thumbsSwiper) {
+                      thumbsSwiper.slideTo(imageIndex);
+                    }
+                  }
+                }, 100);
+              }
+            }
           }
         } else {
           setError("找不到商品");
@@ -175,35 +268,64 @@ export default function ProductDetail() {
         {/* 左側產品圖片 */}
         <div className="col-md-6">
           <div className="product-img">
-            <Image
-              src={`/img/product/${product.images[0]}`}
-              alt={product.name}
-              width={500}
-              height={500}
-              priority
-              style={{
-                maxWidth: "100%",
-                height: "auto",
-                objectFit: "contain",
+            <Swiper
+              spaceBetween={10}
+              navigation={true}
+              thumbs={{ swiper: thumbsSwiper }}
+              modules={[FreeMode, Navigation, Thumbs]}
+              className="mySwiper2"
+              onSwiper={(swiper) => {
+                mainSwiperRef.current = swiper;
               }}
-            />
+            >
+              {allImages.map((image, index) => (
+                <SwiperSlide key={index}>
+                  <div className="product-img-wrapper">
+                    <Image
+                      src={`/img/product/${image}`}
+                      alt={`${product?.name}-${index + 1}`}
+                      width={500}
+                      height={500}
+                      priority={index === 0}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                      }}
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </div>
-          <div className="d-flex justify-content-evenly mt-3">
-            {product.images.map((image, index) => (
-              <div key={index} className="box">
-                <Image
-                  src={`/img/product/${image}`}
-                  alt={`${product.name}-${index + 1}`}
-                  width={100}
-                  height={100}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-              </div>
-            ))}
+          <div className="mt-3">
+            <Swiper
+              onSwiper={setThumbsSwiper}
+              spaceBetween={10}
+              slidesPerView={4}
+              freeMode={true}
+              watchSlidesProgress={true}
+              modules={[FreeMode, Navigation, Thumbs]}
+              className="mySwiper"
+            >
+              {allImages.map((image, index) => (
+                <SwiperSlide key={index}>
+                  <div className="thumb-wrapper">
+                    <Image
+                      src={`/img/product/${image}`}
+                      alt={`${product?.name}-${index + 1}`}
+                      width={100}
+                      height={100}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </div>
         </div>
 
@@ -233,10 +355,9 @@ export default function ProductDetail() {
             </div>
             <h2>{product.name}</h2>
             <hr />
-            <h2 className="text-primary">NT${product.price}</h2>
-
+            <h2 className="text-primary">NT${currentPrice}</h2>
             <h5 className="text-secondary text-decoration-line-through">
-              NT${product.original_price}
+              NT${currentOriginalPrice}
             </h5>
 
             <div className="mb-2">
@@ -262,7 +383,7 @@ export default function ProductDetail() {
                 <div
                   key={size.id}
                   className={`sizeBox ${
-                    selectedSize === size.name ? "active" : ""
+                    selectedSize?.id === size.id ? "active" : ""
                   }`}
                   onClick={() => handleSizeSelect(size)}
                 >
@@ -272,7 +393,12 @@ export default function ProductDetail() {
             </div>
 
             {/* 顏色選擇 */}
-            <div className="my-2">產品顏色</div>
+            <div className="my-2">
+              產品顏色 :::{" "}
+              <span style={{ color: selectedColor?.code }}>
+                {selectedColor?.name}
+              </span>
+            </div>
             <div className="d-flex gap-2 flex-wrap">
               {product?.colors.map((color) => (
                 <div
@@ -282,20 +408,25 @@ export default function ProductDetail() {
                   }`}
                   style={{
                     backgroundColor: color.code,
+                    border: `2px solid ${
+                      selectedColor?.id === color.id ? "#007bff" : "#dee2e6"
+                    }`,
                   }}
                   onClick={() => handleColorSelect(color)}
                   title={color.name}
-                ></div>
+                >
+                  {selectedColor?.id === color.id && (
+                    <div className="check-mark">✓</div>
+                  )}
+                </div>
               ))}
             </div>
 
             {/* 數量選擇 */}
             <div className="my-2">
               產品數量
-              {getCurrentVariant() && (
-                <span className="text-muted ms-2">
-                  (庫存: {getCurrentVariant().stock})
-                </span>
+              {currentStock > 0 && (
+                <span className="text-muted ms-2">(庫存: {currentStock})</span>
               )}
             </div>
             <div className="buttonCount">
@@ -315,9 +446,7 @@ export default function ProductDetail() {
               <button
                 className="button-right"
                 onClick={() => handleQuantityChange(1)}
-                disabled={
-                  getCurrentVariant() && quantity >= getCurrentVariant().stock
-                }
+                disabled={!currentStock || quantity >= currentStock}
               >
                 <span>+</span>
               </button>

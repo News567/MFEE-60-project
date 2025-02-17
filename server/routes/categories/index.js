@@ -4,7 +4,7 @@ import { pool } from "../../config/mysql.js";
 const router = express.Router();
 
 // 6️ 取得所有大分類及其對應的小分類
-router.get("/all", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     // 取得所有大分類
     const [bigCategories] = await pool.execute(

@@ -1,4 +1,3 @@
-/* 变量可以通过CSS变量方式定义 */
 :root {
   --border-color: rgb(228, 228, 228);
   --text-color: #333;
@@ -392,14 +391,13 @@
   cursor: pointer;
 }
 
-
 .filterSection {
   padding: 15px;
 }
 
 .filterTitle {
   font-weight: 500;
-  margin: 15px 0 10px;
+  /* margin: 15px 0 10px; */
   color: #333;
 }
 
@@ -441,6 +439,17 @@
 
 .colorCircle:hover {
   transform: scale(1.1);
+}
+
+.colorCircle.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.colorCircle.selected {
+  border: 2px solid #000;
+  transform: scale(1.1);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
 
 /* 側邊欄商品樣式（新品上市和特惠商品） */
@@ -497,7 +506,6 @@
   font-size: 1rem;
 }
 
-
 .productLink {
   display: block;
   text-decoration: none;
@@ -513,3 +521,34 @@
   color: inherit;
 }
 
+.selectedFilters {
+  padding: 10px 15px;
+  margin-bottom: 15px;
+}
+
+.filterTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filterTags :global(.ant-tag) {
+  margin: 0;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.clearAllTag {
+  background-color: #f0f0f0;
+  border: 1px solid #d9d9d9;
+  cursor: pointer;
+}
+
+.clearAllTag:hover {
+  background-color: #fafafa;
+  border-color: #40a9ff;
+  color: #40a9ff;
+}

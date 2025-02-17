@@ -7,7 +7,6 @@ import path from "path";
 import createError from "http-errors";
 // 路由模組
 import productRouter from "../routes/products/index.js";
-import productDetailRouter from "../routes/products/detail.js";
 import favoritesRouter from "../routes/favorites/index.js";
 import cartRouter from "../routes/cart/index.js";
 import categoriesRouter from "../routes/categories/index.js";
@@ -47,7 +46,6 @@ const apiRouter = express.Router();
 app.use("/api", apiRouter);
 // 產品相關路由
 apiRouter.use("/products", productRouter); // 負責 `/api/products`
-apiRouter.use("/products", productDetailRouter); // 負責 `/api/products/:id`
 // 收藏相關路由
 apiRouter.use("/favorites", favoritesRouter); // 負責 `/api/favorites`
 // 購物車相關路由
