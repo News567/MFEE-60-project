@@ -1,19 +1,41 @@
 "use client";
-import { useRef, useEffect, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+
 import "./articleList.css";
 
-export default function ArticleDetail({ article }) {
+
+export default function ArticleDetail() {
+  const router = useRouter();
+  const [article, setArticle] = useState(null);
+
+  useEffect(() => {
+    const articleId = router.query.articleId;
+    if (articleId) {
+      fetchArticleData(articleId);
+    }
+  }, [router.query.articleId]);
+
+  const fetchArticleData = async (id) => {
+    try {
+      const res = await axios.get(`/api/article/detail/${id}`);
+      setArticle(res.data);
+    } catch (error) {
+      console.error("Failed to fetch article data:", error);
+    }
+  };
+
+  if (!article) return <div>Loading...</div>;
   return (
     <div className="articleDetail">
       <div className="title">
-        <div className="textArea">潛水新手入門指南</div>
+        <div className="textArea">潛水新手入門指南{article.title}</div>
         <div className="authorArea">
-          <i className="fa-solid fa-user"></i>Tom
+          <i className="fa-solid fa-user"></i>Tom{article.author}
         </div>
         <div className="publishTimeArea">
-          <i className="fa-solid fa-calendar-days"></i>2024.12.13 14:05
+          <i className="fa-solid fa-calendar-days"></i>2024.12.13 14:05{article.publishTime}
         </div>
       </div>
       <div className="main-photo">
