@@ -15,6 +15,9 @@ import categoriesRouter from "../routes/categories/index.js";
 import brandRouter from "../routes/brands/index.js";
 import activityRouter from "../routes/activity/index.js";
 import activityDetailRouter from "../routes/activity/detail.js";
+import groupRouter from "../routes/group/index.js";
+import groupListRouter from "../routes/group/list.js";
+import groupDetailRouter from "../routes/group/detail.js";
 
 // 建立 Express 應用程式
 const app = express();
@@ -62,6 +65,11 @@ apiRouter.use("/brands", brandRouter); // 負責 `/api/brands`
 // 活動相關路由
 apiRouter.use("/activity", activityRouter);
 apiRouter.use("/activity", activityDetailRouter);
+
+// 揪團相關路由
+apiRouter.use("/group", groupRouter)
+apiRouter.use("/group", groupListRouter)
+apiRouter.use("/group", groupDetailRouter)
 
 // 捕捉 404 錯誤
 app.use((req, res, next) => {

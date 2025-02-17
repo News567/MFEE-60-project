@@ -10,30 +10,37 @@ import Calendar from "react-calendar";
 import { FaRegCalendar } from "react-icons/fa";
 import "./Calendar.css";
 
-// API 基礎 URL 
+// API 基礎 URL
 const API_BASE_URL = "http://localhost:3005/api";
 
-export default function ProductList() {
-    const [activities, setActivities] = useState([]);
-    // console.log(API_BASE_URL + "/activity");
+export default function GroupListPage() {
+    // 設定揪團資料
+    const [groups, setGroups] = useState([]);
+
+    // 設定api路徑
+    const api = "http://localhost:3005/api";
+
+    // 連接後端獲取揪團資料
     useEffect(() => {
         const getList = async () => {
             await axios
-                .get(API_BASE_URL + "/activity")
+                .get(api + "/group")
                 .then((res) => {
-                    if (res.data.status !== "success")
-                        throw new Error("讀取資料失敗");
-                    setActivities(res.data.data);
+                    // console.log(res.data.data);
+                    setGroups(res.data.data);
                 })
                 .catch((error) => {
-                    console.error("載入活動失敗:", error);
+                    console.log(error);
                 });
         };
         getList();
     }, []);
+
     useEffect(() => {
-        console.log("資料更新:", activities);
-    }, [activities]); // 當 activities 更新時才會執行 console.log
+        if (groups.length > 0) {
+            console.log(groups);
+        }
+    }, [groups]);
 
     return (
         <div className="container py-4">
@@ -535,14 +542,12 @@ export default function ProductList() {
                 <div className="col-lg-9 col-md-8">
                     {/* 商品介紹 */}
                     <div className="mb-4">
-                        <h3 className="mb-3">潛入藍色世界，追逐自由與夢想</h3>
+                        <h3 className="mb-3">開團或參團就是這麼簡單</h3>
                         <p className="mb-2">
-                            歡迎來到我們的課程與活動專區，這裡匯集了潛水愛好者不可錯過的精彩體驗！從基礎潛水課程到進階技術培訓，還有刺激有趣的深海探險活動，我們為您精心設計每一項內容，確保安全與專業性兼具。無論您是剛開始接觸潛水還是已有豐富經驗，這裡都有適合您的選擇。
+                            選擇喜歡的行程、確認細節，快速加入。從初次潛水的新手團，到進階技術挑戰和深海探險，隨時都有精彩行程等您來參與。
                         </p>
                         <p>
-                            現在購物，還可享受獨家優惠：單筆滿 $3000
-                            現在報名，還可享受獨家優惠：單次報名滿 $3000
-                            即贈精美潛水紀念品，部分課程更有限時折扣活動！立即瀏覽，輕鬆找到專屬於您的潛水體驗，為下一次海底旅程做好準備。學習新技能、探索深海奧秘，就從這裡開始！
+                            快來加入揪團，和志同道合的夥伴一起探索深藍世界吧！
                         </p>
                     </div>
 
@@ -551,8 +556,8 @@ export default function ProductList() {
                         className="position-relative mb-4"
                         style={{ height: "188px", overflow: "hidden" }}>
                         <Image
-                            src="/image/product-top-slide.png"
-                            alt="潛水裝備橫幅"
+                            src="/image/group/product-top-slide.png"
+                            alt="揪團橫幅"
                             priority
                             fill
                             style={{ objectFit: "cover" }}
@@ -560,9 +565,9 @@ export default function ProductList() {
                         <div className="position-absolute top-50 end-0 translate-middle-y pe-5">
                             <div className="text-end">
                                 <h3 className="text-white mb-4">
-                                    專業裝備，
+                                    揪團出發，
                                     <br />
-                                    陪你深海冒險每一步！
+                                    一起開啟深海冒險新旅程！
                                 </h3>
                             </div>
                         </div>
@@ -690,7 +695,20 @@ export default function ProductList() {
                             <GroupCard key={group.id} group={group} />
                         ))}
                     </div> */}
-                    <GroupCard />
+                    <div className="d-flex flex-column gap-3">
+                        {groups && groups.length > 0 ? (
+                        groups.map((group, i) => {
+                            return (
+                                <Link className="text-black text-decoration-none" key={i} href={`/group/list/${group.id}`}>
+                                    <GroupCard group={group} />
+                                </Link>
+                            );
+                        })
+                    ) : (
+                        <div>沒有相關資料</div>
+                    )}
+                    </div>
+                    
 
                     {/* 分頁 */}
                 </div>

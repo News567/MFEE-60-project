@@ -15,15 +15,14 @@ router.get("/", async (req, res) => {
 
     try {
         const sql = `SELECT 
-    a.*, 
-    ac.name AS city_name, 
-    ai.imgUrl AS main_image
-FROM activity a
-LEFT JOIN activity_city ac ON a.activityCity_id = ac.id
-LEFT JOIN activity_image ai ON a.id = ai.activity_id AND ai.isMain = 1
+    activity.*, 
+    activity_city.name AS city_name, 
+    activity_image.imgUrl AS main_image
+FROM activity
+LEFT JOIN activity_city ON activity.activityCity_id = activity_city.id
+LEFT JOIN activity_image ON activity.id = activity_image.activity_id AND activity_image.isMain = 1
 ORDER BY ${orderBy}
-LIMIT ? OFFSET ?;
-`;
+LIMIT ? OFFSET ?`;
         const [rows] = await pool.execute(sql, [limit, firstActivity]);
         // 取得產品總數
         const [[{ totalCount }]] = await pool.execute(`

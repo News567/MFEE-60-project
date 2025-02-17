@@ -87,6 +87,10 @@
             padding-top: 40px;
             padding-bottom: 40px;
         }
+        .link{
+            color: #000;
+            text-decoration: none;
+        }
         .group-card {
             .img-container {
                 height: 212px;
@@ -94,8 +98,12 @@
                 object-fit: cover;
                 overflow: hidden;
                 border-radius: 6px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-bottom: 17px;
                 .img {
-                    width: 100%;
+                    height: 100%;
                 }
             }
         }

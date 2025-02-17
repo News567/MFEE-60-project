@@ -1,7 +1,49 @@
 "use client";
+import { useEffect, useState } from "react";
 import "./styles.css";
 import Link from "next/link";
+import axios from "axios";
 export default function GroupHomePage() {
+    // 設定揪團資料
+    const [groups, setGroups] = useState([]);
+    const [progressing, setProgressing] = useState(0);
+    const [endedNumber, setEndedNumber] = useState(0);
+
+    // 設定api路徑
+    const api = "http://localhost:3005/api";
+
+    // 連接後端獲取揪團資料
+    useEffect(() => {
+        const getList = async () => {
+            await axios
+                .get(api + "/group")
+                .then((res) => {
+                    // console.log(res.data.data);
+                    setGroups(res.data.data);
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        };
+        getList();
+    }, []);
+
+    useEffect(() => {
+        if (groups.length > 0) {
+            console.log(groups);
+            const progressingNumber = groups.reduce(
+                (count, item) => count + (item.status == 0 ? 1 : 0),
+                0
+            );
+            setProgressing(progressingNumber);
+            const ended = groups.reduce(
+                (count, item) => count + (item.status == 1 ? 1 : 0),
+                0
+            );
+            setEndedNumber(ended);
+        }
+    }, [groups]);
+
     return (
         <main className="group-home">
             <section className="hero d-flex justify-content-center align-items-center flex-column">
@@ -11,26 +53,32 @@ export default function GroupHomePage() {
                     一起探索大海
                 </h1>
                 <div>
-                    <button className="btn btn-hold">
-                        <i className="icon bi bi-person-plus-fill" /> 我要開團
-                    </button>
-                    <button className="btn btn-join">
-                        <i className="icon bi bi-people-fill" /> 我要跟團
-                    </button>
+                    <Link href="/group/create">
+                        <button className="btn btn-hold">
+                            <i className="icon bi bi-person-plus-fill" />
+                            我要開團
+                        </button>
+                    </Link>
+
+                    <Link href="/group/list">
+                        <button className="btn btn-join">
+                            <i className="icon bi bi-people-fill" /> 我要跟團
+                        </button>
+                    </Link>
                 </div>
             </section>
             <section className="number-section-container d-flex justify-content-center">
                 <div className="d-flex number-section">
                     <div className="number-block border-right">
-                        <h3 className="text-center h3">999</h3>
+                        <h3 className="text-center h3">{groups.length}</h3>
                         <p className="text-center p">總揪團</p>
                     </div>
                     <div className="number-block border-right">
-                        <h3 className="text-center h3">999</h3>
+                        <h3 className="text-center h3">{progressing}</h3>
                         <p className="text-center p">揪團中</p>
                     </div>
                     <div className="number-block">
-                        <h3 className="text-center h3">999</h3>
+                        <h3 className="text-center h3">{endedNumber}</h3>
                         <p className="text-center p">已成團</p>
                     </div>
                 </div>
@@ -38,18 +86,36 @@ export default function GroupHomePage() {
             <section className="text-center new-group-section container">
                 <div className="publicity-title">最新揪團</div>
                 <div className="d-flex justify-content-between group-cards">
-                    <div className="group-card">
-                        <div className="img-container">
-                            <img
-                                className="img"
-                                src="./image/jpg (1).webp"
-                                alt=""
-                            />
-                        </div>
-                        <p className="text-center">離島</p>
-                        <p className="text-center">小琉球共潛需證照</p>
-                    </div>
-                    <div className="group-card">
+                    {groups && groups.length > 0 ? (
+                        groups.map((group, i) => {
+                            return (
+                                <Link
+                                    className="link"
+                                    key={i}
+                                    href={`/group/list/${group.id}`}>
+                                    <div className="group-card">
+                                        <div className="img-container">
+                                            <img
+                                                className="img"
+                                                src={`/image/group/${group.id}/${group.group_img}`}
+                                                alt=""
+                                            />
+                                        </div>
+                                        <p className="text-center text-secondary fw-bold m-0">
+                                            {group.city_name}
+                                        </p>
+                                        <p className="text-center m-0 fw-bold">
+                                            {group.name}
+                                        </p>
+                                    </div>
+                                </Link>
+                            );
+                        })
+                    ) : (
+                        <div>No groups available</div>
+                    )}
+
+                    {/* <div className="group-card">
                         <div className="img-container">
                             <img
                                 className="img"
@@ -92,7 +158,7 @@ export default function GroupHomePage() {
                         </div>
                         <p className="text-center">離島</p>
                         <p className="text-center">小琉球共潛需證照</p>
-                    </div>
+                    </div> */}
                 </div>
                 <Link href="/group/list">
                     <button className="btn all-group-btn">所有揪團</button>

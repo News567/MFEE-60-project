@@ -32,109 +32,6 @@ import "photoswipe/dist/photoswipe.css";
 import { useParams } from "next/navigation";
 import RecommendCard from "./_components/RecommendCard";
 
-const MyGallery = () => (
-    <Gallery
-        options={{
-            getThumbBoundsFn: (index) => {
-                const thumbnail =
-                    document.querySelectorAll(".pswp__thumbnail")[index];
-                const pageY =
-                    window.scrollY || document.documentElement.scrollTop;
-                const rect = thumbnail.getBoundingClientRect();
-                return { x: rect.left, y: rect.top + pageY, w: rect.width };
-            },
-        }}>
-        <div className={`row g-2`}>
-            <Item
-                original="https://image.kkday.com/v2/image/get/h_600%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_20163/20221109043547_c3FqM/jpg"
-                thumbnail="https://image.kkday.com/v2/image/get/h_600%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_20163/20221109043547_c3FqM/jpg"
-                width="1024"
-                height="768">
-                {({ ref, open }) => (
-                    <img
-                        className={`col-6`}
-                        ref={ref}
-                        onClick={open}
-                        src="https://image.kkday.com/v2/image/get/h_600%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_20163/20221109043547_c3FqM/jpg"
-                    />
-                )}
-            </Item>
-            <div className={`col-6 d-flex justify-content-center gap-2`}>
-                <div
-                    className={`d-flex flex-column justify-content-between gap-2`}>
-                    <Item
-                        original="https://image.kkday.com/v2/image/get/h_300%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_23476/20190425075107_xIOAe/jpg"
-                        thumbnail="https://image.kkday.com/v2/image/get/h_300%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_23476/20190425075107_xIOAe/jpg"
-                        width="1024"
-                        height="768">
-                        {({ ref, open }) => (
-                            <img
-                                height="100%"
-                                width="100%"
-                                className=""
-                                ref={ref}
-                                onClick={open}
-                                src="https://image.kkday.com/v2/image/get/h_300%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_23476/20190425075107_xIOAe/jpg"
-                            />
-                        )}
-                    </Item>
-                    <Item
-                        original="https://image.kkday.com/v2/image/get/h_600%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_23476/20190425075110_jiEr2/jpg"
-                        thumbnail="https://image.kkday.com/v2/image/get/h_600%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_23476/20190425075110_jiEr2/jpg"
-                        width="1024"
-                        height="768">
-                        {({ ref, open }) => (
-                            <img
-                                height="100%"
-                                width="100%"
-                                className=""
-                                ref={ref}
-                                onClick={open}
-                                src="https://image.kkday.com/v2/image/get/h_600%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_23476/20190425075110_jiEr2/jpg"
-                            />
-                        )}
-                    </Item>
-                </div>
-                <div
-                    className={`d-flex flex-column justify-content-between gap-2`}>
-                    <Item
-                        original="https://image.kkday.com/v2/image/get/h_600%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_23476/20190425075110_jiEr2/jpg"
-                        thumbnail="https://image.kkday.com/v2/image/get/h_600%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_23476/20190425075110_jiEr2/jpg"
-                        width="1024"
-                        height="768">
-                        {({ ref, open }) => (
-                            <img
-                                height="100%"
-                                width="100%"
-                                className=""
-                                ref={ref}
-                                onClick={open}
-                                src="https://image.kkday.com/v2/image/get/h_600%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_23476/20190425075110_jiEr2/jpg"
-                            />
-                        )}
-                    </Item>
-                    <Item
-                        original="https://image.kkday.com/v2/image/get/h_600%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_23476/20190425075110_jiEr2/jpg"
-                        thumbnail="https://image.kkday.com/v2/image/get/h_600%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_23476/20190425075110_jiEr2/jpg"
-                        width="1024"
-                        height="768">
-                        {({ ref, open }) => (
-                            <img
-                                height="100%"
-                                width="100%"
-                                className=""
-                                ref={ref}
-                                onClick={open}
-                                src="https://image.kkday.com/v2/image/get/h_600%2Cc_fill%2Cq_55%2Ct_webp/s1.kkday.com/product_23476/20190425075110_jiEr2/jpg"
-                            />
-                        )}
-                    </Item>
-                </div>
-            </div>
-        </div>
-    </Gallery>
-);
-
 export default function Home() {
     const api = "http://localhost:3005/api";
     const { id } = useParams();
@@ -170,6 +67,8 @@ export default function Home() {
     // TODO: 獲取推薦活動
     const [recommendActivity, setRecommendActivity] = useState([]);
 
+    // 設定活動圖片
+    const [img, setImg] = useState([]);
     // 賦予活動資料值
     useEffect(() => {
         // console.log(activities?.[0]);
@@ -177,7 +76,7 @@ export default function Home() {
             setName(activities?.[0]?.name);
             setPrice(activities?.[0]?.price);
             setDuration(activities?.[0]?.duration);
-            console.log(activities?.[0]?.duration);
+            // console.log(activities?.[0]?.duration);
             setLanguage(activities?.[0]?.language);
             setJourney(activities?.[0]?.journey);
             const introductionContent =
@@ -192,8 +91,115 @@ export default function Home() {
                 const journeyContent = activities?.[0].journey.split("\n");
                 setJourney(journeyContent);
             }
+            if (activities?.[0].images) {
+                const imgContent = activities[0].images.split(",");
+                setImg(imgContent);
+            }
         }
     }, [activities]);
+
+    const MyGallery = () => (
+        <Gallery
+            options={{
+                getThumbBoundsFn: (index) => {
+                    const thumbnail =
+                        document.querySelectorAll(".pswp__thumbnail")[index];
+                    const pageY =
+                        window.scrollY || document.documentElement.scrollTop;
+                    const rect = thumbnail.getBoundingClientRect();
+                    return { x: rect.left, y: rect.top + pageY, w: rect.width };
+                },
+            }}>
+            <div className={`row g-2`}>
+                <Item
+                    original={`/image/activity/${img[0]}`}
+                    thumbnail={`/image/activity/${img[0]}`}
+                    width="1024"
+                    height="768">
+                    {({ ref, open }) => (
+                        <img
+                            className={`col-6`}
+                            ref={ref}
+                            onClick={open}
+                            src={`/image/activity/${img[0]}`}
+                        />
+                    )}
+                </Item>
+                <div className={`col-6 d-flex justify-content-center gap-2`}>
+                    <div
+                        className={`d-flex flex-column justify-content-between gap-2`}>
+                        <Item
+                            original={`/image/activity/${img[1]}`}
+                            thumbnail={`/image/activity/${img[1]}`}
+                            width="1024"
+                            height="768">
+                            {({ ref, open }) => (
+                                <img
+                                    height="100%"
+                                    width="100%"
+                                    className=""
+                                    ref={ref}
+                                    onClick={open}
+                                    src={`/image/activity/${img[1]}`}
+                                />
+                            )}
+                        </Item>
+                        <Item
+                            original={`/image/activity/${img[2]}`}
+                            thumbnail={`/image/activity/${img[2]}`}
+                            width="1024"
+                            height="768">
+                            {({ ref, open }) => (
+                                <img
+                                    height="100%"
+                                    width="100%"
+                                    className=""
+                                    ref={ref}
+                                    onClick={open}
+                                    src={`/image/activity/${img[2]}`}
+                                />
+                            )}
+                        </Item>
+                    </div>
+                    <div
+                        className={`d-flex flex-column justify-content-between gap-2`}>
+                        <Item
+                            original={`/image/activity/${img[3]}`}
+                            thumbnail={`/image/activity/${img[3]}`}
+                            width="1024"
+                            height="768">
+                            {({ ref, open }) => (
+                                <img
+                                    height="100%"
+                                    width="100%"
+                                    className=""
+                                    ref={ref}
+                                    onClick={open}
+                                    src={`/image/activity/${img[3]}`}
+                                />
+                            )}
+                        </Item>
+                        <Item
+                            original={`/image/activity/${img[4]}`}
+                            thumbnail={`/image/activity/${img[4]}`}
+                            width="1024"
+                            height="768">
+                            {({ ref, open }) => (
+                                <img
+                                    height="100%"
+                                    width="100%"
+                                    className=""
+                                    ref={ref}
+                                    onClick={open}
+                                    src={`/image/activity/${img[4]}`}
+                                />
+                            )}
+                        </Item>
+                    </div>
+                </div>
+            </div>
+        </Gallery>
+    );
     return (
         <>
             <main className={styles.main}>
@@ -223,7 +229,7 @@ export default function Home() {
                                     </h4>
                                     <div className={`${styles.mb25px}`}>
                                         <FaMapMarkerAlt />
-                                        <span> 台灣 - 小琉球</span>
+                                        <span> {activities?.[0]?.country} - {activities?.[0]?.city_name}</span>
                                     </div>
                                     <div
                                         className={`${styles.mb25px} ${styles.colorPrimary} fw-bold`}>
@@ -277,10 +283,11 @@ export default function Home() {
                                     </div>
                                     <div className={styles.promotionalWords}>
                                         <ul>
-                                            {introduction && introduction.length > 0 ? (
+                                            {introduction &&
+                                            introduction.length > 0 ? (
                                                 introduction.map(
                                                     (text, index) => (
-                                                        <li key={index}>
+                                                        <li  className={styles.li} key={index}>
                                                             {text}
                                                         </li>
                                                     )
@@ -377,15 +384,16 @@ export default function Home() {
                                 </div>
                                 <div>優惠券</div>
                             </div>
+                            {/* TODO: p2 先取消方案選擇，做成日期選擇就好 */}
                             <button className={`w-100 btn ${styles.chooseBtn}`}>
-                                選擇方案
+                                選擇日期及人數
                             </button>
                         </div>
                     </div>
                 </section>
                 <section className={`${styles.bgGray} py-5`}>
                     <div className={`container`}>
-                        <h4 className={`${styles.mb25px}`}>選擇方案</h4>
+                        <h4 className={`${styles.mb25px}`}>選擇日期及人數</h4>
                         {/* 手機版日期選擇 */}
                         <div className={`d-sm-none mb-3`}>
                             <div
@@ -505,10 +513,10 @@ export default function Home() {
                                             className={`d-flex align-items-center`}>
                                             <h6
                                                 className={`m-0 fw-bold ${styles.fs20px}`}>
-                                                四人同行8折｜浮潛體驗－冬季時段（11-2月）
+                                                {name}
                                             </h6>
                                             <div
-                                                className={`d-none d-sm-block ${styles.hint}`}>
+                                                className={`ms-2 d-none d-sm-block ${styles.hint}`}>
                                                 7天前可免費取消
                                             </div>
                                         </div>
@@ -529,7 +537,7 @@ export default function Home() {
                                             className={`d-sm-none d-flex justify-content-between align-items-center`}>
                                             <div
                                                 className={`fw-bold ${styles.fs20px}`}>
-                                                NT$330
+                                                NT${price}
                                                 <span
                                                     className={`${styles.fs14px} fw-normal`}>
                                                     起
@@ -561,7 +569,7 @@ export default function Home() {
                                             </div>
                                             <div
                                                 className={`text-nowrap text-end text-decoration-line-through ${styles.fs14px} text-secondary`}>
-                                                NT$400
+                                                NT${price}
                                             </div>
                                             <div
                                                 className={`text-nowrap text-end fw-bold ${styles.fs18px}`}>
@@ -584,25 +592,7 @@ export default function Home() {
                                         {/* TODO: react套件的日曆 */}
                                         {/* <div className={`w-100 bg-secondary text-center my-2`}> */}
                                         <Calendar />
-                                        {/* <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                            <div>用react套件的日曆</div>
-                                        </div> */}
+                                        
                                     </div>
                                     <div
                                         className={`col d-flex flex-column justify-content-between`}>
@@ -641,7 +631,8 @@ export default function Home() {
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div className={`mb-3`}>
+                                            {/* TODO: p2 規格先拔掉，有空再做 */}
+                                            {/* <div className={`mb-3`}>
                                                 <p className="">規格</p>
                                                 <div
                                                     className={`${styles.btns}`}>
@@ -654,8 +645,8 @@ export default function Home() {
                                                         另一規格
                                                     </button>
                                                 </div>
-                                            </div>
-                                            {/* FIXME: 把選人數的做好 */}
+                                            </div> */}
+                                            {/* FIXME: p1 把選人數的做好 */}
                                             <div>
                                                 <p className="">選擇數量</p>
                                                 <div
@@ -671,7 +662,7 @@ export default function Home() {
                                                             NT $400
                                                             <span
                                                                 className={`fs-6 text-secondary fw-bold`}>
-                                                                NT$330/每人
+                                                                NT${price}/每人
                                                             </span>
                                                         </p>
                                                         <div
@@ -725,6 +716,7 @@ export default function Home() {
                                 </div>
                             </div>
                         </form>
+
                         {/* 方案卡片 */}
                         <form action="">
                             <div
@@ -835,14 +827,18 @@ export default function Home() {
                                         <br />
                                     </p>
                                     <ol className={`${styles.mb25px}`}>
-                                        {description && description.length > 0 ? (
-                                            description.map((text, index) =>  (
-                                                <li
+                                        {description &&
+                                        description.length > 0 ? (
+                                            description.map((text, index) => (
+                                                <li className={styles.li}
                                                     key={index}
-                                                    className={styles.li}>
+                                                   >
                                                     {text}
                                                 </li>
-                                            )) ): (<li>沒有內容</li>)}
+                                            ))
+                                        ) : (
+                                            <li className={styles.li}>資料載入中</li>
+                                        )}
                                     </ol>
                                     <div>
                                         <a href="#">收起</a>
@@ -860,8 +856,12 @@ export default function Home() {
                                     </p>
                                     <div className={`${styles.mb25px}`}>
                                         {journey && journey.length > 0 ? (
-                                            journey.map((v, i) =>  <p key={i}>{v}</p>
-                                        )):(<p>沒有內容</p>)}
+                                            journey.map((v, i) => (
+                                                <p key={i}>{v}</p>
+                                            ))
+                                        ) : (
+                                            <p>沒有內容</p>
+                                        )}
                                         {/* <div>
                                             <p>填寫報名表</p>
                                             <div className={`${styles.descriptionImgContainer} ${styles.mb25px}`}>
