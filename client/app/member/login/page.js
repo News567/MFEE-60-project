@@ -12,8 +12,11 @@ export default function Login() {
 
   const onclick = () => {
     console.log(account, password);
-
-    login(account, password);
+    if (typeof login === 'function') {
+      login(account, password);
+    } else {
+      console.error('login is not a function');
+    }
   };
 
   useEffect(() => {
@@ -27,7 +30,7 @@ export default function Login() {
   return (
     <div className={styles.loginPage}>
       <div className={styles.main}>
-        <img src="/DiveIn logo-light.png" alt="logo" className={styles.logo} />
+        <img src="/image/DiveIn-logo-dark-final.png" alt="logo" className={styles.logo} />
         <div className={styles.line1}></div>
         <div className={styles.sectionLogin}>
           <h3>登入</h3>
@@ -62,13 +65,13 @@ export default function Login() {
             </div>
             <div className={styles.loginGoogle}>
               <div className={styles.googleBox}>
-                <img src="/ic_google.svg" alt="Google logo" />
+                <img src="/img/ic_google.svg" alt="Google logo" />
                 <h6>Continue with Google</h6>
               </div>
             </div>
             <div className={styles.loginLine}>
               <div className={styles.lineBox}>
-                <img src="/line.png" alt="Line logo" />
+                <img src="/img/line.png" alt="Line logo" />
                 <h6>Continue with Line</h6>
               </div>
             </div>

@@ -1,4 +1,6 @@
 "use client";
+import orderActivity from "@/member/order/orderActivity/page";
+import orderProduct from "@/member/order/orderProduct/page";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -18,6 +20,18 @@ export default function Breadcrumb() {
             list:"揪團列表",
             detail: "揪團詳情",
             create: "創立新揪團",
+        },
+        member:{
+            "": "會員中心",
+            account: "我的帳戶",
+            favorite: "我的最愛",
+            group: "",
+            order: "我的訂單",
+            orderActivity: "活動清單",
+            orderProduct: "商品清單",
+            orderRent: "租借清單",
+            account: "個人資料",
+            account: "個人資料",
         },
     };
 

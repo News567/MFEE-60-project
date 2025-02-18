@@ -10,9 +10,24 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const { user, register } = useAuth() || {};
 
-  const onclick = () => {
+  const onclick = async () => {
+    
     console.log(account, password);
-    register(account, password);
+    // 发送注册请求到后端
+    const response = await fetch('http://localhost:3005/api/users/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ account, password }),
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      console.log("waiting");
+    } else {
+      console.log("wrong");
+    }
   };
   useEffect(() => {
     if (user === null || user === undefined) {
