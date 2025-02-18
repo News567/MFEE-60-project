@@ -462,10 +462,20 @@
 }
 
 .main .product-lists .card {
+  border: none;
   position: relative;
   overflow: hidden;
+  transition: all 0.4s ease-in-out;
+  /* padding: 10px; */
 }
+
+.main .product-lists .card:hover {
+  /* border: 1px solid var(--gray-50-color); */
+  box-shadow: 2px 4px 15px rgba(0, 0, 0, 0.08);
+}
+
 .main .product-lists .card .img-container {
+  /* padding: 10px; */
   width: 100%;
   aspect-ratio: 1 / 1; /* 確保所有圖片為正方形 */
   position: relative;
@@ -485,10 +495,11 @@
 }
 
 .main .product-lists .card .card-body .product-name {
+  padding: 10px;
   font-size: 14px;
   text-align: center;
   height: 40px; /* 固定高度 */
-  line-height: 20px; /* 控制最多兩行 */
+  line-height: 15px; /* 控制最多兩行 */
   -webkit-line-clamp: 2; /* 限制最多2行 */
   line-clamp: 2;
 }

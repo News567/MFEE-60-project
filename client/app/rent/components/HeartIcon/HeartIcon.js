@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import "./HeartIcon.css"; // 如果有樣式檔案
+import "./HeartIcon.css";
 
 const HeartIcon = ({ isFavorite, onClick }) => {
   return (

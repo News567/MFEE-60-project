@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"; // useState 儲存從後端獲取的資料，並使用 useEffect 在組件加載時發送請求
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 // import Link from "next/link";
 import "./RentList.css";
 import "../../../public/globals.css";
@@ -19,6 +19,37 @@ export default function RentList() {
   const [itemsPerPage, setItemsPerPage] = useState(16); // 預設每頁顯示16個
 
   const router = useRouter();
+  // 動態更新網址參數（根據每頁顯示資料數、分頁、排序條件）
+  const searchParams = useSearchParams();
+
+  // 從 URL 初始化狀態
+  useEffect(() => {
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 16;
+    const sort = searchParams.get("sort") || "";
+
+    setCurrentPage(page);
+    setItemsPerPage(limit);
+    setSort(sort);
+
+    // 根據 URL 參數設置排序條件顯示文字
+    switch (sort) {
+      case "price_desc":
+        setSelectedSort("價格：由高到低");
+        break;
+      case "price_asc":
+        setSelectedSort("價格：由低到高");
+        break;
+      case "newest":
+        setSelectedSort("上架時間：由新到舊");
+        break;
+      case "oldest":
+        setSelectedSort("上架時間：由舊到新");
+        break;
+      default:
+        setSelectedSort("下拉選取排序條件");
+    }
+  }, [searchParams]);
 
   // // 從後端獲取商品資料
   // useEffect(() => {
@@ -73,12 +104,23 @@ export default function RentList() {
   );
 
   useEffect(() => {
-    fetchProducts(currentPage, sort, itemsPerPage); // 根據當前頁數、排序方式和每頁顯示數量加載資料
-  }, [currentPage, sort, itemsPerPage]); // 當 currentPage、sort 或 itemsPerPage 變化時重新加載資料
+    fetchProducts(currentPage, sort, itemsPerPage);
+  }, [currentPage, sort, itemsPerPage, fetchProducts]);
 
+  // 更新網址 URL 查詢參數
+  const updateUrlParams = (page, limit, sort) => {
+    const params = new URLSearchParams();
+    params.set("page", page);
+    params.set("limit", limit);
+    if (sort) params.set("sort", sort);
+    router.push(`/rent?${params.toString()}`);
+  };
+
+  // 每頁顯示資料數量
   const handleItemsPerPageChange = (limit) => {
-    setItemsPerPage(limit); // 更新每頁顯示數量
+    setItemsPerPage(limit);
     setCurrentPage(1); // 重置為第一頁
+    updateUrlParams(1, limit, sort);
   };
 
   // 處理商品卡片點擊事件
@@ -88,7 +130,7 @@ export default function RentList() {
 
   // 處理排序
   const handleSort = (sortType) => {
-    let sortText = "下拉選取排序條件"; // 預設文字
+    let sortText = "下拉選取排序條件"; // 設定我的預設文字
     switch (sortType) {
       case "price_desc":
         sortText = "價格：由高到低";
@@ -109,13 +151,22 @@ export default function RentList() {
     setSort(sortType); // 更新排序方式
     setCurrentPage(1); // 重置為第一頁
     setShowClearSort(true); // 顯示「×」符號
+    updateUrlParams(1, itemsPerPage, sortType);
   };
 
+  // 清除排序條件
   const handleClearSort = () => {
     setSelectedSort("下拉選取排序條件"); // 重置排序條件文字
     setSort(""); // 清除排序方式
     setCurrentPage(1); // 重置為第一頁
     setShowClearSort(false); // 隱藏「×」符號
+    updateUrlParams(1, itemsPerPage, "");
+  };
+
+  // 處理分頁
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    updateUrlParams(page, itemsPerPage, sort);
   };
 
   // 處理租借商品顏色 & 處理是否原價特價
@@ -447,7 +498,7 @@ export default function RentList() {
                 {/* <div className="px-3 select-page d-none d-md-block">
                   顯示 第1頁/共10頁 商品
                 </div> */}
-                <div className="px-3 gap-1 d-flex flex-row justify-content-between align-items-center select-order">
+                <div className="d-flex flex-row justify-content-between align-items-center select-order">
                   {/* <span className="d-none d-md-block">排序</span> */}
                   <div className="dropdown">
                     <button
@@ -612,7 +663,7 @@ export default function RentList() {
                       style={{ cursor: "pointer" }}
                     >
                       {/* <Link href={`/rent/${product.id}`} passHref> */}
-                      <div className="card border-0 h-100 ">
+                      <div className="card h-100 ">
                         <div className="d-flex justify-content-center align-items-center img-container">
                           <Image
                             src={product.img_url || "/img/rent/no-img.png"}
@@ -695,7 +746,7 @@ export default function RentList() {
                       <li className="page-item">
                         <button
                           className="page-link"
-                          onClick={() => setCurrentPage(1)}
+                          onClick={() => handlePageChange(1)}
                           aria-label="FirstPage"
                         >
                           <span aria-hidden="true">
@@ -710,7 +761,7 @@ export default function RentList() {
                       <li className="page-item">
                         <button
                           className="page-link"
-                          onClick={() => setCurrentPage(currentPage - 1)}
+                          onClick={() => handlePageChange(currentPage - 1)}
                           aria-label="Previous"
                         >
                           <span aria-hidden="true">
@@ -779,7 +830,7 @@ export default function RentList() {
                           ) : (
                             <button
                               className="page-link"
-                              onClick={() => setCurrentPage(page)}
+                              onClick={() => handlePageChange(page)}
                             >
                               {page}
                             </button>
@@ -793,7 +844,7 @@ export default function RentList() {
                       <li className="page-item">
                         <button
                           className="page-link"
-                          onClick={() => setCurrentPage(currentPage + 1)}
+                          onClick={() => handlePageChange(currentPage + 1)}
                           aria-label="Next"
                         >
                           <span aria-hidden="true">
@@ -808,7 +859,7 @@ export default function RentList() {
                       <li className="page-item">
                         <button
                           className="page-link"
-                          onClick={() => setCurrentPage(totalPages)}
+                          onClick={() => handlePageChange(totalPages)}
                           aria-label="LastPage"
                         >
                           <span aria-hidden="true">

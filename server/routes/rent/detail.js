@@ -17,7 +17,6 @@ router.get("/:id", async (req, res) => {
       message: "無效的商品 ID ！ 商品 ID 需為正數！",
     });
   }
-
   try {
     // 2. 查詢商品基本信息
     const [rows] = await pool.query(

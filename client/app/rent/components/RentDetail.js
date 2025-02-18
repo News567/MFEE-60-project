@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import axios from "axios";
 import dynamic from "next/dynamic"; // 動態導入，動態加載 flatpickr，從而避免伺服器端渲染時的問題
-import { useParams } from "next/navigation"; // 獲取 url 當中的 id
+import { useParams } from "next/navigation"; // 獲取 url 當中的 id，useParams修改為useSearchParams 更改
 import Head from "next/head";
 import Image from "next/image";
 import flatpickr from "flatpickr";
@@ -11,12 +11,15 @@ import "flatpickr/dist/flatpickr.min.css";
 import "./flatpickr.css"; // 我定義的小日曆css
 import "./RentDetail.css";
 import "../../../public/globals.css";
-import HeartIcon from "./HeartIcon";
+import HeartIcon from "./HeartIcon/HeartIcon";
 
 const Flatpickr = dynamic(() => import("flatpickr"), { ssr: false });
 
 export default function RentProductDetail() {
   const { id } = useParams(); // 取得動態路由參數
+  // const searchParams = useSearchParams(); // 獲取查詢參數
+  // const productId = searchParams.get("productId"); // 從查詢參數中獲取 productId
+  
   const [product, setProduct] = useState(null);
   const [mainImage, setMainImage] = useState(""); // 商品大張圖片（要做大圖切換
   const [loading, setLoading] = useState(true); // 加載狀態
@@ -26,6 +29,7 @@ export default function RentProductDetail() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0); // 當前顯示的圖片索引
   const [isFavorite, setIsFavorite] = useState(0); // 愛心收藏功能
   const [selectedDates, setSelectedDates] = useState([]); // 讓我知道會員選擇了多少天數（動態計算價格用
+  const [recommendedProducts, setRecommendedProducts] = useState([]); // 你可能會喜歡的隨機推薦商品
 
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description"); // 商品描述區塊切換tab
