@@ -19,6 +19,16 @@ export default function Breadcrumb() {
             detail: "揪團詳情",
             create: "創立新揪團",
         },
+        rent:{
+            "":"租賃列表",
+        },
+        product:{
+            "":"商品列表"
+        },
+        cart:{
+            "":"購物車",
+            "create":"新增文章"
+        }
     };
 
     return (

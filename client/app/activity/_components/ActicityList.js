@@ -28,6 +28,8 @@ export default function ProductList() {
     const [selectedDisplay, setSelectedDisplay] = useState("每頁顯示24件");
     const [showBrandClassification, setShowBrandClassification] =
         useState(false);
+    const [location, setLocation] = useState("");
+    const [country, setCountry] = useState("");
 
     // 分頁
     //parseInt 把字串轉成數字    || 負責設定預設值
@@ -41,19 +43,29 @@ export default function ProductList() {
     const [error, setError] = useState(null);
 
     // 處理 URL 更新
-    const updateURL = (newPage, newLimit, newSort) => {
+    const updateURL = (newPage, newLimit, newSort, newLocation, newCountry) => {
         const params = new URLSearchParams();
-        params.set("page", newPage.toString());
-        params.set("limit", newLimit.toString());
-        params.set("sort", newSort.toString()); // 加入排序條件
-        router.push(`/activity?${params.toString()}`);
+        // 先確保變數不是 undefined，若是則設置默認值
+        params.set("page", (newPage || 1).toString()); // 如果 newPage 是 undefined，則使用 1
+        params.set("limit", (newLimit || 24).toString()); // 如果 newLimit 是 undefined，則使用 24
+        params.set("sort", (newSort || 1).toString()); // 如果 newSort 是 undefined，則使用 1
+        if (newLocation) {
+            params.set("location", (newLocation || "").toString());
+        } // 如果 newLocation 是 undefined，則使用空字串
+        if (newCountry) {
+            params.set("country", (newCountry || "").toString());
+        }
+
+        router.push(`/activity?${params.toString()}`, undefined, {
+            shallow: true,
+        });
     };
 
     // 獲取產品資料
     // FIXME: - 有依賴問題
     useEffect(() => {
-        fetchActivity(page, limit, selectedSort.value); // 讓 API 依照當前排序方式請求
-    }, [page, limit, selectedSort.value]); // 監聽 selectedSort.value
+        fetchActivity(page, limit, selectedSort.value, location); // 讓 API 依照當前排序方式請求
+    }, [page, limit, selectedSort.value, location]); // 監聽 selectedSort.value
 
     // 每頁顯示按鈕
     const handleDisplayChange = (newLimit, displayText) => {
@@ -68,7 +80,7 @@ export default function ProductList() {
         setSelectedSort({ text, value });
         setShowDropdown(false); // 關閉下拉選單
 
-        const sortedProducts = [...activities];
+        const sortedProducts = [...products];
         switch (value) {
             case 1: // 綜合
                 sortedProducts.sort((a, b) => a.id - b.id);
@@ -92,9 +104,7 @@ export default function ProductList() {
     };
 
     // TODO:處理活動地點篩選
-    const handleLocation = ()=>{
-
-    }
+    const handleLocation = () => {};
 
     // 處理點擊外部關閉下拉選單
     useEffect(() => {
@@ -108,11 +118,16 @@ export default function ProductList() {
         return () => document.removeEventListener("click", handleClickOutside);
     }, []);
 
-    const fetchActivity = async (currentPage, itemsPerPage, sortValue) => {
+    const fetchActivity = async (
+        currentPage,
+        itemsPerPage,
+        sortValue,
+        location
+    ) => {
         try {
             setLoading(true);
             const response = await axios.get(
-                `${API_BASE_URL}/activity?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}`
+                `${API_BASE_URL}/activity?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}&location=${location}`
             );
             console.log("API Response:", response.data);
             if (response.data.status === "success") {
@@ -150,102 +165,137 @@ export default function ProductList() {
                                     className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
                                     <a
                                         href="#"
-                                        // onClick={(e) => {
-                                        //     e.preventDefault();
-                                        //     handleCategoryFilter("面鏡");
-                                        // }}
-                                    >
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            const newCountry = 1;
+                                            setCountry(newCountry);
+                                            updateURL(
+                                                page,
+                                                limit,
+                                                selectedSort.value,
+                                                "",
+                                                newCountry
+                                            );
+                                        }}>
                                         台灣
                                     </a>
                                     <ul className={styles.submenu}>
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 1;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 屏東
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 2;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 台東
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 3;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 澎湖
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 4;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 綠島
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 5;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 蘭嶼
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 7;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 小琉球
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 8;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 其他
                                             </a>
                                         </li>
@@ -266,39 +316,51 @@ export default function ProductList() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 10;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 沖繩
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 11;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 石垣島
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 12;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 其他
                                             </a>
                                         </li>
@@ -319,52 +381,68 @@ export default function ProductList() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 13;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 長灘島
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 14;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 宿霧
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 15;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 薄荷島
                                             </a>
                                         </li>
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
-                                            >
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newLocation = 16;
+                                                    setLocation(newLocation);
+                                                    updateURL(
+                                                        page,
+                                                        limit,
+                                                        selectedSort.value,
+                                                        newLocation
+                                                    );
+                                                }}>
                                                 其他
                                             </a>
                                         </li>
@@ -382,16 +460,36 @@ export default function ProductList() {
                                         其他
                                     </a>
                                 </li>
+                                <li
+                                    className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
+                                    <a
+                                        href="#"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            const newLocation = "";
+                                            setLocation(newLocation);
+                                            updateURL(
+                                                page,
+                                                limit,
+                                                selectedSort.value,
+                                                newLocation
+                                            );
+                                        }}>
+                                        所有活動
+                                    </a>
+                                </li>
                             </ul>
                         </div>
 
                         {/* 活動篩選 */}
-                        <div className={styles.sideCard}>
-                            <div className={styles.cardTitle}>
-                                <h5>活動篩選</h5>
-                            </div>
-                            <div className={styles.filterSection}>
-                                <div className={styles.filterTitle}>
+                        <form action="/activity" method="GET">
+                            <div className={styles.sideCard}>
+                                <div className={styles.cardTitle}>
+                                    <h5>活動篩選</h5>
+                                </div>
+                                <div className={styles.filterSection}>
+                                    {/* TODO: p2 證照資格篩選 */}
+                                    {/* <div className={styles.filterTitle}>
                                     證照資格
                                 </div>
                                 <div className={styles.checkboxGroup}>
@@ -425,122 +523,162 @@ export default function ProductList() {
                                             需AOWD證照 (15)
                                         </label>
                                     </div>
-                                </div>
-                                <div className={styles.filterTitle}>
-                                    導覽語言
-                                </div>
-                                <div className={styles.checkboxGroup}>
-                                    <div className={styles.checkboxItem}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            id="language-english"
-                                        />
-                                        <label htmlFor="language-english">
-                                            英文 (4)
-                                        </label>
+                                </div> */}
+                                    {/* TODO: 導覽語言這邊是不是要直接reduce然後做成陣列，就變成語言是活的，然後數量也比較好算？但可能要useEffect確保他只有在第一次載入時讀取，不然他會一直變動影響ui */}
+                                    <div className={styles.filterTitle}>
+                                        導覽語言
                                     </div>
-                                    <div className={styles.checkboxItem}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            id="language-chinese"
-                                        />
-                                        <label htmlFor="language-chinese">
-                                            中文 (15)
-                                        </label>
+                                    <div className={styles.checkboxGroup}>
+                                        <div className={styles.checkboxItem}>
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                id="language-english"
+                                                value="english"
+                                                name="language"
+                                            />
+                                            <label htmlFor="language-english">
+                                                英文 (4)
+                                            </label>
+                                        </div>
+                                        <div className={styles.checkboxItem}>
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                id="language-chinese"
+                                                value="chinese"
+                                                name="language"
+                                            />
+                                            <label htmlFor="language-chinese">
+                                                中文 (15)
+                                            </label>
+                                        </div>
+                                        <div className={styles.checkboxItem}>
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                id="language-jp"
+                                                value="japanese"
+                                                name="language"
+                                            />
+                                            <label htmlFor="language-jp">
+                                                日文 (15)
+                                            </label>
+                                        </div>
+                                        <div className={styles.checkboxItem}>
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                id="language-korean"
+                                                value="korean"
+                                                name="language"
+                                            />
+                                            <label htmlFor="language-korean">
+                                                韓文 (15)
+                                            </label>
+                                        </div>
+                                        <div className={styles.checkboxItem}>
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                id="language-cantonese"
+                                                value="cantonese"
+                                                name="cantonese"
+                                            />
+                                            <label htmlFor="language-cantonese">
+                                                廣東話 (15)
+                                            </label>
+                                        </div>
                                     </div>
-                                    <div className={styles.checkboxItem}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            id="language-jp"
-                                        />
-                                        <label htmlFor="language-jp">
-                                            日文 (15)
-                                        </label>
+                                    <div className={styles.filterTitle}>
+                                        價格區間
                                     </div>
-                                </div>
-                                <div className={styles.filterTitle}>
-                                    價格區間
-                                </div>
-                                <div className={styles.priceInputs}>
-                                    <input
-                                        type="number"
-                                        placeholder="最低"
-                                        className={styles.priceInput}
-                                    />
-                                    <span>-</span>
-                                    <input
-                                        type="number"
-                                        placeholder="最高"
-                                        className={styles.priceInput}
-                                    />
-                                </div>
-                                <div className={styles.filterTitle}>
-                                    行程時間
-                                </div>
-                                <div className={styles.checkboxGroup}>
-                                    <div className={styles.checkboxItem}>
+                                    <div className={styles.priceInputs}>
                                         <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            id="duration-less4"
+                                            type="number"
+                                            placeholder="最低"
+                                            className={styles.priceInput}
                                         />
-                                        <label htmlFor="duration-less4">
-                                            少於4小時 (4)
-                                        </label>
+                                        <span>-</span>
+                                        <input
+                                            type="number"
+                                            placeholder="最高"
+                                            className={styles.priceInput}
+                                        />
                                     </div>
-                                    <div className={styles.checkboxItem}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            id="duration-4toDay"
-                                        />
-                                        <label htmlFor="duration-4toDay">
-                                            4小時-1日 (15)
-                                        </label>
+                                    <div className={styles.filterTitle}>
+                                        行程時間
                                     </div>
-                                    <div className={styles.checkboxItem}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            id="brand-omer"
-                                        />
-                                        <label htmlFor="brand-omer">
-                                            1日-2日 (15)
-                                        </label>
-                                    </div>
-                                    <div className={styles.checkboxItem}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            id="brand-omer"
-                                        />
-                                        <label htmlFor="brand-omer">
-                                            2日以上 (15)
-                                        </label>
+                                    <div className={styles.checkboxGroup}>
+                                        <div className={styles.checkboxItem}>
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                id="duration-less4"
+                                                value="less4"
+                                                name="duration"
+                                            />
+                                            <label htmlFor="duration-less4">
+                                                少於4小時 (4)
+                                            </label>
+                                        </div>
+                                        <div className={styles.checkboxItem}>
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                id="duration-4toDay"
+                                                value="4toDay"
+                                                name="duration"
+                                            />
+                                            <label htmlFor="duration-4toDay">
+                                                4小時-1日 (15)
+                                            </label>
+                                        </div>
+                                        <div className={styles.checkboxItem}>
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                id="oneToTwo"
+                                                value="oneToTwo"
+                                                name="duration"
+                                            />
+                                            <label htmlFor="oneToTwo">
+                                                1日-2日 (15)
+                                            </label>
+                                        </div>
+                                        <div className={styles.checkboxItem}>
+                                            <input
+                                                type="checkbox"
+                                                className={styles.checkbox}
+                                                id="twoDaysUp"
+                                                value="twoDaysUp"
+                                                name="duration"
+                                            />
+                                            <label htmlFor="twoDaysUp">
+                                                2日以上 (15)
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* 活動日期選擇 */}
-                        <div className={styles.sideCard}>
-                            <div className={styles.cardTitle}>
-                                <h5 className="d-flex gap-2 align-items-center">
-                                    <FaRegCalendar />
-                                    選擇出發日期
-                                </h5>
+                            {/* 活動日期選擇 */}
+                            <div className={styles.sideCard}>
+                                <div className={styles.cardTitle}>
+                                    <h5 className="d-flex gap-2 align-items-center">
+                                        <FaRegCalendar />
+                                        選擇出發日期
+                                    </h5>
+                                </div>
+                                <div className="">
+                                    <Calendar />
+                                </div>
                             </div>
-                            <div className="">
-                                <Calendar />
-                            </div>
-                        </div>
 
-                        <button className="btn btn-primary w-100 mb-3">
-                            套用篩選(0/20)
-                        </button>
+                            <button className="btn btn-primary w-100 mb-3">
+                                套用篩選(0/20)
+                            </button>
+                        </form>
 
                         {/* 最新活動 */}
                         <div className={styles.sideCard}>
