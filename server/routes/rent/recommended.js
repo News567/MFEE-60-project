@@ -5,24 +5,20 @@ const router = express.Router();
 
 // 根據當前商品資料推薦相似商品
 router.get("/recommended", async (req, res) => {
-  console.log(
-    "收到的 id:",
-    req.query.id,
-    "類型:",
-    typeof req.query.id,
-    "轉換後的 id:",
-    id
-  );
+  res.setHeader("Cache-Control", "no-cache");
 
-  const id = parseInt(req.query.id, 10);
-  const { brand, category_small } = req.query;
+  const { brand, category_small, id } = req.query;
+  const parsedId = parseInt(id, 10); // 將 id 轉換為數字
 
-  if (!brand || !category_small || !id) {
+  console.log("收到的 id:", id, "類型:", typeof id, "轉換後的 id:", parsedId);
+  console.log("品牌:", brand);
+  console.log("分類:", category_small);
+
+  if (!brand || !category_small || !parsedId) {
     return res.status(400).json({ success: false, message: "缺少必要參數" });
   }
 
   const decodedCategorySmall = decodeURIComponent(category_small);
-
 
   try {
     const [rows] = await pool.query(
@@ -52,7 +48,7 @@ router.get("/recommended", async (req, res) => {
       ORDER BY RAND()
       LIMIT 4;
       `,
-      [brand, decodedCategorySmall, id]
+      [brand, decodedCategorySmall, parsedId]
     );
 
     // 將資料轉換為前端預期的格式

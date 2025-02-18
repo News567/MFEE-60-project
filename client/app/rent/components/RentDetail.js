@@ -61,6 +61,8 @@ export default function RentProductDetail() {
           "/rent/no-img.png"; // 如果沒有圖片，顯示"本商品暫時沒有圖片"的預設圖片
         setMainImage(mainImage);
 
+        console.log("Product images:", images); // 調試訊息
+
         // 獲取"你可能喜歡"區塊的推薦商品
         fetchRecommendedProducts(data.brand_name, data.category_small, data.id);
       } catch (err) {
@@ -75,22 +77,30 @@ export default function RentProductDetail() {
 
   // 獲取推薦商品
   const fetchRecommendedProducts = async (brand, category_small, id) => {
+    console.log("呼叫 fetchRecommendedProducts，參數:", {
+      brand,
+      category_small,
+      id,
+    });
+
     try {
       console.log("收到的 id:", req.query.id, "類型:", typeof req.query.id);
       const API_BASE_URL =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
 
-        // 確保 id 是數字，且為正整數
-    const parsedId = Number(id);
-    if (!Number.isInteger(parsedId) || parsedId <= 0) {
-      console.error("無效的商品 ID:", id);
-      return;
-    }
+      // 確保 id 是數字，且為正整數
+      const parsedId = Number(id);
+      if (!Number.isInteger(parsedId) || parsedId <= 0) {
+        console.error("無效的商品 ID:", id);
+        return;
+      }
 
       const response = await fetch(
         `${API_BASE_URL}/api/rent/recommended?brand=${encodeURIComponent(
           brand
-        )}&category_small=${encodeURIComponent(category_small)}&id=${Number(id)}`
+        )}&category_small=${encodeURIComponent(category_small)}&id=${Number(
+          id
+        )}`
       );
       if (!response.ok) {
         throw new Error("無法獲取推薦商品");
