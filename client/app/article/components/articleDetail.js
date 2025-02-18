@@ -43,7 +43,7 @@ export default function ArticleDetail() {
     return article.replies.map((reply) => (
       <div key={reply.id}>
         {/* 層級1回覆 */}
-        {reply.level === 1 && (
+        {Number(reply.level) === 1 && (
           <div className="reply1">
             <img
               src="../img/article/reply1.jpg"
@@ -77,7 +77,7 @@ export default function ArticleDetail() {
         )}
   
         {/* 層級2回覆 */}
-        {reply.level === 2 && (
+        {Number(reply.level) === 2 && (
           <div className="reply2">
             <img
               src="../img/article/reply2.jpg"
