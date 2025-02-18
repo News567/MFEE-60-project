@@ -10,10 +10,10 @@ export default function ArticleCard({ article }) {
       <Image
         className="article-list-card-photo"
         src={
-    article.img_url && article.img_url !== ""
-      ? article.img_url
-      : "/default-image.jpg"
-  } // 當 image 為空時顯示預設圖片
+          article.img_url && article.img_url !== ""
+            ? article.img_url
+            : "/default-image.jpg"
+        } // 當 image 為空時顯示預設圖片
         alt="Article Thumbnail"
         width={400}
         height={300}
