@@ -1,0 +1,152 @@
+/*--------------------------------------
+  優惠券卡片樣式設定 (CouponCard.css)
+---------------------------------------*/
+
+/* 定義全域色彩變數 */
+:root {
+  --primary-deep-color: #023047;       /* 主深色 */
+  --primary-color: #219ebc;            /* 主色 */
+  --primary-light-color: #8ecae6;      /* 主淺色 */
+  --secondary-deep-color: #ffb703;      /* 次深色 */
+  --secondary-color: #ffd500;          /* 次色 */
+  --secondary-light-color: #f1d691;    /* 次淺色 */
+  --white-color: #fff;                 /* 白色 */
+  --light-gray-color: #D8D8D8;          /* 淺灰色 */
+  --cornflower-blue-color: #508BE3;     /* 矢車菊藍 */
+  --block-color: #000;                 /* 黑色 */
+}
+
+/* 設定全站字型 */
+* {
+  font-family: "Noto Sans TC", serif;
+}
+
+/* 
+  優惠券卡片區塊設定：
+  模仿蝦皮風格，設定邊框、圓角、固定高度、Flex 排版、背景及間距。
+*/
+.coupon-card {
+    border: 1px solid;                         /* 邊框樣式與寬度 */
+    border-color: var(--light-gray-color);      /* 邊框顏色使用全域變數 */
+    border-radius: 3px;                         /* 卡片圓角 */
+    height: 7.5rem;                             /* 固定卡片高度 */
+    display: flex;                              /* Flex 排版 */
+    align-items: center;                        /* 垂直置中 */
+    background: #fff;                           /* 背景顏色：白色 */
+    gap: 10px;                                  /* 內部元素間距 */
+    margin-bottom: 15px;                        /* 卡片下方外間距 */
+}
+
+/* 
+  優惠券圖片容器設定：
+  固定寬度、高度滿版、圖片覆蓋模式、左側圓角處理
+*/
+.coupon-image {
+    position: relative;                         /* 相對定位，方便內部圖片定位 */
+    width: 7.5rem;                              /* 固定寬度 */
+    height: 100%;                               /* 高度填滿父容器 */
+    object-fit: cover;                          /* 圖片覆蓋容器且保持比例 */
+    border-radius: 3px 0 0 3px;                   /* 左側圓角 */
+}
+
+/* 
+  優惠券資訊內容區設定：
+  使用 Flex 自動填滿剩餘空間
+*/
+.coupon-left {
+    flex: 1;
+}
+
+/* 
+  優惠券面額／折扣值設定：
+  使用較大字型、粗體與主色呈現
+*/
+.coupon-value {
+    font-size: 1.2rem;                          /* 大字型 */
+    font-weight: 600;                           /* 粗體 */
+    color: var(--primary-color);                /* 使用主色 */
+}
+
+/* 
+  優惠券使用條件說明：
+  使用較小字型，字重正常
+*/
+.coupon-condition {
+    font-size: 14px;
+    font-weight: 400;
+}
+
+/* 
+  優惠券類型標籤：
+  顯示小字型標籤，搭配主色邊框、圓角與內邊距
+*/
+.coupon-type {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--primary-color);
+    border: 1px solid;
+    border-color: var(--primary-color);
+    border-radius: 5px;
+    padding: 2px 8px;
+    margin-top: 5px;
+    font-weight: 400;
+}
+
+/* 
+  優惠券有效期限顯示：
+  小字型並以 inline-block 呈現
+*/
+.coupon-expiry {
+    font-size: 12px;
+    display: inline-block;
+}
+
+/* 
+  優惠券使用條件連結：
+  小字型，設定矢車菊藍色文字與左側間距，
+  預設無下劃線，hover 時呈現下劃線效果
+*/
+.coupon-terms {
+    font-size: 12px;
+    color: var(--cornflower-blue-color);
+    text-decoration: none;
+    margin-left: 5px;
+}
+
+.coupon-terms:hover {
+    text-decoration: underline;
+}
+
+/* 
+  領取按鈕設定：
+  按鈕使用主色邊框、圓角、適當內外邊距，
+  並設定按鈕預設文字顏色
+*/
+.btn.btn-claim.btn-claim-style {
+    color: var(--primary-color);
+    border-radius: 5px;
+    border: 1.5px solid;
+    border-color: var(--primary-color);
+    padding: 5px 10px;
+    font-size: 14px;
+    font-weight: 400;
+    margin-right: 10px;
+}
+
+/* 
+  領取按鈕 hover 效果：
+  滑鼠移上時背景改為主色，文字改為白色
+*/
+.btn-claim-style:hover {
+    background: var(--primary-color);
+    color: var(--white-color);
+}
+
+/* 
+  領取按鈕 active 狀態：
+  點擊時強制設定背景與文字顏色，確保即時回饋
+*/
+.btn-claim-style:active {
+    background: var(--primary-color) !important;
+    color: var(--white-color) !important;
+}

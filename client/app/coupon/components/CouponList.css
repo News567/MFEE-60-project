@@ -1,0 +1,208 @@
+/* =========================
+   全局樣式
+   -------------------------
+   設定網站的全局樣式，包括字體、背景顏色等
+========================= */
+
+:root {
+  --primary-deep-color: #023047;
+  --primary-color: #219ebc;
+  --primary-light-color: #8ecae6;
+  --secondary-deep-color: #ffb703;
+  --secondary-color: #ffd500;
+  --secondary-light-color: #f1d691;
+  --white-color: #fff;
+  --light-gray-color: #d8d8d8;
+  --cornflower-blue-color: #508be3;
+  --block-color: #000;
+}
+
+* {
+  font-family: "Noto Sans TC", serif;
+}
+
+/* =========================
+   結構樣式
+   -------------------------
+   設定網站主要結構樣式，包括Header、Footer、主容器等
+========================= */
+
+/* 主容器設定 */
+/* .coupon-content {
+  padding-left: 27px;
+  padding-right: 27px;
+} */
+
+/* =========================
+   組件樣式
+   -------------------------
+   設定頁面中的各個組件樣式，如導航欄、麵包屑導航、側邊欄、主要內容區等
+========================= */
+
+/* 搜尋框父容器 */
+.gray-block {
+  min-height: 100px; /* 設定最小高度，根據需要調整 */
+}
+
+/* 優惠券搜尋區塊 */
+.coupon-search-group {
+  max-width: 400px;
+}
+
+/* 篩選容器：水平排列並置中 */
+.filter-group {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+/* 篩選標籤設定：字型大小、顏色與右側間距 */
+.filter-label {
+  font-size: 16px;
+  color: black;
+}
+
+/* 篩選按鈕基本樣式設定：無背景、無邊框、內邊距與字型大小 */
+.filter-group button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: black;
+  transition: color 0.2s ease-in-out;
+}
+
+/* 篩選按鈕 hover 效果：文字顏色變藍 */
+.filter-group button:hover {
+  color: var(--primary-color);
+}
+
+/* 篩選按鈕選中狀態：文字顏色維持藍色 */
+.filter-group button.active {
+  color: var(--primary-color);
+}
+
+/* 優惠券標題與操作連結樣式 */
+.coupon-header {
+  border-bottom: 1px solid lightgray;
+  margin-top: 10px;
+}
+
+.coupon-actions a {
+  text-decoration: none;
+  color: black;
+  margin: 0 5px;
+}
+
+.coupon-actions a:hover {
+  color: #007bff;
+}
+
+
+/* =========================
+   為你推薦卡片樣式
+   -------------------------
+   設定為你推薦卡片的樣式，包括虛線框、圓角、內邊距、背景顏色等
+========================= */
+
+/* 為你推薦卡片圖片：固定寬高、圓角與圖片填充 */
+.coupon-product-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+/* =========================
+   功能樣式
+   -------------------------
+   設定特定功能區塊的樣式，如搜尋框、篩選區塊、優惠券列表、分頁按鈕等
+========================= */
+
+/* 分頁容器：水平排列、左右對齊且垂直置中，並有上方間距 */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 分頁資訊：字型大小與顏色設定 */
+.pagination-info {
+  font-size: 1rem;
+  color: black;
+}
+
+/* 分頁按鈕區塊：水平排列且按鈕間有間隔 */
+.page-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.page-buttons button i {
+  font-size: 1rem;
+}
+
+/* 分頁按鈕：無背景、無邊框、內邊距與字型大小，並加入過渡效果 */
+.page-buttons button {
+  background: none;
+  border: none;
+  padding: 5px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  color: black;
+  /* 頁碼顏色保持黑色 */
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* 分頁按鈕 hover 效果：背景變為黃色 */
+.page-buttons button:hover {
+  background-color: var(--secondary-color);
+}
+
+/* 當前選中頁碼：背景為黃色，字體加粗 */
+.page-buttons button.active {
+  background-color: var(--secondary-color);
+}
+
+/* 下拉選單大小 */
+.custom-select-container {
+  width: 11.25rem;
+  height: 1.875rem;
+  margin: 5px;
+}
+
+.custom-select-container {
+  width: 11.25rem;
+  height: 1.875rem;
+  margin: 5px;
+}
+
+.search-text {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.coupon-search {
+  max-width: 18.75rem;
+}
+
+.coupon-search .form-control {
+  margin-right: 5px;
+  border-radius: 3px;
+}
+
+.coupon-search span {
+  background-color: var(--primary-color);
+  border-radius: 3px !important;
+  width: 2.8rem;
+}
+
+.coupon-search i {
+  color: var(--white-color);
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 400;
+}

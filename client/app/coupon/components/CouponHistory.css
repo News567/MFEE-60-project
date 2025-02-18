@@ -1,0 +1,210 @@
+:root {
+  --primary-deep-color: #023047;
+  --primary-color: #219ebc;
+  --primary-light-color: #8ecae6;
+  --secondary-deep-color: #ffb703;
+  --secondary-color: #ffd500;
+  --secondary-light-color: #f1d691;
+  --white-color: #fff;
+  --light-gray-color: #D8D8D8;
+  --cornflower-blue-color: #508BE3;
+  --block-color: #000;
+}
+
+* {
+  font-family: "Noto Sans TC", serif;
+}
+
+/* 主容器 */
+/* .coupon-content {
+  padding-left: 27px;
+  padding-right: 27px;
+} */
+
+/* 歷史紀錄篩選 */
+.filter-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.filter-label {
+  font-size: 16px;
+  color: black;
+  margin-right: 10px;
+}
+
+.filter-group button {
+  background: none;
+  border: none;
+  padding: 5px 15px;
+  font-size: 16px;
+  cursor: pointer;
+  color: black;
+  transition: color 0.2s ease-in-out;
+}
+
+.filter-group button:hover {
+  color: #007bff;
+}
+
+.filter-group button.active {
+  color: #007bff;
+}
+
+/* 優惠券列表 */
+.coupon-card {
+  border: 1px solid;
+  border-color: var(--light-gray-color);
+  border-radius: 3px;
+  height: 7.5rem;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+/* 優惠券圖片：固定寬高、圓角與圖片填充 */
+.coupon-image {
+  width: 7.5em;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 3px 0 0 3px;
+}
+
+/* 優惠券卡片內左側內容：自動填滿剩餘空間 */
+.coupon-left {
+  flex: 1;
+  padding-inline: 5px;
+}
+
+/* 優惠券面額／折扣值：大字型、粗體與紅色 */
+.coupon-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+/* 優惠券使用條件描述：較小字型與灰色 */
+.coupon-condition {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* 優惠券類型標籤：小字型、紅色邊框、圓角與內邊距 */
+.coupon-type {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--primary-color);
+  border: 1px solid;
+  border-color: var(--primary-color);
+  border-radius: 5px;
+  padding: 2px 8px;
+  margin-top: 5px;
+  font-weight: 400;
+}
+
+/* 優惠券有效期限：小字型與淺灰色 */
+.coupon-expiry {
+  font-size: 12px;
+  display: inline-block;
+}
+
+/* 優惠券使用條件連結：小字型、紅色文字與左側間距 */
+.coupon-terms {
+  font-size: 12px;
+  color: var(--cornflower-blue-color);
+  text-decoration: none;
+  margin-left: 10px;
+}
+
+/* 連結 hover 效果：文字變深並顯示下劃線 */
+.coupon-terms:hover {
+  text-decoration: underline;
+}
+
+/* 領取按鈕：紅底白字、圓角、內邊距與字型設定 */
+.btn-claim {
+  color: var(--primary-color);
+  border-radius: 5px;
+  border: 1px solid;
+  border-color: var(--primary-color);
+  padding: 8px 15px;
+  font-size: 14px;
+  font-weight: 400;
+  margin-right: 15px;
+}
+
+/* 領取按鈕 hover 效果：背景色改變 */
+.btn-claim:hover {
+  background: var(--primary-color);
+  color: var(--white-color);
+}
+
+.btn-claim:active {
+  background: var(--primary-color) !important;
+  color: var(--white-color) !important;
+}
+
+/* 分頁顯示 */
+/* 分頁容器：水平排列、左右對齊且垂直置中，並有上方間距 */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 分頁資訊：字型大小與顏色設定 */
+.pagination-info {
+  font-size: 1rem;
+  color: black;
+}
+
+/* 分頁按鈕區塊：水平排列且按鈕間有間隔 */
+.page-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.page-buttons button i {
+  font-size: 1rem;
+}
+
+/* 分頁按鈕：無背景、無邊框、內邊距與字型大小，並加入過渡效果 */
+.page-buttons button {
+  background: none;
+  border: none;
+  padding: 5px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  color: black;
+  /* 頁碼顏色保持黑色 */
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* 分頁按鈕 hover 效果：背景變為黃色 */
+.page-buttons button:hover {
+  background-color: var(--secondary-color);
+}
+
+/* 當前選中頁碼：背景為黃色，字體加粗 */
+.page-buttons button.active {
+  background-color: var(--secondary-color);
+}
+
+/* 下拉選單大小 */
+.custom-select-container {
+  width: 11.25rem;
+  height: 1.875rem;
+  margin: 5px;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.link-list{
+ font-size: 1rem; 
+}
