@@ -67,7 +67,7 @@ apiRouter.use("/group", groupDetailRouter)
 // 租借相關路由
 apiRouter.use("/rent", rentRouter); // 負責 `/api/rent`
 apiRouter.use("/rent", rentDetailRouter); // 負責 `/api/rent/:id`
-apiRouter.use("/rent", rentRecommendedRouter); // 負責 `/api/rent/`
+apiRouter.use("/rent", rentRecommendedRouter); // 你可能會喜歡
 // 文章相關路由
 apiRouter.use("/article", articleRouter); // 負責 `/api/article`
 apiRouter.use("/article", articleDetailRouter); // 負責 `/api/article/:id`

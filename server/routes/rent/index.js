@@ -3,7 +3,7 @@ import { pool } from "../../config/mysql.js";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/recommended", async (req, res) => {
   const page = parseInt(req.query.page) || 1; // 當前頁數，默認為第 1 頁
   const limit = parseInt(req.query.limit) || 16; // 每頁顯示的商品數量，默認為 16
   const sort = req.query.sort; // 排序方式（先做price_desc 或 price_asc）

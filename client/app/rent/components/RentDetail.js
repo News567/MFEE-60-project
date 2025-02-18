@@ -19,7 +19,7 @@ export default function RentProductDetail() {
   const { id } = useParams(); // 取得動態路由參數
   // const searchParams = useSearchParams(); // 獲取查詢參數
   // const productId = searchParams.get("productId"); // 從查詢參數中獲取 productId
-  
+
   const [product, setProduct] = useState(null);
   const [mainImage, setMainImage] = useState(""); // 商品大張圖片（要做大圖切換
   const [loading, setLoading] = useState(true); // 加載狀態
@@ -61,7 +61,8 @@ export default function RentProductDetail() {
           "/rent/no-img.png"; // 如果沒有圖片，顯示"本商品暫時沒有圖片"的預設圖片
         setMainImage(mainImage);
 
-        console.log("Product images:", images); // 調試訊息
+        // 獲取"你可能喜歡"區塊的推薦商品
+        fetchRecommendedProducts(data.brand_name, data.category_small, data.id);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -71,6 +72,35 @@ export default function RentProductDetail() {
 
     fetchProduct();
   }, [id]);
+
+  // 獲取推薦商品
+  const fetchRecommendedProducts = async (brand, category_small, id) => {
+    try {
+      console.log("收到的 id:", req.query.id, "類型:", typeof req.query.id);
+      const API_BASE_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
+
+        // 確保 id 是數字，且為正整數
+    const parsedId = Number(id);
+    if (!Number.isInteger(parsedId) || parsedId <= 0) {
+      console.error("無效的商品 ID:", id);
+      return;
+    }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/rent/recommended?brand=${encodeURIComponent(
+          brand
+        )}&category_small=${encodeURIComponent(category_small)}&id=${Number(id)}`
+      );
+      if (!response.ok) {
+        throw new Error("無法獲取推薦商品");
+      }
+      const result = await response.json();
+      setRecommendedProducts(result.data || []);
+    } catch (err) {
+      console.error("獲取推薦商品失敗:", err);
+    }
+  };
 
   // 判斷收藏的愛心狀態
   const handleClick = () => {
@@ -575,40 +605,41 @@ export default function RentProductDetail() {
           <h3 className="you-may-like-title">你可能會喜歡</h3>
         </div>
         <div className="row you-may-like-products">
-          {[1, 2, 3, 4].map((item) => (
+          {recommendedProducts.map((item) => (
             <div
-              key={item}
+              key={item.id}
               className="col-12 col-sm-6 col-md-4 col-lg-3 you-may-like-product mb-4"
             >
               <div className="card border-0 h-100">
                 <Image
-                  src="/img/rent/fit/1732690021_5668.jpg"
+                  src={item.images[0]?.img_url || "/rent/no-img.png"}
                   className="card-img-top product-img w-100"
-                  alt="TRYGONS液態面鏡"
-                  width={148} // 設定圖片的寬度
-                  height={148} // 設定圖片的高度
+                  alt={item.name}
+                  width={148}
+                  height={148}
                   layout="responsive"
                   priority
                   unoptimized
                 />
                 <div className="py-2 px-0 d-flex flex-column justify-content-start align-items-center card-body">
-                  <p className="product-brand">TRYGONS</p>
-                  <p className="product-name">液態面鏡</p>
-                  <h6 className="product-price">NT $740</h6>
-                  <h6 className="product-price2">NT $350</h6>
+                  <p className="product-brand">{item.brand}</p>
+                  <p className="product-name">{item.name}</p>
+                  {item.price2 && (
+                    <h6 className="product-price2">NT ${item.price2}</h6>
+                  )}
+                  <h6 className="product-price">NT ${item.price}</h6>
                   <div className="d-flex flex-row justify-content-center align-items-center product-color">
-                    <span
-                      className="color-box"
-                      style={{ backgroundColor: "#4d4244" }}
-                    ></span>
-                    <span
-                      className="color-box"
-                      style={{ backgroundColor: "#403f6f" }}
-                    ></span>
-                    <span
-                      className="color-box"
-                      style={{ backgroundColor: "white" }}
-                    ></span>
+                    {item.specifications &&
+                      item.specifications.map(
+                        (spec, index) =>
+                          spec.color_rgb && (
+                            <span
+                              key={index}
+                              className="color-box"
+                              style={{ backgroundColor: spec.color_rgb }}
+                            ></span>
+                          )
+                      )}
                   </div>
 
                   {/* 右上角hover */}
