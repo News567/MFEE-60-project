@@ -22,7 +22,7 @@ export default function ProductCard({ product }) {
       <Link href={`/activity/${product.id}`} className={styles.productLink}>
         <div className={styles.productImg}>
           <Image
-            src={`/image/activity/${product.main_image}` || "/image/activity/1.jpg"}
+            src={`/image/activity/${product.id}/${product.main_image}` || "/image/activity/1.jpg"}
             alt={product.name || "商品圖片"}
             width={200}
             height={200}

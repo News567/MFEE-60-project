@@ -82,7 +82,7 @@ export default function Header() {
               <li className="px-3 py-2">
                 <Link
                   className="a"
-                  href="#"
+                  href="/article"
                   onMouseEnter={() => handleMouseEnter("forum")}
                 >
                   論壇

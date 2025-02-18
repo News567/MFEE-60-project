@@ -21,7 +21,7 @@
 }
 
 * {
-  font-family: 'Noto Sans TC', serif;
+  font-family: "Noto Sans TC", serif;
   font-size: 16px;
 }
 
@@ -41,18 +41,85 @@
 
 .main-details .main-image {
   width: 100%;
+  aspect-ratio: 1; /* 保持正方形比例（高與寬相等） */
+  overflow: hidden; /* 隱藏超出部分 */
+}
+.main-details .main-image Image {
+  width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
 .main-details .small-images {
-  padding: 30px 0px;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  overflow: hidden;
+}
+.main-details .small-images > div {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0; /* 防止圖片縮小 */
 }
 
-.main-details .small-images img {
-  width: 25%;
+.main-details .small-images Image {
+  width: 100%;
   max-width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: cover;
+}
+
+/* 設置空白元素的樣式 */
+.empty-image {
+  background-color: transparent;
+  border: none;
+  flex-shrink: 0;
+}
+
+.main-details .small-images .btn-prev,
+.main-details .small-images .btn-next {
+  position: absolute; /* 絕對定位 */
+  top: 50%; /* 垂直居中 */
+  transform: translateY(-50%); /* 垂直居中 */
+  background-color: var(--primary-color);
+  color: var(--white);
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  opacity: 0; /* 預設隱藏 */
+  transition: opacity 0.3s ease; /* 淡入淡出效果 */
+  z-index: 1;
+}
+
+.main-details .small-images .btn-prev {
+  left: 10; /* 第一張圖片的左側 */
+}
+
+.main-details .small-images .btn-next {
+  right: 10; /* 第三張圖片的右側 */
+}
+
+/* 滑鼠 hover 時顯示按鈕 */
+.main-details .small-images:hover .btn-prev,
+.main-details .small-images:hover .btn-next {
+  opacity: 1; /* 顯示按鈕 */
+}
+
+.main-details .small-images .btn-prev i,
+.main-details .small-images .btn-next i {
+  font-size: 20px;
+  color: var(--white);
 }
 
 .main-details .rent-rules {
@@ -91,8 +158,27 @@
 .main-details .details-titles .product-brand {
   margin: 0;
   color: var(--gray-600-color);
-  font-size: 24px;
+  /* font-size: 24px; */
   font-weight: 700;
+}
+/* .main-details .details-titles .product-name-fav {
+  position: relative;
+} */
+
+.main-details .details-titles .product-name-fav .heart-icon {
+  font-size: 24;
+  color: var(--black);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+/* hover的時候的效果 */
+.main-details .details-titles .product-name-fav .heart-icon:hover {
+  color: var(--primary-color);
+}
+/* fill的時候的效果 */
+.main-details .details-titles .product-name-fav .heart-icon.filled {
+  color: var(--primary-color);
 }
 
 .main-details .details-titles .product-name {
@@ -107,10 +193,23 @@
 }
 
 .main-details .subdetails-titles {
-  gap: 5px;
+  gap: 10px;
 }
 
-.main-details .subdetails-titles .product-price-perday {
+.main-details .subdetails-titles .product-price {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* 劃掉樣式 */
+.main-details .subdetails-titles .product-price.strikethrough {
+  color: var(--gray-600-color);
+  text-decoration: line-through;
+}
+
+/* 特價樣式 */
+.main-details .subdetails-titles .product-price2 {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
@@ -128,14 +227,22 @@
 
 .main-details .details-select .product-stock {
   margin: 0;
-  font-style: 17px;
-  font-weight: 700;
+  margin-left: 10;
+  color: var(--gray-600-color);
+  /* font-style: italic; */
+}
+.main-details .details-select .stock-available {
+  margin: 0;
+  margin-left: 10;
+  color: var(--gray-600-color);
+  /* font-style: italic; */
 }
 
 .main-details .details-select .product-color .color-title {
   margin: 0;
   color: var(--gray-600-color);
   font-weight: 700;
+  margin-bottom: 10px;
 }
 
 .main-details .details-select .product-color .colors {
@@ -143,9 +250,17 @@
 }
 
 .main-details .details-select .product-color .colors .color-box {
-  width: 38px;
-  height: 38px;
+  width: 33px;
+  height: 33px;
   border-radius: 100px;
+  display: inline-block;
+  margin-right: 8px;
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.4));
+}
+
+.no-colors {
+  color: var(--gray-600-color);
+  font-style: italic;
 }
 
 .main-details .product-amount .amount-title {
@@ -155,7 +270,6 @@
 }
 
 .main-details .product-amount .amounts {
-  width: 45px;
   padding: 14px 9px;
 }
 
@@ -188,6 +302,7 @@
   margin: 0;
   color: var(--gray-600-color);
   font-weight: 700;
+  margin-bottom: 10px;
 }
 
 .main-details .product-btns {
@@ -218,11 +333,15 @@
   border: 1px solid var(--gray-300-color);
 }
 
-.under-detail {
-  text-align: center;
+.tab-buttons {
+  gap: 25px;
 }
 
-.under-detail .under-details-title {
+.tab-button {
+  border: 0;
+  background-color: transparent;
+}
+.tab-button .under-details-title {
   margin: 0;
   display: inline-block;
   color: var(--black);
@@ -234,6 +353,14 @@
 }
 
 .under-detail .under-details-content {
+  margin: 0;
+  color: var(--black);
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+  padding: 15px;
+}
+.under-comments .under-comments-content {
   margin: 0;
   color: var(--black);
   font-size: 14px;
@@ -306,7 +433,12 @@
   gap: 6px;
 }
 
-.you-may-like-products .you-may-like-product .card .card-body .product-color .color-box {
+.you-may-like-products
+  .you-may-like-product
+  .card
+  .card-body
+  .product-color
+  .color-box {
   width: 15px;
   height: 15px;
   border: 0.5px solid var(--gray-200-color);
@@ -338,4 +470,42 @@
 .you-may-likes nav .pagination .page-item .page-link {
   border: none;
   color: var(--black);
+}
+
+.you-may-likes .you-may-like-products .card .card-body .icon-container {
+  position: absolute;
+  bottom: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  gap: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.you-may-likes .you-may-like-products .card .card-body .icon-container .icon {
+  background-color: var(--white);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.you-may-likes .you-may-like-products .card .card-body .icon-container .icon i {
+  font-size: 16px;
+  color: var(--black);
+}
+
+.you-may-likes .you-may-like-products .card:hover .icon-container {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+  color: var(--white);
+}
+
+.you-may-likes .you-may-like-products .card:hover .icon-container .icon:hover {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+.you-may-likes .you-may-like-products.card:hover .icon-container .icon i:hover {
+  color: var(--white);
 }

@@ -1,257 +1,167 @@
-/* 隱藏 Flatpickr 的輸入框 */
-.booking-calendar .flatpickr-input {
-    display: none;
-  }
-  
-  .booking-calendar {
-    width: 100%;
-  }
-  
-  .booking-calendar .flatpickr-calendar {
-    width: 100%;
-    max-width: 100%;
-    background-color: var(--white);
-    border: 0.5px solid var(--gray-100-color);
-    border-radius: 0;
-    box-shadow: none;
-  }
-  .booking-calendar .dayContainer {
-    width: 100%;
-    min-width: 100%;
-    max-width: 100%;
-  }
-  
-  .flatpickr-current-month {
-    display: flex;
-    align-items: center; /* 垂直居中 */
-    gap: 5px; /* 設置間距 */
-    background-color: var(--primary-color);
-  }
-  .flatpickr-current-month .numInputWrapper {
-    width: 40%;
-    display: flex;
-    justify-content: center;
-  }
-  
-  .flatpickr-current-month .numInputWrapper input {
-    width: 120px;
-    max-width: 100%;
-    text-align: center;
-  }
-  
-  /* 調整年份輸入框 */
-  .flatpickr-current-month .cur-year {
-    width: 50%;
-    padding: 10px;
-    border: none;
-    text-align: center;
-    background-color: var(--primary-color);
-    color: var(--white);
-  }
-  
-  /* 月份標題樣式 */
-  .booking-calendar .flatpickr-month {
-    width: 100%;
-    height: auto;
-    font-size: 16px;
-    font-weight: 700;
-    background: var(--primary-color);
-    color: var(--white);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-  }
-  
-  .booking-calendar .flatpickr-current-month {
-    height: 100%;
-    padding: 0;
-    margin: 0;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--white);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .booking-calendar .flatpickr-monthDropdown-months {
-    font-size: 16px;
-    font-weight: 700;
-    background-color: var(--primary-color);
-    color: var(--white);
-  }
-  
-  .booking-calendar .flatpickr-current-month .flatpickr-monthDropdown-months {
-    appearance: none;
-    background-image: none;
-    border: none;
-  }
-  .booking-calendar .flatpickr-current-month .flatpickr-monthDropdown-months,
-  .booking-calendar .flatpickr-current-month .numInputWrapper {
-    margin: 0;
-  }
-  
-  .booking-calendar .flatpickr-current-month .numInputWrapper {
-    display: inline-flex;
-    align-items: center;
-  }
-  
-  .booking-calendar .flatpickr-current-month input {
-    font-size: 16px;
-    font-weight: bold;
-    text-align: center;
-  }
-  
-  .flatpickr-months {
-    background-color: var(--primary-color);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0 10px;
-  }
-  
-  /* 前後月箭頭顏色 */
-  .booking-calendar .flatpickr-prev-month svg,
-  .booking-calendar .flatpickr-next-month svg {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    fill: var(--white);
-    width: 16px;
-    height: 16px;
-  }
-  
-  /* 週次樣式 */
-  .booking-calendar .flatpickr-weekdays {
-    width: 100%;
-    background-color: var(--primary-light-color);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-  }
-  .flatpickr-weekdaycontainer {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 5%;
-    padding: 5px;
-    text-align: center;
-  }
-  
-  .flatpickr-weekdaycontainer span {
-    white-space: nowrap;
-  }
-  
-  .booking-calendar .flatpickr-weekday {
-    flex: 1;
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--black);
-  }
-  
-  /* 日期樣式 */
-  .booking-calendar .flatpickr-days {
-    width: 100%;
-  }
-  
-  .booking-calendar .flatpickr-day.today {
-    border-radius: 0;
-    border: 0.5px solid var(--primary-light-color);
-  }
-  
-  .booking-calendar .flatpickr-day.selected,
-  .booking-calendar .flatpickr-day.inRange,
-  .booking-calendar .flatpickr-day.startRange,
-  .booking-calendar .flatpickr-day.endRange {
-    border-radius: 0;
-    background: var(--primary-color);
-    color: var(--white);
-    border: none;
-  }
-  
-  /* 日數容器 */
-  .dayContainer {
-    width: 100% !important;
-    min-width: 100% !important;
-    max-width: 100% !important;
-    display: flex;
-    flex-wrap: wrap;
-  }
-  
-  /* 日數單元格 */
-  .flatpickr-day {
-    width: calc(100% / 7);
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    box-sizing: border-box;
-  }
-  
-  .booking-calendar .flatpickr-day.today {
-    border-radius: 0;
-    border: 0.5px solid var(--primary-light-color);
-  }
-  
-  .booking-calendar .flatpickr-day.selected,
-  .booking-calendar .flatpickr-day.inRange,
-  .booking-calendar .flatpickr-day.startRange,
-  .booking-calendar .flatpickr-day.endRange {
-    border-radius: 0;
-    background: var(--primary-color);
-    color: var(--white);
-    border: none;
-  }
-  
-  /* 日數容器 */
-  .dayContainer {
-    width: 100% !important;
-    min-width: 100% !important;
-    max-width: 100% !important;
-    display: flex;
-    flex-wrap: wrap;
-  }
-  
-  /* 改變 hover 時日期的背景 */
-  .booking-calendar .flatpickr-day:hover {
-    background: var(--primary-light-color);
-    border-radius: 0;
-    color: var(--white);
-  }
-  
-  /* 選擇日期範圍樣式 */
-  .selected-date-range {
-    gap: 10px;
-    margin-top: 20px;
-    background-color: rgba(142, 202, 230, 0.5);
-  }
-  
-  .selected-date-range #date-range-text {
-    margin: 0;
-    color: var(--black);
-    font-weight: 400;
-  }
-  
-  .selected-date-range #total-cost-text {
-    margin: 0;
-    color: var(--black);
-    font-weight: 400;
-    display: none;
-  }
-  
-  /* 非當前月份的日期 */
-  .flatpickr-day.prevMonthDay {
-    color: var(--gray-50-color);
-  }
-  .flatpickr-day.nextMonthDay {
-    color: var(--gray-400-color);
-  }
-  
+/* flatpickr自訂樣式修改 */
+
+/* 通用樣式 */
+.booking-date .booking-title {
+  margin: 0;
+  color: var(--gray-600-color);
+  font-weight: 700;
+}
+
+.booking-date .booking-calendar .flatpickr-input {
+  display: none;
+}
+
+.booking-date .booking-calendar .flatpickr-calendar {
+  width: 100%;
+  max-width: 100%;
+  background-color: var(--white);
+  border: 0.5px solid var(--gray-100-color);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.booking-date .booking-calendar .dayContainer {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+}
+
+/* 月份樣式 */
+.booking-date .booking-calendar .flatpickr-month {
+  height: auto;
+  min-height: 50px;
+  font-size: 16px;
+  font-weight: 700;
+  background: var(--primary-color);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+}
+
+.booking-date .booking-calendar .flatpickr-current-month {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.booking-date .booking-calendar .flatpickr-monthDropdown-months {
+  font-size: 16px;
+  font-weight: 700;
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+.booking-date .booking-calendar .flatpickr-current-month .flatpickr-monthDropdown-months {
+  appearance: none; /* 移除預設樣式 */
+  background-image: none; /* 移除預設箭頭 */
+}
+
+.booking-date .booking-calendar .flatpickr-current-month .flatpickr-monthDropdown-months,
+.booking-date .booking-calendar .flatpickr-current-month .numInputWrapper {
+  margin: 0;
+}
+
+.booking-date .booking-calendar .flatpickr-current-month .numInputWrapper {
+  display: inline-flex; /* 讓年份輸入框與月份選擇器對齊 */
+  align-items: center; /* 垂直置中 */
+}
+
+.booking-date .booking-calendar .flatpickr-current-month input {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* 修改前後月箭頭顏色 */
+.booking-date .booking-calendar .flatpickr-prev-month svg,
+.booking-date .booking-calendar .flatpickr-next-month svg {
+  fill: var(--white);
+}
+
+/* 週次樣式 */
+.booking-date .booking-calendar .flatpickr-weekdays {
+  width: 100%;
+  background-color: var(--primary-light-color);
+  display: flex;
+}
+
+.booking-date .booking-calendar .flatpickr-weekday {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--black);
+  flex: 1;
+  text-align: center;
+}
+
+.booking-date .booking-calendar .flatpickr-day.today {
+  border-radius: 0;
+  border: 0.5px solid var(--primary-light-color);
+}
+
+.booking-date .booking-calendar .flatpickr-day.selected,
+.booking-date .booking-calendar .flatpickr-day.inRange,
+.booking-date .booking-calendar .flatpickr-day.startRange,
+.booking-date .booking-calendar .flatpickr-day.endRange {
+  border-radius: 0;
+  background: var(--primary-color);
+  color: var(--white);
+  border: none;
+}
+
+.booking-date .booking-calendar .flatpickr-days {
+  width: 100%;
+}
+
+.booking-date .booking-calendar .flatpickr-day {
+  margin: 0;
+  width: calc(100% / 7); /* 7 天均分寬度 */
+  max-width: calc(100% / 7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* 讓選取範圍內的日期緊貼在一起 */
+.booking-date .booking-calendar .flatpickr-day.inRange {
+  box-shadow: -5px 0 0 var(--primary-color), 5px 0 0 var(--primary-color);
+}
+
+.booking-date .booking-calendar .flatpickr-day.selected:hover {
+  border-radius: 0;
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+/* 改變 hover 時日期的背景 */
+.booking-date .booking-calendar .flatpickr-day:hover {
+  background: var(--primary-light-color);
+  border-radius: 0;
+  color: var(--white);
+}
+
+/* 選定日期範圍的樣式 */
+.booking-date .booking-calendar .selected-date-range {
+  gap: 10px;
+  margin-top: 20px;
+  background-color: rgba(142, 202, 230, 0.5);
+}
+
+.booking-date .booking-calendar .selected-date-range #date-range-text {
+  margin: 0;
+  color: var(--black);
+  font-weight: 400;
+}
+
+.booking-date .booking-calendar .selected-date-range #total-cost-text {
+  margin: 0;
+  color: var(--black);
+  font-weight: 400;
+  display: none; /* 預設隱藏 */
+}

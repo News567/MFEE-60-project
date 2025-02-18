@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
@@ -11,23 +11,169 @@ import RecommendedProducts from "./RecommendedProducts";
 import SocialToolbar from "./SocialToolbar";
 import useFavorite from "@/hooks/useFavorite";
 import { useCart } from "@/hooks/cartContext";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { FreeMode, Navigation, Thumbs } from "swiper/modules";
+//使用swiper
+import "swiper/css";
+import "swiper/css/free-mode";
+import "swiper/css/navigation";
+import "swiper/css/thumbs";
+
 // API 基礎 URL
 const API_BASE_URL = "http://localhost:3005/api";
 export default function ProductDetail() {
   const params = useParams();
-  const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
-  const [activeTab, setActiveTab] = useState("description");
   const [product, setProduct] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { addToCart } = useCart();
+  const [activeTab, setActiveTab] = useState("description");
+  const { addToCart, fetchCart } = useCart();
   const {
     isFavorite,
     toggleFavorite,
     loading: favoriteLoading,
   } = useFavorite(params.id);
+  const [thumbsSwiper, setThumbsSwiper] = useState(null);
+  const [currentStock, setCurrentStock] = useState(0);
+  const [currentPrice, setCurrentPrice] = useState(0);
+  const [currentOriginalPrice, setCurrentOriginalPrice] = useState(0);
+  const [allImages, setAllImages] = useState([]);
+  const mainSwiperRef = useRef(null);
+
+  // 當顏色或尺寸改變時，更新庫存
+  useEffect(() => {
+    const variant = getCurrentVariant();
+    if (variant) {
+      setCurrentStock(variant.stock);
+    }
+  }, [selectedColor, selectedSize]);
+
+  // 取得當前選擇的變體
+  const getCurrentVariant = () => {
+    if (!product || !selectedColor || !selectedSize) return null;
+
+    return product.variants.find(
+      (v) => v.color_id === selectedColor.id && v.size_id === selectedSize.id
+    );
+  };
+
+  // 處理數量變更
+  const handleQuantityChange = (value) => {
+    setQuantity((prevQuantity) => {
+      const newQuantity = prevQuantity + value;
+      const variant = getCurrentVariant();
+
+      if (newQuantity >= 1 && variant) {
+        if (newQuantity <= variant.stock) {
+          return newQuantity;
+        } else {
+          alert("超過庫存數量！");
+          return prevQuantity;
+        }
+      }
+      return prevQuantity;
+    });
+  };
+
+  // 加入購物車
+  const handleAddToCart = async () => {
+    if (!selectedColor || !selectedSize) {
+      alert("請選擇商品尺寸和顏色");
+      return;
+    }
+
+    const currentVariant = getCurrentVariant();
+    if (!currentVariant) {
+      alert("找不到對應的商品規格");
+      return;
+    }
+
+    try {
+      // 發送購物車請求
+      const cartData = {
+        userId: 1,
+        variantId: currentVariant.id,
+        quantity: quantity,
+        type: "product",
+      };
+
+      const response = await axios.post(`${API_BASE_URL}/cart/add`, cartData);
+
+      if (response.data.success) {
+        //讓購物車重新從後端獲取最新數據，而不是自己組裝 cartItem
+        fetchCart(1);
+        alert("成功加入購物車！");
+      } else {
+        alert(response.data.message || "加入購物車失敗");
+      }
+    } catch (error) {
+      console.error("加入購物車失敗:", error);
+      alert("加入購物車失敗，請稍後再試");
+    }
+  };
+
+  // 修改尺寸選擇的處理
+  const handleSizeSelect = (size) => {
+    setSelectedSize(size);
+    setQuantity(1);
+
+    if (selectedColor) {
+      const variant = product.variants.find(
+        (v) => v.color_id === selectedColor.id && v.size_id === size.id
+      );
+      if (variant) {
+        setCurrentPrice(variant.price);
+        setCurrentOriginalPrice(variant.original_price);
+        setCurrentStock(variant.stock);
+
+        // 如果變體有圖片，切換到對應圖片
+        if (variant.images?.[0]) {
+          const imageIndex = allImages.findIndex(
+            (img) => img === variant.images[0]
+          );
+          if (imageIndex !== -1 && mainSwiperRef.current) {
+            mainSwiperRef.current.slideTo(imageIndex);
+            if (thumbsSwiper) {
+              thumbsSwiper.slideTo(imageIndex);
+            }
+          }
+        }
+      }
+    }
+  };
+
+  // 修改顏色選擇的處理
+  const handleColorSelect = (color) => {
+    setSelectedColor(color);
+    setQuantity(1);
+
+    if (selectedSize) {
+      const variant = product.variants.find(
+        (v) => v.color_id === color.id && v.size_id === selectedSize.id
+      );
+      if (variant) {
+        setCurrentPrice(variant.price);
+        setCurrentOriginalPrice(variant.original_price);
+        setCurrentStock(variant.stock);
+
+        // 如果變體有圖片，切換到對應圖片
+        if (variant.images?.[0]) {
+          const imageIndex = allImages.findIndex(
+            (img) => img === variant.images[0]
+          );
+          if (imageIndex !== -1 && mainSwiperRef.current) {
+            mainSwiperRef.current.slideTo(imageIndex);
+            if (thumbsSwiper) {
+              thumbsSwiper.slideTo(imageIndex);
+            }
+          }
+        }
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -45,13 +191,52 @@ export default function ProductDetail() {
 
         if (response.data.status === "success" && response.data.data) {
           const productData = response.data.data;
+
+          // 收集所有變體的圖片
+          const variantImages = productData.variants.flatMap(
+            (variant) => variant.images || []
+          );
+          // 合併主圖片和變體圖片
+          const images = [...productData.images, ...variantImages];
+
+          setAllImages(images);
           setProduct(productData);
-          // 設置默認選中的尺寸和顏色
-          if (productData.sizes && productData.sizes.length > 0) {
-            setSelectedSize(productData.sizes[0]);
-          }
-          if (productData.colors && productData.colors.length > 0) {
-            setSelectedColor(productData.colors[0].name);
+
+          // 設置初始選中的尺寸和顏色
+          if (productData.sizes?.length > 0 && productData.colors?.length > 0) {
+            const initialSize = productData.sizes[0];
+            const initialColor = productData.colors[0];
+
+            setSelectedSize(initialSize);
+            setSelectedColor(initialColor);
+
+            // 找到對應的變體
+            const initialVariant = productData.variants.find(
+              (v) =>
+                v.color_id === initialColor.id && v.size_id === initialSize.id
+            );
+
+            if (initialVariant) {
+              setCurrentPrice(initialVariant.price);
+              setCurrentOriginalPrice(initialVariant.original_price);
+              setCurrentStock(initialVariant.stock);
+
+              // 如果初始變體有圖片，設置初始圖片位置
+              if (initialVariant.images?.[0]) {
+                const imageIndex = images.findIndex(
+                  (img) => img === initialVariant.images[0]
+                );
+                // 等待 Swiper 初始化完成後再設置位置
+                setTimeout(() => {
+                  if (imageIndex !== -1 && mainSwiperRef.current) {
+                    mainSwiperRef.current.slideTo(imageIndex);
+                    if (thumbsSwiper) {
+                      thumbsSwiper.slideTo(imageIndex);
+                    }
+                  }
+                }, 100);
+              }
+            }
           }
         } else {
           setError("找不到商品");
@@ -69,64 +254,9 @@ export default function ProductDetail() {
     }
   }, [params.id]);
 
-  const handleQuantityChange = (value) => {
-    const newQuantity = quantity + value;
-    if (newQuantity >= 1) {
-      setQuantity(newQuantity);
-    }
-  };
-
   if (loading) return <div>...</div>;
   if (error) return <div>錯誤 {error}</div>;
   if (!product) return <div>未找到商品</div>;
-
-  // 模擬瀏覽記錄數據
-  const historyItems = [
-    { name: "商品1", price: 1999, image: "/images/1.webp" },
-    { name: "商品2", price: 2999, image: "/images/1.webp" },
-    { name: "商品3", price: 3999, image: "/images/1.webp" },
-    { name: "商品4", price: 4999, image: "/images/1.webp" },
-    { name: "商品5", price: 5999, image: "/images/1.webp" },
-  ];
-
-  // 模擬推薦商品數據
-  const recommendedProducts = [
-    {
-      name: "TRYGONS",
-      description: "液態面鏡",
-      originalPrice: "NT$2500",
-      salePrice: "NT$1999",
-      imgSrc: "/images/1.webp",
-    },
-    {
-      name: "商品2",
-      description: "描述2",
-      originalPrice: "NT$3000",
-      salePrice: "NT$2499",
-      imgSrc: "/images/1.webp",
-    },
-    {
-      name: "商品3",
-      description: "描述3",
-      originalPrice: "NT$4000",
-      salePrice: "NT$3499",
-      imgSrc: "/images/1.webp",
-    },
-    {
-      name: "商品4",
-      description: "描述4",
-      originalPrice: "NT$5000",
-      salePrice: "NT$4499",
-      imgSrc: "/images/1.webp",
-    },
-    {
-      name: "商品5",
-      description: "描述5",
-      originalPrice: "NT$6000",
-      salePrice: "NT$5499",
-      imgSrc: "/images/1.webp",
-    },
-  ];
 
   return (
     <div className="container">
@@ -134,35 +264,64 @@ export default function ProductDetail() {
         {/* 左側產品圖片 */}
         <div className="col-md-6">
           <div className="product-img">
-            <Image
-              src={product.images[0]}
-              alt={product.name}
-              width={500}
-              height={500}
-              priority
-              style={{
-                maxWidth: "100%",
-                height: "auto",
-                objectFit: "contain",
+            <Swiper
+              spaceBetween={10}
+              navigation={true}
+              thumbs={{ swiper: thumbsSwiper }}
+              modules={[FreeMode, Navigation, Thumbs]}
+              className="mySwiper2"
+              onSwiper={(swiper) => {
+                mainSwiperRef.current = swiper;
               }}
-            />
+            >
+              {allImages.map((image, index) => (
+                <SwiperSlide key={index}>
+                  <div className="product-img-wrapper">
+                    <Image
+                      src={`/img/product/${image}`}
+                      alt={`${product?.name}-${index + 1}`}
+                      width={500}
+                      height={500}
+                      priority={index === 0}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                      }}
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </div>
-          <div className="d-flex justify-content-evenly mt-3">
-            {product.images.map((image, index) => (
-              <div key={index} className="box">
-                <Image
-                  src={image}
-                  alt={`${product.name}-${index + 1}`}
-                  width={100}
-                  height={100}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-              </div>
-            ))}
+          <div className="mt-3">
+            <Swiper
+              onSwiper={setThumbsSwiper}
+              spaceBetween={10}
+              slidesPerView={4}
+              freeMode={true}
+              watchSlidesProgress={true}
+              modules={[FreeMode, Navigation, Thumbs]}
+              className="mySwiper"
+            >
+              {allImages.map((image, index) => (
+                <SwiperSlide key={index}>
+                  <div className="thumb-wrapper">
+                    <Image
+                      src={`/img/product/${image}`}
+                      alt={`${product?.name}-${index + 1}`}
+                      width={100}
+                      height={100}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </div>
         </div>
 
@@ -183,19 +342,18 @@ export default function ProductDetail() {
                   disabled={favoriteLoading}
                 >
                   {isFavorite ? (
-                    <AiFillHeart color="red" size={24} />
+                    <AiFillHeart color="red" size={40} />
                   ) : (
-                    <AiOutlineHeart size={24} />
+                    <AiOutlineHeart size={40} />
                   )}
                 </button>
               </div>
             </div>
             <h2>{product.name}</h2>
             <hr />
-            <h2 className="text-primary">NT${product.price}</h2>
-
+            <h2 className="text-primary">NT${currentPrice}</h2>
             <h5 className="text-secondary text-decoration-line-through">
-              NT${product.original_price}
+              NT${currentOriginalPrice}
             </h5>
 
             <div className="mb-2">
@@ -217,43 +375,63 @@ export default function ProductDetail() {
             {/* 尺寸選擇 */}
             <div className="my-2">產品尺寸</div>
             <div className="d-flex gap-2">
-              {product.sizes.map((size) => (
+              {product?.sizes.map((size) => (
                 <div
-                  key={size}
-                  className={`sizeBox ${selectedSize === size ? "active" : ""}`}
-                  onClick={() => setSelectedSize(size)}
+                  key={size.id}
+                  className={`sizeBox ${
+                    selectedSize?.id === size.id ? "active" : ""
+                  }`}
+                  onClick={() => handleSizeSelect(size)}
                 >
-                  {size}
+                  {size.name}
                 </div>
               ))}
             </div>
 
             {/* 顏色選擇 */}
-            <div className="my-2">產品顏色</div>
+            <div className="my-2">
+              產品顏色 :::{" "}
+              <span style={{ color: selectedColor?.code }}>
+                {selectedColor?.name}
+              </span>
+            </div>
             <div className="d-flex gap-2 flex-wrap">
-              {product.colors.map((color) => (
+              {product?.colors.map((color) => (
                 <div
                   key={color.id}
                   className={`circle ${
-                    selectedColor === color.name ? "active" : ""
+                    selectedColor?.id === color.id ? "active" : ""
                   }`}
                   style={{
-                    backgroundColor: `#${color.code.replace("#", "")}`,
+                    backgroundColor: color.code,
+                    border: `2px solid ${
+                      selectedColor?.id === color.id ? "#007bff" : "#dee2e6"
+                    }`,
                   }}
-                  onClick={() => setSelectedColor(color.name)}
+                  onClick={() => handleColorSelect(color)}
                   title={color.name}
-                ></div>
+                >
+                  {selectedColor?.id === color.id && (
+                    <div className="check-mark">✓</div>
+                  )}
+                </div>
               ))}
             </div>
 
             {/* 數量選擇 */}
-            <div className="my-2">產品數量</div>
+            <div className="my-2">
+              產品數量
+              {currentStock > 0 && (
+                <span className="text-muted ms-2">(庫存: {currentStock})</span>
+              )}
+            </div>
             <div className="buttonCount">
               <button
                 className="button-left"
                 onClick={() => handleQuantityChange(-1)}
+                disabled={quantity <= 1}
               >
-                -
+                <span>-</span>
               </button>
               <input
                 type="text"
@@ -264,16 +442,18 @@ export default function ProductDetail() {
               <button
                 className="button-right"
                 onClick={() => handleQuantityChange(1)}
+                disabled={!currentStock || quantity >= currentStock}
               >
-                +
+                <span>+</span>
               </button>
             </div>
 
             {/* 購買按鈕 */}
             <div className="d-flex mt-4">
               <button
-                onClick={() => addToCart(product)}
+                onClick={handleAddToCart}
                 className="btn btn-info addCartButton flex-grow-1"
+                disabled={!selectedColor || !selectedSize}
               >
                 加入購物車
               </button>
@@ -326,13 +506,12 @@ export default function ProductDetail() {
       </div>
 
       {/* 瀏覽記錄 */}
-      <BrowsingHistory historyItems={historyItems} />
+      {/* <BrowsingHistory /> */}
 
       {/* 推薦商品 */}
-      <RecommendedProducts products={recommendedProducts} />
-
+      {/* <RecommendedProducts /> */}
       {/* 社交工具欄 */}
-      <SocialToolbar historyItems={historyItems} />
+      <SocialToolbar />
     </div>
   );
 }

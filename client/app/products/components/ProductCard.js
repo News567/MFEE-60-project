@@ -22,7 +22,7 @@ export default function ProductCard({ product }) {
       <Link href={`/products/${product.id}`} className={styles.productLink}>
         <div className={styles.productImg}>
           <Image
-            src={`/img/product/${product.main_image}` || "/images/1.webp"}
+            src={`/img/product/${product.main_image}`}
             alt={product.name || "商品圖片"}
             width={200}
             height={200}
@@ -51,9 +51,22 @@ export default function ProductCard({ product }) {
           </div>
         </div>
         <div className={`d-flex justify-content-center gap-1 my-2`}>
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className={styles.saleCircle}></div>
-          ))}
+          {product.color && product.color.length > 0 ? (
+            product.color.map((color) => (
+              <div
+                key={color.color_id}
+                className={styles.saleCircle}
+                style={{
+                  backgroundColor: color.color_code,
+                  border: "1px solid #e0e0e0",
+                  cursor: "pointer",
+                }}
+                title={color.color_name}
+              />
+            ))
+          ) : (
+            <div className={styles.saleCircle} style={{ opacity: 0.3 }} />
+          )}
         </div>
         <div className={styles.productInfo}>
           <div className={styles.brandName}>

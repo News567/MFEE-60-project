@@ -6,9 +6,22 @@ import axios from "axios";
 import styles from "./products.module.css";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "./ProductCard";
+import debounce from "lodash/debounce";
+import { Slider, InputNumber, Space, Tag } from "antd";
 
 // API 基礎 URL
 const API_BASE_URL = "http://localhost:3005/api";
+
+// 在文件顶部添加默认图片常量
+const DEFAULT_PRODUCT_IMAGE = "/images/default-product.jpg"; // 确保这个路径指向一个实际存在的默认图片
+
+// 將 API 相關常數提取出來
+const SORT_OPTIONS = {
+  COMPREHENSIVE: { value: 1, text: "綜合" },
+  NEWEST: { value: 2, text: "最新上架" },
+  PRICE_ASC: { value: 3, text: "價格：由低到高" },
+  PRICE_DESC: { value: 4, text: "價格：由高到低" },
+};
 
 export default function ProductList() {
   const router = useRouter();
@@ -31,12 +44,125 @@ export default function ProductList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // 修改初始化 currentQuery，从 URL 参数中恢复状态
+  const [currentQuery, setCurrentQuery] = useState(() => {
+    const categoryId = searchParams.get("category_id");
+    const bigCategoryId = searchParams.get("big_category_id");
+    const brandName = searchParams.get("brand_name");
+
+    if (categoryId) {
+      return { type: "category", id: categoryId, name: null };
+    } else if (bigCategoryId) {
+      return { type: "bigCategory", id: bigCategoryId, name: null };
+    } else if (brandName) {
+      return { type: "brand", id: null, name: brandName };
+    }
+    return { type: null, id: null, name: null };
+  });
+
   // 處理 URL 更新
-  const updateURL = (newPage, newLimit) => {
+  const updateURL = (newPage, newLimit, query = currentQuery) => {
     const params = new URLSearchParams();
     params.set("page", newPage.toString());
     params.set("limit", newLimit.toString());
+
+    // 根据查询类型设置相应参数
+    if (query.type === "category") {
+      params.set("category_id", query.id);
+    } else if (query.type === "bigCategory") {
+      params.set("big_category_id", query.id);
+    } else if (query.type === "brand") {
+      params.set("brand_id", query.id);
+    }
+
+    // 添加颜色筛选参数
+    if (tempFilters.colors.length > 0) {
+      params.set("color_id", tempFilters.colors.join(","));
+    }
+
     router.push(`/products?${params.toString()}`);
+  };
+
+  // 修改颜色相关的状态
+  const [colors, setColors] = useState([]); // 所有颜色
+  const [availableColors, setAvailableColors] = useState([]); // 当前可用的颜色
+  const [tempFilters, setTempFilters] = useState({
+    colors: [], // 存储选中的颜色 ID
+    price: {
+      min: "",
+      max: "",
+    },
+  });
+
+  // 从产品数据中提取颜色信息
+  useEffect(() => {
+    if (products.length > 0) {
+      const colorSet = new Set();
+      const colorMap = new Map();
+
+      products.forEach((product) => {
+        if (product.color && Array.isArray(product.color)) {
+          product.color.forEach((color) => {
+            if (color && color.color_id) {
+              colorSet.add(color.color_id);
+              colorMap.set(color.color_id, {
+                id: color.color_id,
+                name: color.color_name,
+                color_code: color.color_code,
+              });
+            }
+          });
+        }
+      });
+
+      const extractedColors = Array.from(colorMap.values());
+      setAvailableColors(Array.from(colorSet));
+      setColors(extractedColors);
+    }
+  }, [products]);
+
+  // 从 URL 初始化筛选条件
+  useEffect(() => {
+    const colorParam = searchParams.get("color_id");
+    const minPrice = searchParams.get("min_price");
+    const maxPrice = searchParams.get("max_price");
+
+    setTempFilters((prev) => ({
+      ...prev,
+      colors: colorParam ? colorParam.split(",").map(Number) : [],
+      price: {
+        min: minPrice || "",
+        max: maxPrice || "",
+      },
+    }));
+  }, [searchParams]);
+
+  // 在 ProductList 组件中添加价格范围的状态
+  const [priceRange, setPriceRange] = useState({
+    min: 0,
+    max: 40000,
+  });
+
+  // 修改价格筛选的处理函数
+  const handlePriceChange = (type, value) => {
+    setTempFilters((prev) => ({
+      ...prev,
+      price: {
+        ...prev.price,
+        [type]: value,
+      },
+    }));
+  };
+
+  // 处理滑块变化
+  const handleSliderChange = (values) => {
+    setTempFilters((prev) => ({
+      ...prev,
+      price: {
+        min: values[0].toString(),
+        max: values[1].toString(),
+      },
+    }));
   };
 
   // 品牌分類區間
@@ -56,19 +182,22 @@ export default function ProductList() {
   const [brandCategories, setBrandCategories] = useState([]);
   const [groupedBrands, setGroupedBrands] = useState({});
   const [hoveredBrandCategory, setHoveredBrandCategory] = useState(null);
-
+  // input brands
+  const [brands, setBrands] = useState([]);
   // 取得品牌分類
   useEffect(() => {
     axios
-      .get(`${API_BASE_URL}/brands/all`)
+      .get(`${API_BASE_URL}/brands/`)
       .then((res) => res.data)
       .then((result) => {
         const grouped = groupBrandsByCategory(result);
         setGroupedBrands(grouped);
         setBrandCategories(Object.keys(grouped)); // 確保分類名稱正確
+        setBrands(result);
       })
       .catch((err) => console.error(err));
   }, []);
+  console.log("🚀 DEBUG: brands =", brands);
 
   function groupBrandsByCategory(brands) {
     const grouped = {};
@@ -88,6 +217,7 @@ export default function ProductList() {
       let categoryKey = "其他"; // 預設為 "其他"
 
       // 找出 initial 所屬的分類區間
+      // entire 物件轉陣列
       Object.entries(categoryGroups).forEach(([group, letters]) => {
         if (letters.includes(initial)) {
           categoryKey = group;
@@ -112,7 +242,7 @@ export default function ProductList() {
   // 一次性請求所有分類資料
   useEffect(() => {
     axios
-      .get(`${API_BASE_URL}/categories/all`)
+      .get(`${API_BASE_URL}/categories`)
       .then((res) => res.data)
       .then((result) => {
         setBigCategories(result.bigCategories);
@@ -121,111 +251,261 @@ export default function ProductList() {
       .catch((err) => console.error(err));
   }, []);
 
+  // 修改計算已選擇的篩選條件數量
+  const getSelectedFiltersCount = () => {
+    let count = 0;
+    // 計算選中的顏色數量
+    count += tempFilters.colors.length;
+    // 計算價格篩選
+    if (tempFilters.price.min || tempFilters.price.max) count += 1;
+    return count;
+  };
+
+  // 修改顏色點擊處理函數 - 只更新暫存狀態，不觸發篩選
+  const handleColorClick = (colorId) => {
+    setTempFilters((prev) => {
+      const newColors = prev.colors.includes(colorId)
+        ? prev.colors.filter((id) => id !== colorId) // 如果已選中則移除
+        : [...prev.colors, colorId]; // 如果未選中則添加
+      return {
+        ...prev,
+        colors: newColors,
+      };
+    });
+  };
+
+  // 添加一个状态来控制是否显示筛选标签
+  const [showFilters, setShowFilters] = useState(false);
+
+  // 修改 applyFilters 函数
+  const applyFilters = async () => {
+    if (loading) return;
+    setShowFilters(true);
+
+    // 構建查詢參數
+    const params = new URLSearchParams();
+    params.set("page", "1");
+    params.set("limit", limit.toString());
+    params.set("sort", selectedSort.value.toString());
+
+    // 添加顏色篩選
+    if (tempFilters.colors.length > 0) {
+      params.set("color_id", tempFilters.colors.join(","));
+    }
+
+    // 添加價格篩選
+    if (tempFilters.price.min) {
+      params.set("min_price", tempFilters.price.min);
+    }
+    if (tempFilters.price.max) {
+      params.set("max_price", tempFilters.price.max);
+    }
+
+    // 保留分類/品牌相關參數
+    if (currentQuery.type === "category") {
+      params.set("category_id", currentQuery.id);
+    } else if (currentQuery.type === "bigCategory") {
+      params.set("big_category_id", currentQuery.id);
+    } else if (currentQuery.type === "brand") {
+      params.set("brand_id", currentQuery.id);
+    }
+
+    router.replace(`/products?${params.toString()}`);
+    await fetchProducts({
+      page: 1,
+      colors: tempFilters.colors,
+      min_price: tempFilters.price.min,
+      max_price: tempFilters.price.max,
+    });
+  };
+
   // 獲取產品資料
   // FIXME - 有依賴問題
   useEffect(() => {
-    fetchProducts(page, limit, selectedSort.value); // 讓 API 依照當前排序方式請求
-  }, [page, limit, selectedSort.value]); // 監聽 selectedSort.value
+    // 從 URL 獲取所有篩選參數
+    const categoryId = searchParams.get("category_id");
+    const bigCategoryId = searchParams.get("big_category_id");
+    const brandName = searchParams.get("brand_name");
+    const pageParam = parseInt(searchParams.get("page")) || 1;
+    const limitParam = parseInt(searchParams.get("limit")) || 24;
+    const colorIds = searchParams.get("color_id")?.split(",").map(Number) || [];
+    const minPrice = searchParams.get("min_price");
+    const maxPrice = searchParams.get("max_price");
+    const sortParam = parseInt(searchParams.get("sort")) || 1;
 
-  // 獲取所有產品
-  const fetchProducts = async (currentPage, itemsPerPage, sortValue) => {
+    // 更新查詢狀態
+    if (categoryId) {
+      setCurrentQuery({ type: "category", id: categoryId, name: null });
+    } else if (bigCategoryId) {
+      setCurrentQuery({ type: "bigCategory", id: bigCategoryId, name: null });
+    } else if (brandName) {
+      setCurrentQuery({ type: "brand", id: null, name: brandName });
+    }
+
+    // 更新篩選狀態
+    setTempFilters((prev) => ({
+      ...prev,
+      colors: colorIds,
+      price: {
+        min: minPrice || "",
+        max: maxPrice || "",
+      },
+    }));
+
+    // 如果有任何篩選條件，顯示篩選標籤
+    if (colorIds.length > 0 || minPrice || maxPrice) {
+      setShowFilters(true);
+    }
+
+    // 獲取數據
+    fetchProducts({
+      page: pageParam,
+      limit: limitParam,
+      colors: colorIds,
+      min_price: minPrice,
+      max_price: maxPrice,
+      sort: sortParam,
+    });
+  }, [searchParams]); // 只依賴 searchParams
+
+  const [productsCache, setProductsCache] = useState({});
+
+  // 修改统一的数据获取函数
+  const fetchProducts = async (params = {}) => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}/products?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}`
-      );
+      let url = `${API_BASE_URL}/products`;
+
+      // 構建查詢參數
+      const queryParams = {
+        page: params.page || page,
+        limit: params.limit || limit,
+        sort: params.sort || selectedSort.value,
+      };
+
+      // 添加顏色篩選
+      if (params.colors?.length > 0) {
+        queryParams.color_id = params.colors.join(",");
+      }
+
+      // 添加價格篩選
+      if (params.min_price) {
+        queryParams.min_price = params.min_price;
+      }
+      if (params.max_price) {
+        queryParams.max_price = params.max_price;
+      }
+
+      // 根據當前查詢類型選擇正確的 API 端點
+      if (currentQuery.type === "category") {
+        url = `${API_BASE_URL}/products/category/${currentQuery.id}`;
+      } else if (currentQuery.type === "bigCategory") {
+        url = `${API_BASE_URL}/products/category/big/${currentQuery.id}`;
+      } else if (currentQuery.type === "brand") {
+        url = `${API_BASE_URL}/products/brand/${currentQuery.id}`;
+      }
+
+      const response = await axios.get(url, { params: queryParams });
 
       if (response.data.status === "success") {
         setProducts(response.data.data);
         setTotalPages(response.data.pagination.totalPages);
-        setPage(response.data.pagination.currentPage);
-        updateURL(response.data.pagination.currentPage, itemsPerPage);
-        console.log("API Response:", response.data.data);
-      } else {
-        setError("獲取產品資料失敗");
+        if (params.page) setPage(params.page);
       }
     } catch (error) {
-      console.error("Error fetching products:", error.response || error);
-      setError("獲取產品資料時發生錯誤");
+      console.error("Error fetching products:", error);
+      setError("獲取產品數據時發生錯誤");
     } finally {
       setLoading(false);
     }
   };
 
-  // 每頁顯示按鈕
-  const handleDisplayChange = (newLimit, displayText) => {
+  // 修改每頁顯示按鈕
+  const handleDisplayChange = async (newLimit, displayText) => {
     setSelectedDisplay(displayText);
-    setLimit(newLimit);
-    setPage(1); // 切換顯示數量時重置為第一頁
-    setShowDisplayDropdown(false); //關閉下拉選單
+
+    const params = new URLSearchParams(window.location.search);
+    params.set("limit", newLimit.toString());
+    params.set("page", "1");
+
+    router.replace(`/products?${params.toString()}`);
   };
 
   // 處理排序
   const handleSort = async (text, value) => {
     setSelectedSort({ text, value });
-    setShowDropdown(false); //關閉下拉選單
+    setShowDropdown(false);
 
-    const sortedProducts = [...products];
-    switch (value) {
-      case 1: // 綜合
-        sortedProducts.sort((a, b) => a.id - b.id);
-        break;
-      case 2: // 最新上架
-        sortedProducts.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        );
-        break;
-      case 3: // 價格：由低到高
-        sortedProducts.sort((a, b) => a.price - b.price);
-        break;
-      case 4: // 價格：由高到低
-        sortedProducts.sort((a, b) => b.price - a.price);
-        break;
-      default:
-        break;
-    }
-    fetchProducts(page, limit, value);
+    const params = new URLSearchParams(window.location.search);
+    params.set("sort", value.toString());
+
+    router.replace(`/products?${params.toString()}`);
   };
 
-  // 處理品牌篩選
-  const handleBrandFilter = async (brandName) => {
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}/products/brand/${brandName}`
-      );
-      if (response.data.status === "success") {
-        setProducts(response.data.data);
-      } else {
-        setError("獲取品牌產品失敗");
-      }
-    } catch (error) {
-      console.error("Error fetching products by brand:", error);
-      setError("獲取品牌產品時發生錯誤");
-    } finally {
-      setLoading(false);
-    }
+  // 添加标题状态
+  const [pageTitle, setPageTitle] = useState({
+    title: "潛水必備裝備",
+    subtitle: "一站式選購體驗",
+  });
+
+  // 修改分類篩選處理函數
+  const handleCategoryFilter = async (
+    categoryId,
+    isBigCategory = false,
+    categoryName = ""
+  ) => {
+    const newQuery = {
+      type: isBigCategory ? "bigCategory" : "category",
+      id: categoryId,
+      name: null,
+    };
+    setCurrentQuery(newQuery);
+
+    // 更新標題
+    setPageTitle({
+      title: categoryName,
+      subtitle: "精選潛水裝備推薦",
+    });
+
+    updateURL(1, limit, newQuery);
   };
 
-  // 處理分類篩選
-  const handleCategoryFilter = async (categoryName) => {
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}/products/category/${categoryName}`
-      );
-      if (response.data.status === "success") {
-        setProducts(response.data.data);
-      } else {
-        setError("獲取分類產品失敗");
-      }
-    } catch (error) {
-      console.error("Error fetching products by category:", error);
-      setError("獲取分類產品時發生錯誤");
-    } finally {
-      setLoading(false);
-    }
+  // 修改品牌篩選處理函數
+  const handleBrandFilter = async (brandId, brandName) => {
+    const newQuery = {
+      type: "brand",
+      id: brandId,
+      name: brandName,
+    };
+    setCurrentQuery(newQuery);
+
+    // 更新标题
+    setPageTitle({
+      title: brandName,
+      subtitle: "品牌精選系列",
+    });
+
+    updateURL(1, limit, newQuery);
   };
+
+  // 添加重置标题的函数
+  const resetPageTitle = () => {
+    setPageTitle({
+      title: "潛水必備裝備",
+      subtitle: "一站式選購體驗",
+    });
+  };
+
+  // 在 useEffect 中处理标题重置
+  useEffect(() => {
+    const categoryId = searchParams.get("category_id");
+    const bigCategoryId = searchParams.get("big_category_id");
+    const brandName = searchParams.get("brand_name");
+
+    if (!categoryId && !bigCategoryId && !brandName) {
+      resetPageTitle();
+    }
+  }, [searchParams]);
 
   // 處理點擊外部關閉下拉選單
   useEffect(() => {
@@ -238,6 +518,135 @@ export default function ProductList() {
     document.addEventListener("click", handleClickOutside, true);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
+
+  // 使用 debounce 包裝 fetchProducts
+  const fetchWithRetry = async (fn, retries = 3) => {
+    try {
+      return await fn();
+    } catch (error) {
+      if (retries > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return fetchWithRetry(fn, retries - 1);
+      }
+      throw error;
+    }
+  };
+
+  // 修改清除所有筛选函数
+  const clearAllFilters = async () => {
+    // 重置所有篩選條件
+    setTempFilters({
+      colors: [],
+      price: { min: "", max: "" },
+    });
+    setShowFilters(false);
+
+    // 構建基礎 URL 參數，只保留必要的參數
+    const params = new URLSearchParams();
+    params.set("page", "1");
+    params.set("limit", limit.toString());
+
+    // 保留分類/品牌相關參數
+    if (currentQuery.type === "category") {
+      params.set("category_id", currentQuery.id);
+    } else if (currentQuery.type === "bigCategory") {
+      params.set("big_category_id", currentQuery.id);
+    } else if (currentQuery.type === "brand") {
+      params.set("brand_id", currentQuery.id);
+    }
+
+    // 更新 URL 並重新獲取數據
+    router.replace(`/products?${params.toString()}`);
+    await fetchProducts({ page: 1 });
+  };
+
+  // 修改單個顏色移除函數
+  const removeColorFilter = async (colorId) => {
+    const newColors = tempFilters.colors.filter((id) => id !== colorId);
+
+    setTempFilters((prev) => ({
+      ...prev,
+      colors: newColors,
+    }));
+
+    if (
+      newColors.length === 0 &&
+      !tempFilters.price.min &&
+      !tempFilters.price.max
+    ) {
+      setShowFilters(false);
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    params.set("page", "1");
+
+    if (newColors.length > 0) {
+      params.set("color_id", newColors.join(","));
+    } else {
+      params.delete("color_id");
+    }
+
+    // 保留其他篩選參數
+    if (tempFilters.price.min) params.set("min_price", tempFilters.price.min);
+    if (tempFilters.price.max) params.set("max_price", tempFilters.price.max);
+    if (currentQuery.type === "category")
+      params.set("category_id", currentQuery.id);
+    if (currentQuery.type === "bigCategory")
+      params.set("big_category_id", currentQuery.id);
+    if (currentQuery.type === "brand") params.set("brand_id", currentQuery.id);
+
+    router.replace(`/products?${params.toString()}`);
+    await fetchProducts({
+      page: 1,
+      colors: newColors,
+      min_price: tempFilters.price.min,
+      max_price: tempFilters.price.max,
+    });
+  };
+
+  // 修改價格篩選清除函數
+  const clearPriceFilter = async () => {
+    setTempFilters((prev) => ({
+      ...prev,
+      price: { min: "", max: "" },
+    }));
+
+    if (tempFilters.colors.length === 0) {
+      setShowFilters(false);
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    params.set("page", "1");
+    params.delete("min_price");
+    params.delete("max_price");
+
+    // 保留其他篩選參數
+    if (tempFilters.colors.length > 0) {
+      params.set("color_id", tempFilters.colors.join(","));
+    }
+    if (currentQuery.type === "category")
+      params.set("category_id", currentQuery.id);
+    if (currentQuery.type === "bigCategory")
+      params.set("big_category_id", currentQuery.id);
+    if (currentQuery.type === "brand") params.set("brand_id", currentQuery.id);
+
+    router.replace(`/products?${params.toString()}`);
+    await fetchProducts({
+      page: 1,
+      colors: tempFilters.colors,
+    });
+  };
+
+  // 辅助函数：判断颜色是否为浅色
+  const isLightColor = (color) => {
+    // 移除 # 号
+    const hex = color.replace("#", "");
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    // 计算亮度
+    return r * 0.299 + g * 0.587 + b * 0.114 > 186;
+  };
 
   if (loading) return <div className="text-center py-4">...</div>;
   if (error) return <div className="text-center py-4 text-danger">{error}</div>;
@@ -270,17 +679,36 @@ export default function ProductList() {
                     onMouseEnter={() => setHoveredBigCategory(category.id)}
                     onMouseLeave={() => setHoveredBigCategory(null)}
                   >
-                    <a href="#" className={styles.categoryLink}>
+                    <a
+                      href="#"
+                      className={styles.categoryLink}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleCategoryFilter(category.id, true, category.name);
+                      }}
+                    >
                       {category.name}
+                      <i className="bi bi-chevron-right float-end"></i>
                     </a>
 
-                    {/*避免無效渲染 */}
                     {hoveredBigCategory === category.id && (
                       <ul className={styles.submenu}>
                         {smallCategories[category.id] ? (
                           smallCategories[category.id].map((smallCategory) => (
                             <li key={smallCategory.id}>
-                              <a href="#">{smallCategory.name}</a>
+                              <a
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleCategoryFilter(
+                                    smallCategory.id,
+                                    false,
+                                    smallCategory.name
+                                  );
+                                }}
+                              >
+                                {smallCategory.name}
+                              </a>
                             </li>
                           ))
                         ) : (
@@ -333,7 +761,7 @@ export default function ProductList() {
                                 href="#"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  handleBrandFilter(brand.name);
+                                  handleBrandFilter(brand.id, brand.name);
                                 }}
                               >
                                 {brand.name}
@@ -347,8 +775,54 @@ export default function ProductList() {
               </ul>
             </div>
 
-            <button className="btn btn-primary w-100 mb-3">
-              套用篩選(0/20)
+            {/* 在筛选按钮上方添加已选择的筛选条件标签 */}
+            <div className={styles.selectedFilters}>
+              {showFilters && getSelectedFiltersCount() > 0 && (
+                <div className={styles.filterTags}>
+                  {/* 颜色标签 */}
+                  {tempFilters.colors.map((colorId) => {
+                    const color = colors.find((c) => c.id === colorId);
+                    if (!color) return null;
+                    return (
+                      <Tag
+                        key={`color-tag-${colorId}`}
+                        closable
+                        onClose={() => removeColorFilter(colorId)}
+                        style={{
+                          backgroundColor: color.color_code,
+                          color: isLightColor(color.color_code)
+                            ? "#000"
+                            : "#fff",
+                          borderColor: color.color_code,
+                        }}
+                      >
+                        {color.name}
+                      </Tag>
+                    );
+                  })}
+
+                  {/* 价格标签 */}
+                  {(tempFilters.price.min || tempFilters.price.max) && (
+                    <Tag closable onClose={clearPriceFilter} color="blue">
+                      價格: {tempFilters.price.min || 0} -{" "}
+                      {tempFilters.price.max || "∞"}
+                    </Tag>
+                  )}
+
+                  {/* 清除所有筛选 */}
+                  <Tag className={styles.clearAllTag} onClick={clearAllFilters}>
+                    清除全部篩選
+                  </Tag>
+                </div>
+              )}
+            </div>
+
+            <button
+              className="btn btn-primary w-100 mb-3"
+              onClick={applyFilters}
+              disabled={loading}
+            >
+              篩選({getSelectedFiltersCount()}/20)
             </button>
 
             {/* 商品篩選 */}
@@ -358,49 +832,86 @@ export default function ProductList() {
               </div>
               <div className={styles.filterSection}>
                 <div className={styles.filterTitle}>價格區間</div>
-                <div className={styles.priceInputs}>
-                  <input
-                    type="number"
-                    placeholder="最低"
-                    className={styles.priceInput}
-                  />
-                  <span>-</span>
-                  <input
-                    type="number"
-                    placeholder="最高"
-                    className={styles.priceInput}
-                  />
+                <div className={styles.priceFilter}>
+                  <Space direction="vertical" style={{ width: "100%" }}>
+                    <div className={styles.priceInputs}>
+                      <InputNumber
+                        min={0}
+                        max={parseInt(tempFilters.price.max) || priceRange.max}
+                        value={
+                          tempFilters.price.min
+                            ? parseInt(tempFilters.price.min)
+                            : null
+                        }
+                        onChange={(value) =>
+                          handlePriceChange("min", value?.toString())
+                        }
+                        placeholder="最低"
+                        style={{ width: "45%" }}
+                      />
+                      <span style={{ margin: "0 4px" }}>-</span>
+                      <InputNumber
+                        min={parseInt(tempFilters.price.min) || 0}
+                        max={priceRange.max}
+                        value={
+                          tempFilters.price.max
+                            ? parseInt(tempFilters.price.max)
+                            : null
+                        }
+                        onChange={(value) =>
+                          handlePriceChange("max", value?.toString())
+                        }
+                        placeholder="最高"
+                        style={{ width: "45%" }}
+                      />
+                    </div>
+                    <Slider
+                      range
+                      min={priceRange.min}
+                      max={priceRange.max}
+                      value={[
+                        parseInt(tempFilters.price.min) || priceRange.min,
+                        parseInt(tempFilters.price.max) || priceRange.max,
+                      ]}
+                      onChange={handleSliderChange}
+                      tooltip={{
+                        formatter: (value) => `NT$${value.toLocaleString()}`,
+                      }}
+                    />
+                  </Space>
                 </div>
 
-                <div className={styles.filterTitle}>品牌類別</div>
-                <div className={styles.checkboxGroup}>
-                  <div className={styles.checkboxItem}>
-                    <input
-                      type="checkbox"
-                      className={styles.checkbox}
-                      id="brand-leaders"
-                    />
-                    <label htmlFor="brand-leaders">LEADERS (4)</label>
-                  </div>
-                  <div className={styles.checkboxItem}>
-                    <input
-                      type="checkbox"
-                      className={styles.checkbox}
-                      id="brand-omer"
-                    />
-                    <label htmlFor="brand-omer">OMER (15)</label>
-                  </div>
-                </div>
-
-                <div className={styles.filterTitle}>顏色類別</div>
+                <div className={styles.filterTitle}>顏色篩選</div>
                 <div className={styles.colorGroup}>
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div
-                      key={i}
-                      className={styles.colorCircle}
-                      style={{ backgroundColor: "#808080" }}
-                    ></div>
-                  ))}
+                  {colors.map((color) => {
+                    const isAvailable = availableColors.includes(color.id);
+                    return (
+                      <div
+                        key={`color-${color.id}`}
+                        className={`${styles.colorCircle} 
+                          ${
+                            tempFilters.colors.includes(color.id)
+                              ? styles.selected
+                              : ""
+                          }
+                          ${!isAvailable ? styles.disabled : ""}`}
+                        style={{
+                          backgroundColor: color.color_code,
+                          cursor:
+                            loading || !isAvailable ? "not-allowed" : "pointer",
+                          opacity: isAvailable ? 1 : 0.5,
+                        }}
+                        onClick={() => {
+                          if (!loading && isAvailable) {
+                            handleColorClick(color.id);
+                          }
+                        }}
+                        title={`${color.name}${
+                          !isAvailable ? " (此分類無此顏色)" : ""
+                        }`}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -461,18 +972,12 @@ export default function ProductList() {
         <div className="col-lg-9 col-md-8">
           {/* 商品介紹 */}
           <div className="mb-4">
-            <h3 className="mb-3">潛水必備裝備，一站式選購體驗</h3>
-            <p className="mb-2">
-              歡迎來到我們的商品專區，這裡匯集了潛水愛好者必備的精選裝備！從舒適貼合的潛水服到高性能的潛水電筒，我們為您精心挑選每一件商品，確保品質與實用性兼具。無論您是初學者還是資深潛水員，這裡都有滿足您需求的最佳選擇。
-            </p>
-            <p>
-              現在購物，還可享受獨家優惠：單筆滿 $3000
-              即享免運服務，並有多款商品參與限時折扣活動！立即瀏覽，輕鬆找到適合您的專屬裝備，為下一次潛水旅程做好準備。探索深海奇觀，就從裝備開始！
-            </p>
+            <h3 className="mb-3">{pageTitle.title}</h3>
+            <p>{pageTitle.subtitle}</p>
           </div>
 
           {/* 輪播圖 */}
-          <div className="position-relative mb-4" style={{ height: "400px" }}>
+          <div className="position-relative mb-4" style={{ height: "200px" }}>
             <Image
               src="/images/product-top-slide.png"
               alt="潛水裝備橫幅"
