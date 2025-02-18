@@ -17,7 +17,7 @@ router.get("/", async (req, res) => {
     const language = req.query.language;
     // 價格區間
     const minPrice = req.query.minPrice || 1;
-    const maxPrice = req.query.maxPrice || 1000000;
+    const maxPrice = req.query.maxPrice || 10000000;
 
     // 設定當頁第一項資料
     const firstActivity = (page - 1) * limit;
@@ -70,7 +70,7 @@ router.get("/", async (req, res) => {
                 : [language];
             if (languageArray.length > 1) {
                 const languageCondition = languageArray
-                    .map((v, i) => {
+                    .map((v) => {
                         return `activity.language LIKE '%${v}%'`;
                     })
                     .join(" OR ");
@@ -85,7 +85,7 @@ router.get("/", async (req, res) => {
                     LEFT JOIN activity_image ON activity.id = activity_image.activity_id AND activity_image.isMain = 1
                     LEFT JOIN activity_country ON activity_city.activityCountry_id = activity_country.id
                     WHERE activity.price BETWEEN ${minPrice} AND ${maxPrice}
-                AND ${languageCondition}
+                    AND ${languageCondition}
                     ORDER BY ${orderBy}
                     LIMIT ? OFFSET ?`;
                 console.log(sql);

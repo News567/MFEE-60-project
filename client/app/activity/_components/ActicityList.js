@@ -30,6 +30,10 @@ export default function ProductList() {
         useState(false);
     const [location, setLocation] = useState("");
     const [country, setCountry] = useState("");
+    const [language, setLanguage] = useState([]);
+    const [minPrice, setMinPrice] = useState("");
+    const [maxPrice, setMaxPrice] = useState("");
+    const [duration, setDuration] = useState("");
 
     // 分頁
     //parseInt 把字串轉成數字    || 負責設定預設值
@@ -43,7 +47,17 @@ export default function ProductList() {
     const [error, setError] = useState(null);
 
     // 處理 URL 更新
-    const updateURL = (newPage, newLimit, newSort, newLocation, newCountry) => {
+    const updateURL = (
+        newPage,
+        newLimit,
+        newSort,
+        newLocation,
+        newCountry,
+        language,
+        minPrice,
+        maxPrice,
+        newDuration
+    ) => {
         const params = new URLSearchParams();
         // 先確保變數不是 undefined，若是則設置默認值
         params.set("page", (newPage || 1).toString()); // 如果 newPage 是 undefined，則使用 1
@@ -54,6 +68,24 @@ export default function ProductList() {
         } // 如果 newLocation 是 undefined，則使用空字串
         if (newCountry) {
             params.set("country", (newCountry || "").toString());
+        }
+        if (language) {
+            if (language.length > 1) {
+                language.map((v) => {
+                    params.append("language", v.toString());
+                });
+            } else {
+                params.set("language", language.toString());
+            }
+        }
+        if (minPrice) {
+            params.set("minPrice", minPrice.toString());
+        }
+        if (maxPrice) {
+            params.set("maxPrice", maxPrice.toString());
+        }
+        if (newDuration) {
+            params.set("duration", newDuration.toString());
         }
 
         router.push(`/activity?${params.toString()}`, undefined, {
@@ -103,8 +135,32 @@ export default function ProductList() {
         updateURL(page, limit, value); // ✅ 更新 URL
     };
 
-    // TODO:處理活動地點篩選
-    const handleLocation = () => {};
+    // 處理react-calendar的選定日期
+
+    // 處理側邊欄篩選
+    const handleFilter = (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const choselanguage = formData.getAll("language");
+        const minPrice = formData.get("minPrice");
+        const maxPrice = formData.get("maxPrice");
+        const duration = formData.getAll("duration");
+        setLanguage(choselanguage);
+        setMinPrice(minPrice);
+        setMaxPrice(maxPrice);
+        setDuration(duration);
+        updateURL(
+            page,
+            limit,
+            selectedSort.value,
+            location,
+            country,
+            choselanguage,
+            minPrice,
+            maxPrice,
+            duration
+        );
+    };
 
     // 處理點擊外部關閉下拉選單
     useEffect(() => {
@@ -118,17 +174,31 @@ export default function ProductList() {
         return () => document.removeEventListener("click", handleClickOutside);
     }, []);
 
+    // 獲取資料
     const fetchActivity = async (
         currentPage,
         itemsPerPage,
         sortValue,
-        location
+        location,
+        language,
+        minPrice,
+        maxPrice,
+        duration
     ) => {
         try {
             setLoading(true);
-            const response = await axios.get(
-                `${API_BASE_URL}/activity?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}&location=${location}`
-            );
+            // let url = `${API_BASE_URL}/activity?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}&location=${location}`;
+            // if (language) {
+            //     if (language.length > 1) {
+            //         language.map((v) => {
+            //             url += `&language=${v}`;
+            //         });
+            //     } else {
+            //         url += `&language=${language}`;
+            //     }
+            // }
+            console.log(`${API_BASE_URL}/activity?${searchParams.toString()}`);
+            const response = await axios.get(`${API_BASE_URL}/activity?${searchParams.toString()}`);
             console.log("API Response:", response.data);
             if (response.data.status === "success") {
                 setProducts(response.data.data);
@@ -482,7 +552,7 @@ export default function ProductList() {
                         </div>
 
                         {/* 活動篩選 */}
-                        <form action="/activity" method="GET">
+                        <form onSubmit={handleFilter}>
                             <div className={styles.sideCard}>
                                 <div className={styles.cardTitle}>
                                     <h5>活動篩選</h5>
@@ -546,7 +616,7 @@ export default function ProductList() {
                                                 type="checkbox"
                                                 className={styles.checkbox}
                                                 id="language-chinese"
-                                                value="chinese"
+                                                value="中文"
                                                 name="language"
                                             />
                                             <label htmlFor="language-chinese">
@@ -558,7 +628,7 @@ export default function ProductList() {
                                                 type="checkbox"
                                                 className={styles.checkbox}
                                                 id="language-jp"
-                                                value="japanese"
+                                                value="日本語"
                                                 name="language"
                                             />
                                             <label htmlFor="language-jp">
@@ -570,7 +640,7 @@ export default function ProductList() {
                                                 type="checkbox"
                                                 className={styles.checkbox}
                                                 id="language-korean"
-                                                value="korean"
+                                                value="한국어"
                                                 name="language"
                                             />
                                             <label htmlFor="language-korean">
@@ -582,8 +652,8 @@ export default function ProductList() {
                                                 type="checkbox"
                                                 className={styles.checkbox}
                                                 id="language-cantonese"
-                                                value="cantonese"
-                                                name="cantonese"
+                                                value="廣東話"
+                                                name="language"
                                             />
                                             <label htmlFor="language-cantonese">
                                                 廣東話 (15)
@@ -598,12 +668,14 @@ export default function ProductList() {
                                             type="number"
                                             placeholder="最低"
                                             className={styles.priceInput}
+                                            name="minPrice"
                                         />
                                         <span>-</span>
                                         <input
                                             type="number"
                                             placeholder="最高"
                                             className={styles.priceInput}
+                                            name="maxPrice"
                                         />
                                     </div>
                                     <div className={styles.filterTitle}>
