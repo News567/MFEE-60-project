@@ -2,7 +2,7 @@
 :root {
   --border-color: rgb(228, 228, 228);
   --text-color: #333;
-  --primary1-color: #007bff;
+  /* --primary-color: #007bff; */
   --hover-bg: #f8f9fa;
 }
 
@@ -11,7 +11,7 @@
 }
 
 .textDecorationNone:hover {
-  color: var(--primary1-color);
+  color: var(--primary-color);
 }
 
 .breadcrumb .breadcrumbItem a {
@@ -19,7 +19,7 @@
 }
 
 .breadcrumb .breadcrumbItem a:hover {
-  color: var(--primary1-color);
+  color: var(--primary-color);
 }
 
 .sideCard {
@@ -159,7 +159,7 @@
 }
 
 .categoryItem a:hover {
-  color: var(--primary1-color);
+  color: var(--primary-color);
   padding-left: 12px;
   background-color: rgba(0, 123, 255, 0.1);
 }
@@ -194,7 +194,7 @@
 
 .submenu a:hover {
   background-color: var(--hover-bg);
-  color: var(--primary1-color);
+  color: var(--primary-color);
 }
 
 /* 价格范围 */
@@ -253,7 +253,7 @@
 }
 
 .productPrice {
-  color: var(--primary1-color);
+  color: var(--primary-color);
   font-weight: bold;
   font-size: 1.2em;
 }
@@ -277,13 +277,13 @@
 
 .pageButton:hover {
   background: var(--hover-bg);
-  color: var(--primary1-color);
+  color: var(--primary-color);
 }
 
 .pageButton.active {
-  background: var(--primary1-color);
+  background: var(--primary-color);
   color: white;
-  border-color: var(--primary1-color);
+  border-color: var(--primary-color);
 }
 
 /* 排序工具栏 */
@@ -313,7 +313,7 @@
 
 .sortButton:hover,
 .sortButton.active {
-  color: var(--primary1-color);
+  color: var(--primary-color);
 }
 
 /* 商品卡片 */
@@ -378,7 +378,7 @@
 }
 
 .salePrice {
-  color: var(--primary1-color);
+  color: var(--primary-color);
   font-weight: bold;
   font-size: 1.1rem;
   margin-bottom: 2px;
@@ -508,7 +508,7 @@
 }
 
 .sidebarProductPrice {
-  color: var(--primary1-color);
+  color: var(--primary-color);
   font-weight: 500;
   font-size: 1rem;
 }
