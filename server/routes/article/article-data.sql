@@ -193,15 +193,11 @@ INSERT INTO article_image (article_id, name, img_url, is_main) VALUES
 -- 插入資料到 article_tag_big 表格
 INSERT INTO article_tag_big (article_id, article_tag_small_id) VALUES
 (1, 1),
-(2, 2),
-(3, 3),
-(4, 4),
-(5, 5),
-(6, 6),
-(7, 7),
-(8, 8),
-(9, 9),
-(10, 10);
+(1, 5),
+(1, 8),
+(2, 3),
+(2, 7),
+(2, 8);
 
 -- 插入資料到 article_reply 表格
 INSERT INTO article_reply (article_id, users_id, content, floor_number, reply_number, level, created_at) VALUES

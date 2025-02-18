@@ -1,4 +1,3 @@
-
 -- =========================== 1. article_category_big 表格 ===========================
 CREATE TABLE article_category_big (
     id INT AUTO_INCREMENT PRIMARY KEY, -- 主鍵
@@ -99,4 +98,4 @@ CREATE TABLE comment (
     FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE CASCADE, -- 外鍵: 產品 (可為NULL)
     FOREIGN KEY (activity_id) REFERENCES activity (id) ON DELETE CASCADE, -- 外鍵: 活動 (可為NULL)
     FOREIGN KEY (rent_item_id) REFERENCES rent_item (id) ON DELETE CASCADE -- 外鍵: 租借 (可為NULL)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;

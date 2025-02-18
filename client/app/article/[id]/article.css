@@ -5,7 +5,7 @@
   margin-bottom: 20px;
 }
 
-.article .textArea {
+.article .text-area {
   color: rgba(0, 0, 0, 0.8);
   font-size: 28px;
   font-weight: 700;
@@ -13,8 +13,8 @@
   flex: 1; /* 讓 textArea 佔據剩餘空間 */
 }
 
-.article .authorArea,
-.article .publishTimeArea {
+.article .author-area,
+.article .publish-time-area {
   display: inline-flex; /* 使用 inline-flex 以便讓圖標和文字保持在同一行 */
   align-items: center; /* 垂直置中圖標和文字 */
   color: #898989;
@@ -23,11 +23,11 @@
   gap: 10px; /* 圖標與文字之間的間距 */
 }
 
-.article .authorArea {
+.article .author-area {
   margin-right: 20px; /* authorArea 和 publishTimeArea 之間的間距 */
 }
 
-.article .publishTimeArea {
+.article .publish-time-area {
   margin-left: 10px; /* 增加 publishTimeArea 左邊的間距 */
 }
 
@@ -46,7 +46,7 @@
   object-position: center; /* 圖片居中顯示 */
 }
 
-.articleContentArea {
+.article-content-area {
   margin: 20px 0;
 }
 .tag-area {
@@ -57,7 +57,7 @@
   display: inline-block;
   padding: 0.5em 1em; /* 增加 padding，避免文字擠在邊框裡 */
   margin: 0 0 0 10px;
-  border: 1px solid rgba(0, 0, 0, 0.5); /* 外框顏色 */
+  border: 1px solid rgba(0, 0, 0, 0.25); /* 外框顏色 */
   border-radius: 20px; /* 讓外框變成橢圓形 */
   color: rgba(0, 0, 0, 0.5); /* 文字顏色 */
   font-size: 0.9rem;
@@ -69,7 +69,8 @@
 .tag-area .tag:hover {
   background-color: #f0f0f0; /* 當滑鼠懸停時的背景色 */
   cursor: pointer; /* 顯示為可點擊 */
-  background-color: #ffd500;
+  background-color: #219ebc;
+  color: white;
 }
 
 .replyFilter {
@@ -108,7 +109,6 @@
   margin: 20px 0;
   margin-left: 30px; /* 增加左邊距，使其有縮排效果 */
 }
-
 
 /* reply1 */
 
@@ -168,13 +168,13 @@
 }
 
 /* reply2 */
- .reply-avatar2 {
+.reply-avatar2 {
   height: 40px;
   width: 40px;
-  margin-left: 65px;  /*平移頭像，與 .reply-header2 左邊對齊*/
-} 
+  margin-left: 65px; /*平移頭像，與 .reply-header2 左邊對齊*/
+}
 
- .reply2 {
+.reply2 {
   display: flex;
   align-items: flex-start;
   margin: 30px 0;
@@ -226,7 +226,7 @@
 
 .others-reply2 {
   cursor: pointer;
-} 
+}
 
 /* more-reply */
 
@@ -280,61 +280,103 @@
   width: 100%;
   padding: 11px 28px; /* 調整內邊距 */
   align-items: center;
-  background: var(--primary, #219ebc);
+  background: #219ebc;
   white-space: nowrap; /* 防止換行 */
-  color: var(--white, #fff);
-  font-family: "Noto Sans TC";
+  color: #fff;
   font-size: 12px;
-  font-style: normal;
   font-weight: 500;
-  line-height: normal;
   margin: 20px 0;
 }
 
-.related-article-area .col-md-6 {
-  position: relative;
-  overflow: hidden;
-  height: 100%; /* 繼承卡片高度 */
-  padding: 0; /* 移除左右預設 padding */
+
+/* 父容器設置 */
+.related-article-area {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  margin-bottom: 40px;
 }
 
-.related-article-area .col-md-6 img {
+/* 卡片外框設置 */
+.related-card {
+  display: flex;
+  flex-direction: column;
+  height: auto; /* 讓高度自動調整 */
+  max-height: 400px; /* 可選：最大高度限制 */
+  overflow: hidden;
+  background: #fff;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+/* 圖片區域 */
+.related-card .img-container {
+  width: 100%;
+  height: 50%; /* 使圖片區域佔卡片的一半高度 */
+  overflow: hidden;
+}
+
+.related-card .img-container img {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* 等比例縮放且裁切圖片 */
-  object-position: center; /* 圖片中心對齊 */
+  object-fit: cover;
+  object-position: center;
 }
 
-.related-article-area .card-body {
+/* 內容區域 */
+.related-card .card-body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 100%;
+  height: 50%; /* 使文字區域佔卡片的另一半高度 */
+
 }
 
-.related-article-area .card-title {
-  margin-top: 0; /* 確保標題貼頂 */
+/* 卡片標題與內容 */
+.related-card .card-title {
+  margin-top: 0;
   color: rgba(0, 0, 0, 0.8);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
 }
 
-.related-article-area .tag-area {
-  margin-top: auto; /* 自動推到卡片底部 */
-  color: #a3a3a3;
+.related-card .card-content {
+  color: rgba(0, 0, 0, 0.8);
   font-size: 14px;
   font-weight: 400;
+  margin-top: 8px;
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis; /* 顯示省略號 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; /* 最多顯示兩行 */
 }
-.related-article-area .tag1,
-.tag2 {
+
+/* 標籤區域 */
+.related-card .related-tag-area {
+  margin-top: 5px; /* 增加上邊距，避免與其他區域重疊 */
+  padding-bottom: 5px; /* 確保標籤區域與下方區域有距離 */
+}
+
+.related-card .tag {
+  color: #219ebc;
+  font-size: 14px;
+  font-weight: 400;
   margin-right: 6px;
 }
 
-.related-article-area .others-reply-area1 {
+/* 回覆區域 */
+.related-card .others-reply-area {
   display: flex;
   justify-content: flex-start;
   align-items: center;
   color: #a3a3a3;
   font-size: 14px;
   font-weight: 400;
+  margin-top: auto; /* 讓回覆區域推到卡片底部 */
+  padding-top: 8px; /* 確保區域有一定的上下間距 */
 }

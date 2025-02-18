@@ -72,7 +72,32 @@ LEFT JOIN article_image ai ON a.id = ai.article_id AND ai.is_main = 1
       [articleId]
     );
 
-    // 5. 更新文章瀏覽量
+// 5. 查詢相關文章及其標籤
+const [relatedArticles] = await pool.execute(
+  `
+ SELECT 
+    a.id,
+    a.title,
+    a.content,
+    a.article_category_small_id,
+    ai.img_url AS img_url,
+    (SELECT GROUP_CONCAT(ats.tag_name SEPARATOR ', ') 
+     FROM article_tag_big atb
+     JOIN article_tag_small ats ON atb.article_tag_small_id = ats.id
+     WHERE atb.article_id = a.id) AS tags
+  FROM article a
+  LEFT JOIN article_image ai ON a.id = ai.article_id AND ai.is_main = 1
+  WHERE a.article_category_small_id = ? AND a.is_deleted = FALSE
+  ORDER BY RAND() 
+  LIMIT 4
+  `,
+  [article.article_category_small_id]  // 這裡會自動替換 `?` 為具體的值
+);
+
+
+
+
+    // 6. 更新文章瀏覽量
     // await pool.execute(
     //   `
     //   UPDATE article
@@ -82,12 +107,14 @@ LEFT JOIN article_image ai ON a.id = ai.article_id AND ai.is_main = 1
     //   [articleId]
     // );
 
+
     // 整理回傳資料
     const finalArticle = {
       ...article,
       images: imageRows, // 使用 `imageRows` 而不是 `images`
       tags: tagRows.map((tag) => tag.tag_name),
       replies: replyRows,
+      relatedArticles: relatedArticles,  // 確保相關文章包含在回應中
     };
     res.json({
       status: "success",
