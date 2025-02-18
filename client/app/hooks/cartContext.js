@@ -11,16 +11,17 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
 
   // 加入商品到購物車
+  // 如果已存在，覆蓋數量
   const addToCart = (product) => {
     setCart((prevCart) => {
       const existingItemIndex = prevCart.findIndex(
         (item) => item.variant_id === product.variant_id
       );
-  
+
       if (existingItemIndex !== -1) {
-        // 如果已存在，更新數量
+        // 如果已存在，覆蓋數量
         const updatedCart = [...prevCart];
-        updatedCart[existingItemIndex].quantity += product.quantity;
+        updatedCart[existingItemIndex].quantity = product.quantity;
         return updatedCart;
       } else {
         // 否則新增
@@ -28,14 +29,13 @@ export const CartProvider = ({ children }) => {
       }
     });
   };
-  
 
   // 移除商品
   const removeFromCart = (productId) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
 
-  // 從後端獲取購物車資料
+  // 從後端獲取購物車資料 目前失敗
   const fetchCart = async (userId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/cart/${userId}`);

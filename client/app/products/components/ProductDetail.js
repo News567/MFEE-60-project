@@ -92,16 +92,12 @@ export default function ProductDetail() {
     }
 
     try {
-      // 1️⃣ 發送購物車請求
+      // 發送購物車請求
       const cartData = {
         userId: 1,
-        productId: product.id,
         variantId: currentVariant.id,
-        rentalId: null,
-        activityId: null,
         quantity: quantity,
-        rentalPeriod: null,
-        participants: null,
+        type: "product",
       };
 
       const response = await axios.post(`${API_BASE_URL}/cart/add`, cartData);
