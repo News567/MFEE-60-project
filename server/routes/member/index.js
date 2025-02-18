@@ -242,6 +242,7 @@ app.post("/api/users/logout", checkToken, (req, res) => {
 });
 
 app.post("/api/users/register", async (req, res) => {
+  console.log("POST /api/users/register 请求到达"); 
   const { account, password } = req.body;
 
   if (!account || !password) {
