@@ -500,7 +500,11 @@
   text-align: center;
   height: 40px; /* 固定高度 */
   line-height: 15px; /* 控制最多兩行 */
-  -webkit-line-clamp: 2; /* 限制最多2行 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 顯示最多兩行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden; /* 超出部分隱藏 */
+  text-overflow: ellipsis; /* 超出部分顯示省略號 */
   line-clamp: 2;
 }
 

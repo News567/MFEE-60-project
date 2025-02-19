@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react"; // useState 儲存從後端獲取的資料，並使用 useEffect 在組件加載時發送請求
+import { useCallback, useEffect, useState, useMemo } from "react"; // useState 儲存從後端獲取的資料，並使用 useEffect 在組件加載時發送請求
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 // import Link from "next/link";
 import "./RentList.css";
 import "../../../public/globals.css";
+import { debounce } from "lodash"; // 新增 debounce 解決刷新有參數的介面資料閃動問題
 
 export default function RentList() {
   const [products, setProducts] = useState([]); // 儲存後端獲取的商品資料
@@ -51,7 +52,7 @@ export default function RentList() {
     }
   }, [searchParams]);
 
-  // // 從後端獲取商品資料
+  // 從後端獲取商品資料
   // useEffect(() => {
   //   const fetchProducts = async () => {
   //     try {
@@ -72,10 +73,8 @@ export default function RentList() {
   const fetchProducts = useCallback(
     async (page = 1, sort = "", limit = itemsPerPage) => {
       try {
-        // 連到後端 API
         const API_BASE_URL =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
-
         const response = await fetch(
           `${API_BASE_URL}/api/rent?page=${page}&limit=${limit}&sort=${sort}`
         );
@@ -83,91 +82,142 @@ export default function RentList() {
           throw new Error("Network response was not ok");
         }
 
-        const result = await response.json(); // 先將結果存到變數中
-        console.log("API 返回的完整資料:", result); // 檢查 API 返回的完整資料
-
+        const result = await response.json();
         if (result && result.data) {
-          setProducts(result.data); // 更新商品資料
-          setCurrentPage(result.page); // 更新當前頁數
-          setTotalPages(result.totalPages); // 更新總頁數
-          setTotalProducts(result.total); // 更新總商品數量
+          setProducts(result.data);
+          setCurrentPage(result.page);
+          setTotalPages(result.totalPages);
+          setTotalProducts(result.total);
+
+          // 儲存資料到 localStorage
+          localStorage.setItem(
+            `products_${page}_${limit}_${sort}`,
+            JSON.stringify({
+              data: result.data,
+              totalPages: result.totalPages,
+              total: result.total,
+            })
+          );
         } else {
           console.error("API 返回的資料格式不正確:", result);
         }
       } catch (error) {
         console.error("租借商品資料獲取失敗:", error);
       } finally {
-        setLoading(false); // 結束加載狀態
+        setLoading(false);
       }
     },
-    [itemsPerPage] // 如果 itemsPerPage 改變，fetchProducts 函數才會重新創建
+    [itemsPerPage]
   );
 
+  // 使用 debounce 減少頻繁請求，解決頁面刷新閃動問題
+  const debouncedFetchProducts = useMemo(
+    () => debounce(fetchProducts, 300),
+    [fetchProducts]
+  );
+
+  // 從 localStorage 讀取快取資料
   useEffect(() => {
-    fetchProducts(currentPage, sort, itemsPerPage);
-  }, [currentPage, sort, itemsPerPage, fetchProducts]);
+    const cachedData = localStorage.getItem(
+      `products_${currentPage}_${itemsPerPage}_${sort}`
+    );
+    if (cachedData) {
+      try {
+        const parsedData = JSON.parse(cachedData);
+        if (parsedData.data && parsedData.totalPages && parsedData.total) {
+          setProducts(parsedData.data);
+          setTotalPages(parsedData.totalPages);
+          setTotalProducts(parsedData.total);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("解析 localStorage 資料失敗:", error);
+      }
+    } else {
+      setLoading(true);
+      debouncedFetchProducts(currentPage, sort, itemsPerPage); // 使用 debouncedFetchProducts
+    }
+  }, [currentPage, itemsPerPage, sort, debouncedFetchProducts]);
 
-  // 更新網址 URL 查詢參數
-  const updateUrlParams = (page, limit, sort) => {
-    const params = new URLSearchParams();
-    params.set("page", page);
-    params.set("limit", limit);
-    if (sort) params.set("sort", sort);
-    router.push(`/rent?${params.toString()}`);
-  };
+  // useEffect(() => {
+  //   fetchProducts(currentPage, sort, itemsPerPage);
+  // }, [currentPage, sort, itemsPerPage, fetchProducts]);
 
+  // 更新網址 URL 查詢參數（更新使用 useCallback 記憶化，避免資料閃動）
+  const updateUrlParams = useCallback(
+    (page, limit, sort) => {
+      const params = new URLSearchParams();
+      params.set("page", page);
+      params.set("limit", limit);
+      if (sort) params.set("sort", sort);
+      router.push(`/rent?${params.toString()}`, undefined, { shallow: true }); // 使用 shallow 選項
+    },
+    [router]
+  );
   // 每頁顯示資料數量
-  const handleItemsPerPageChange = (limit) => {
-    setItemsPerPage(limit);
-    setCurrentPage(1); // 重置為第一頁
-    updateUrlParams(1, limit, sort);
-  };
+  const handleItemsPerPageChange = useCallback(
+    (limit) => {
+      setItemsPerPage(limit);
+      setCurrentPage(1);
+      updateUrlParams(1, limit, sort);
+    },
+    [sort, updateUrlParams]
+  );
 
   // 處理商品卡片點擊事件
-  const handleProductClick = (productId) => {
-    router.push(`/rent/${productId}`); // 使用 router.push 跳轉到商品詳細頁面
-  };
+  const handleProductClick = useCallback(
+    (productId) => {
+      router.push(`/rent/${productId}`);
+    },
+    [router]
+  );
 
   // 處理排序
-  const handleSort = (sortType) => {
-    let sortText = "下拉選取排序條件"; // 設定我的預設文字
-    switch (sortType) {
-      case "price_desc":
-        sortText = "價格：由高到低";
-        break;
-      case "price_asc":
-        sortText = "價格：由低到高";
-        break;
-      case "newest":
-        sortText = "上架時間：由新到舊";
-        break;
-      case "oldest":
-        sortText = "上架時間：由舊到新";
-        break;
-      default:
-        sortText = "下拉選取排序條件";
-    }
-    setSelectedSort(sortText); // 更新當前選擇的排序條件
-    setSort(sortType); // 更新排序方式
-    setCurrentPage(1); // 重置為第一頁
-    setShowClearSort(true); // 顯示「×」符號
-    updateUrlParams(1, itemsPerPage, sortType);
-  };
+  const handleSort = useCallback(
+    (sortType) => {
+      let sortText = "下拉選取排序條件";
+      switch (sortType) {
+        case "price_desc":
+          sortText = "價格：由高到低";
+          break;
+        case "price_asc":
+          sortText = "價格：由低到高";
+          break;
+        case "newest":
+          sortText = "上架時間：由新到舊";
+          break;
+        case "oldest":
+          sortText = "上架時間：由舊到新";
+          break;
+        default:
+          sortText = "下拉選取排序條件";
+      }
+      setSelectedSort(sortText);
+      setSort(sortType);
+      setCurrentPage(1);
+      setShowClearSort(true);
+      updateUrlParams(1, itemsPerPage, sortType);
+    },
+    [itemsPerPage, updateUrlParams]
+  );
 
   // 清除排序條件
-  const handleClearSort = () => {
-    setSelectedSort("下拉選取排序條件"); // 重置排序條件文字
-    setSort(""); // 清除排序方式
-    setCurrentPage(1); // 重置為第一頁
-    setShowClearSort(false); // 隱藏「×」符號
+  const handleClearSort = useCallback(() => {
+    setSelectedSort("下拉選取排序條件");
+    setSort("");
+    setCurrentPage(1);
+    setShowClearSort(false);
     updateUrlParams(1, itemsPerPage, "");
-  };
+  }, [itemsPerPage, updateUrlParams]);
 
-  // 處理分頁
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    updateUrlParams(page, itemsPerPage, sort);
-  };
+  // 處理分頁 // 分頁參數的返回還是會閃動
+  const handlePageChange = useCallback(
+    (page) => {
+      setCurrentPage(page);
+      updateUrlParams(page, itemsPerPage, sort);
+    },
+    [itemsPerPage, sort, updateUrlParams]
+  );
 
   // 處理租借商品顏色 & 處理是否原價特價
   useEffect(() => {
@@ -219,7 +269,6 @@ export default function RentList() {
       <div className="container py-4 mx-auto">
         <div className="row">
           {/* 麵包屑 ：外掛公版*/}
-
           <div className="row">
             {/* Sidebar */}
             <div className="col-12 col-lg-3 col-md-4 order-2 order-md-1 d-flex flex-column sidebar">
