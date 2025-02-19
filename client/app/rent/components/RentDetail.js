@@ -30,7 +30,6 @@ export default function RentProductDetail() {
   const [isFavorite, setIsFavorite] = useState(0); // 愛心收藏功能
   const [selectedDates, setSelectedDates] = useState([]); // 讓我知道會員選擇了多少天數（動態計算價格用
   const [recommendedProducts, setRecommendedProducts] = useState([]); // 你可能會喜歡的隨機推薦商品
-  const [categoryMap, setCategoryMap] = useState({}); // 儲存分類名稱對應的 ID
 
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description"); // 商品描述區塊切換tab
@@ -64,27 +63,11 @@ export default function RentProductDetail() {
 
         console.log("Product images:", images); // 調試訊息
 
-        // 用來從類別名稱查找對應 ID 的函式
-        const getCategoryIdFromName = async (categoryName) => {
-          const categoryMapping = {
-            自由潛水面鏡: 1, // 這裡將名稱對應到 ID
-            "面鏡/呼吸管": 2,
-            // 其他類別對應
-          };
-
-          // 如果映射中有對應的名稱，直接返回 ID
-          if (categoryMapping[categoryName]) {
-            return categoryMapping[categoryName];
-          }
-          
-        };
-        
-
         // 獲取推薦商品
-        const fetchRecommendedProducts = async (brand, category, id) => {
+        const fetchRecommendedProducts = async (brand, categoryId, id) => {
           console.log("呼叫 fetchRecommendedProducts，參數:", {
             brand,
-            category,
+            categoryId,
             id,
           });
 
@@ -99,17 +82,17 @@ export default function RentProductDetail() {
               return;
             }
 
-            const categoryId = await getCategoryIdFromName(category);
-            if (!categoryId) {
-              console.error("無效的分類名稱:", category);
+            // 確保 categoryId 存在且為有效數字
+            if (!Number.isInteger(categoryId) || categoryId <= 0) {
+              console.error("無效的分類 ID:", categoryId);
               return;
             }
+            console.log("data.rent_category_small_id:", categoryId);
 
             const response = await fetch(
-              `${API_BASE_URL}/api/rent/recommended?brand=${encodeURIComponent(
-                brand
-              )}&category=${categoryId}&id=${parsedId}`
+              `${API_BASE_URL}/api/rent/${id}/recommended?brand=${encodeURIComponent(brand)}&category=${categoryId}`
             );
+
             if (!response.ok) {
               throw new Error("無法獲取推薦商品");
             }
@@ -121,7 +104,11 @@ export default function RentProductDetail() {
         };
 
         // 獲取"你可能喜歡"區塊的推薦商品
-        fetchRecommendedProducts(data.brand_name, data.category_small, data.id);
+        fetchRecommendedProducts(
+          data.brand_name,
+          data.rent_category_small_id,
+          data.id
+        );
       } catch (err) {
         setError(err.message);
       } finally {

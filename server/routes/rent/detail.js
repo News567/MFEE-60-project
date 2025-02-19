@@ -7,8 +7,8 @@ const router = express.Router();
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
 
-    // 打印收到的 id，確保其正確
-    console.log("Request ID: ", id);
+  // 打印收到的 id，確保其正確
+  console.log("Request ID: ", id);
 
   // 1. 驗證 ID 是否為有效數字
   if (isNaN(id) || id <= 0) {
@@ -22,13 +22,14 @@ router.get("/:id", async (req, res) => {
     const [rows] = await pool.query(
       `
       SELECT 
-        ri.id, ri.name, ri.price, ri.price2, ri.description, ri.description2,
-        ri.stock, ri.created_at, ri.update_at, ri.deposit, ri.is_like,
-        rcs.name AS category_small, rcb.name AS category_big,
-        rb.id AS brand_id,  -- 取得品牌 ID
-        rb.name AS brand_name,  -- 取得品牌名稱
-        GROUP_CONCAT(DISTINCT rc.name ORDER BY rc.id ASC) AS color_name,  -- 顏色名稱
-        GROUP_CONCAT(DISTINCT rc.rgb ORDER BY rc.id ASC) AS color_rgb  -- 顏色 RGB 值
+      ri.id, ri.name, ri.price, ri.price2, ri.description, ri.description2,
+    ri.stock, ri.created_at, ri.update_at, ri.deposit, ri.is_like,
+    rcs.name AS category_small, rcb.name AS category_big,
+    ri.rent_category_small_id,  -- 添加 rent_category_small_id
+    rb.id AS brand_id,  -- 取得品牌 ID
+    rb.name AS brand_name,  -- 取得品牌名稱
+    GROUP_CONCAT(DISTINCT rc.name ORDER BY rc.id ASC) AS color_name,  -- 顏色名稱
+    GROUP_CONCAT(DISTINCT rc.rgb ORDER BY rc.id ASC) AS color_rgb  -- 顏色 RGB 值
       FROM rent_item ri
       JOIN rent_category_small rcs ON ri.rent_category_small_id = rcs.id
       JOIN rent_category_big rcb ON rcs.rent_category_big_id = rcb.id
