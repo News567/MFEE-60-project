@@ -29,7 +29,7 @@ export default function Breadcrumb() {
             list: "租借商商品詳情",
             detail: "",
         },
-        product: {
+        products: {
             "": "商品列表",
         },
         cart: {

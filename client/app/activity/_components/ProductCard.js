@@ -45,9 +45,9 @@ export default function ProductCard({ product }) {
                 <AiOutlineHeart color="white" size={24} />
               )}
             </button>
-            <button className="btn btn-primary w-75" onClick={handleCartClick}>
+            {/* <button className="btn btn-primary w-75" onClick={handleCartClick}>
               加入購物車
-            </button>
+            </button> */}
           </div>
         </div>
         {/* <div

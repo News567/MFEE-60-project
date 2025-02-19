@@ -14,20 +14,20 @@ import Link from "next/link";
 
 export default function RecommendCard({activity}) {
     return (
-        <Link className={styles.recommendCardA} href="#">
+        <Link className={styles.recommendCardA} href={`/activity/${activity.id}`}>
             <div className={`${styles.recommendCard}`}>
                 <div className={`${styles.cardImgContainer}`}>
                     <Image
                         className={`${styles.img}`}
-                        src="/image/jpg (5).webp"
-                        width={500}
-                        height={153}
+                        src={`/image/activity/${activity.id}/${activity.imgUrl}`}
+                        
                         alt=""  
-                        layout="responsive"
+                        layout="fill"  // 使用 layout="fill"
+            objectFit="cover" // 確保圖片保持填滿但不會變形
                     />
                     <div className={`${styles.mapMarker}`}>
                         <FaMapMarkerAlt />
-                        {activity?.location ? activity.location : "屏東"}
+                        {activity?.recommedCity ? activity.recommedCity : "屏東"}
                     </div>
                     <div>
                         <FaRegHeart className={`${styles.heart}`} />
@@ -41,7 +41,7 @@ export default function RecommendCard({activity}) {
                     <FaStar />
                     4.8(999) | 9K+個已訂購
                 </div>
-                <div className={`fw-bold`}>{activity?.price ? activity.price : "NT$360起"}</div>
+                <div className={`fw-bold`}>{activity?.price ? "NT."+activity.price : "NT$360起"}</div>
             </div>
         </Link>
     );

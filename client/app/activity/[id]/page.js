@@ -3,7 +3,9 @@ import { useEffect, image, useState } from "react";
 import axios from "axios";
 import styles from "./detail.module.css";
 // import "./detail.css";
-import "react-calendar/dist/Calendar.css";
+import "./Calendar.css";
+import { useCart } from "@/hooks/cartContext";
+
 // import icons
 import {
     FaRegHeart,
@@ -46,8 +48,19 @@ export default function Home() {
     const [language, setLanguage] = useState("");
     const [meetingPoint, setMeetingPoint] = useState("");
 
+    // 人數記數器
+    const [count, setCount] = useState(0);
+
     // 獲取活動資料
-    const [activities, setActivities] = useState([]);
+    const [activities, setActivities] = useState([]); //該id活動
+    const [projects, setProjects] = useState([]); //該id活動所有方案
+    const [recommendActivity, setRecommendActivity] = useState([]); //推薦活動，和該id活動相同地點
+
+    // 若最早預定日早於今天，改成明天
+    const [tomorrow, setTomorrow] = useState("");
+    const today = new Date();
+    const tomorrowDate = new Date(today);
+
     useEffect(() => {
         const getList = async () => {
             await axios
@@ -56,6 +69,9 @@ export default function Home() {
                     if (res.data.status !== "success")
                         throw new Error("讀取資料失敗");
                     setActivities(res.data.data);
+                    setProjects(res.data.project);
+                    setRecommendActivity(res.data.recommend);
+                    setTomorrow(tomorrowDate.setDate(today.getDate() + 1));
                 })
                 .catch((error) => {
                     console.error("載入活動失敗:", error);
@@ -63,9 +79,6 @@ export default function Home() {
         };
         getList();
     }, [id]);
-
-    // TODO: 獲取推薦活動
-    const [recommendActivity, setRecommendActivity] = useState([]);
 
     // 設定活動圖片
     const [img, setImg] = useState([]);
@@ -98,6 +111,49 @@ export default function Home() {
         }
     }, [activities]);
 
+    // 加入購物車
+    const handleAddToCart = async () => {
+        //放入要送往後端的useState 取得目前你點擊得商品/租賃/活動
+        //規格
+        //舉例
+        const currentRental = getCurrentRental();
+        const currentActivity = getCurrentActivity();
+
+        try {
+            //---- 發送購物車請求----
+
+            //活動
+            const activity = {
+                userId: 1, //(寫死)
+                type: "activity", //(寫死)
+                projectId: 1, //(綁定資料來源)
+                quantity: 1, //(綁定按鈕)
+                date: "2025-02-20", //(綁定按鈕)
+                time: "10:00:00", //(綁定按鈕)
+            };
+
+            //   下面不動
+            const response = await axios.post(
+                `${API_BASE_URL}/cart/add`,
+                cartData
+            );
+
+            if (response.data.success) {
+                //讓購物車重新從後端獲取最新數據，而不是自己組裝 cartItem
+                fetchCart(1);
+                alert("成功加入購物車！");
+            } else {
+                alert(response.data.message || "加入購物車失敗");
+            }
+        } catch (error) {
+            console.error("加入購物車失敗:", error);
+            alert("加入購物車失敗，請稍後再試");
+        }
+    };
+
+    // 最後把這個handleAddToCart綁定到加入購物車按鈕上
+
+    // 設定燈箱
     const MyGallery = () => (
         <Gallery
             options={{
@@ -229,7 +285,11 @@ export default function Home() {
                                     </h4>
                                     <div className={`${styles.mb25px}`}>
                                         <FaMapMarkerAlt />
-                                        <span> {activities?.[0]?.country} - {activities?.[0]?.city_name}</span>
+                                        <span>
+                                            {" "}
+                                            {activities?.[0]?.country} -{" "}
+                                            {activities?.[0]?.city_name}
+                                        </span>
                                     </div>
                                     <div
                                         className={`${styles.mb25px} ${styles.colorPrimary} fw-bold`}>
@@ -287,7 +347,11 @@ export default function Home() {
                                             introduction.length > 0 ? (
                                                 introduction.map(
                                                     (text, index) => (
-                                                        <li  className={styles.li} key={index}>
+                                                        <li
+                                                            className={
+                                                                styles.li
+                                                            }
+                                                            key={index}>
                                                             {text}
                                                         </li>
                                                     )
@@ -384,9 +448,9 @@ export default function Home() {
                                 </div>
                                 <div>優惠券</div>
                             </div>
-                            {/* TODO: p2 先取消方案選擇，做成日期選擇就好 */}
+
                             <button className={`w-100 btn ${styles.chooseBtn}`}>
-                                選擇日期及人數
+                                選擇方案
                             </button>
                         </div>
                     </div>
@@ -502,137 +566,213 @@ export default function Home() {
                             </div>
                         </div>
                         {/* 方案卡片 */}
-                        <form action="">
-                            <div
-                                className={`${styles.activityProject} ${styles.active} mb-3 p-5`}>
-                                <div
-                                    className={`d-flex justify-content-btween`}>
-                                    <div
-                                        className={`${styles.activityPlain} gap-3 me-sm-5`}>
-                                        <div
-                                            className={`d-flex align-items-center`}>
-                                            <h6
-                                                className={`m-0 fw-bold ${styles.fs20px}`}>
-                                                {name}
-                                            </h6>
-                                            <div
-                                                className={`ms-2 d-none d-sm-block ${styles.hint}`}>
-                                                7天前可免費取消
-                                            </div>
-                                        </div>
-                                        <div
-                                            className={`${styles.earliestBookingDay} d-flex align-items-center gap-2`}>
-                                            <FaRegCheckCircle />
-                                            最早可預訂日：
-                                            <span>2025-01-05</span>
-                                        </div>
-                                        <div
-                                            type="button"
-                                            className={`${styles.fs14px} ${styles.colorPrimary} text-decoration-underline d-block d-sm-none`}
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#detailModal">
-                                            查看方案詳情
-                                        </div>
-                                        <div
-                                            className={`d-sm-none d-flex justify-content-between align-items-center`}>
-                                            <div
-                                                className={`fw-bold ${styles.fs20px}`}>
-                                                NT${price}
-                                                <span
-                                                    className={`${styles.fs14px} fw-normal`}>
-                                                    起
-                                                </span>
-                                            </div>
-                                            <button
-                                                className={`btn ${styles.colorPrimary} text-nowrap ${styles.chooseProjectBtn} px-4 py-2 ${styles.active}`}>
-                                                取消選擇
-                                            </button>
-                                        </div>
-                                        <ul className={`d-none d-sm-block`}>
-                                            <li className={`mb-3`}>
-                                                3 歲以上至 60
-                                                歲之間的旅客皆可參與，未滿 6
-                                                歲須由家長陪同。
-                                            </li>
-                                            <li>
-                                                患有下列疾病者皆不適合參加此活動，請勿下單訂購：甲狀腺亢、高血壓、懼高症、氣喘、癲癇、懷孕婦女、心肺功能疾病(異常)及體驗潛水切結同意書所提及項目，如訂購後才告知有前述疾病並要求取消，則按取消政策辦理。如有隱匿身體狀況而參加活動，參加活動後發生事故或損害，後果自負。如有健康上疑慮，請來電電話
-                                                :
-                                                0918364235後再行報名，謝謝您的配合。
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div className={`d-sm-flex d-none`}>
-                                        <div className={`me-2`}>
-                                            <div
-                                                className={`text-nowrap text-white ${styles.fs14px} ${styles.bgSecondaryDeep} text-center rounded fw-bold`}>
-                                                17% OFF
-                                            </div>
-                                            <div
-                                                className={`text-nowrap text-end text-decoration-line-through ${styles.fs14px} text-secondary`}>
-                                                NT${price}
-                                            </div>
-                                            <div
-                                                className={`text-nowrap text-end fw-bold ${styles.fs18px}`}>
-                                                NT$330
-                                            </div>
-                                        </div>
-                                        <button
-                                            className={`btn ${styles.colorPrimary} text-nowrap ${styles.chooseProjectBtn} px-4 py-2 ${styles.active}`}>
-                                            取消選擇
-                                        </button>
-                                    </div>
-                                </div>
-                                <div
-                                    className={`row p-5 ${styles.collapseSession} d-none d-sm-flex`}>
-                                    <h6 className={`${styles.fs18px}`}>
-                                        選擇日期、選項
-                                    </h6>
-                                    <div className={`col`}>
-                                        <p>請選擇出發日期</p>
-                                        {/* TODO: react套件的日曆 */}
-                                        {/* <div className={`w-100 bg-secondary text-center my-2`}> */}
-                                        <Calendar />
-                                        
-                                    </div>
-                                    <div
-                                        className={`col d-flex flex-column justify-content-between`}>
-                                        <div>
-                                            <div className={`mb-3`}>
-                                                <p className="">場次時間</p>
-                                                <div
-                                                    className={`${styles.btns}`}>
-                                                    <button
-                                                        className={`btn ${styles.btn}`}>
-                                                        08:00
-                                                    </button>
-                                                    <button
-                                                        className={`btn ${styles.btn}`}>
-                                                        09:00
-                                                    </button>
-                                                    <button
-                                                        className={`btn ${styles.btn}`}>
-                                                        10:00
-                                                    </button>
-                                                    <button
-                                                        className={`btn ${styles.btn}`}>
-                                                        11:00
-                                                    </button>
-                                                    <button
-                                                        className={`btn ${styles.btn}`}>
-                                                        13:00
-                                                    </button>
-                                                    <button
-                                                        className={`btn ${styles.btn}`}>
-                                                        14:00
-                                                    </button>
-                                                    <button
-                                                        className={`btn ${styles.btn}`}>
-                                                        15:00
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            {/* TODO: p2 規格先拔掉，有空再做 */}
-                                            {/* <div className={`mb-3`}>
+                        {projects && projects.length > 0
+                            ? projects.map((v, i) => {
+                                  return (
+                                      <form key={i} action="">
+                                          <div
+                                              className={`${styles.activityProject} mb-3 p-5`}>
+                                              <div
+                                                  className={`d-flex justify-content-between`}>
+                                                  <div
+                                                      className={`${styles.activityPlain} gap-3 me-sm-5`}>
+                                                      <div
+                                                          className={`d-flex align-items-center`}>
+                                                          <h6
+                                                              className={`m-0 fw-bold ${styles.fs20px}`}>
+                                                              {v.name}
+                                                          </h6>
+                                                          {/* TODO: p2 先放著，想一下要不要做可以取消 */}
+                                                          {/* <div
+                                                              className={`ms-2 d-none d-sm-block ${styles.hint}`}>
+                                                              7天前可免費取消
+                                                          </div> */}
+                                                      </div>
+                                                      <div
+                                                          className={`${styles.earliestBookingDay} d-flex align-items-center gap-2`}>
+                                                          <FaRegCheckCircle />
+                                                          最早可預訂日：
+                                                          <span>
+                                                              {new Date(
+                                                                  v.earliestDate
+                                                              ) > new Date()
+                                                                  ? v.earliestDate
+                                                                  : new Date(
+                                                                        tomorrow
+                                                                    )
+                                                                        .toISOString()
+                                                                        .split(
+                                                                            "T"
+                                                                        )[0]}
+                                                          </span>
+                                                      </div>
+                                                      <div
+                                                          type="button"
+                                                          className={`${styles.fs14px} ${styles.colorPrimary} text-decoration-underline d-block d-sm-none`}
+                                                          data-bs-toggle="modal"
+                                                          data-bs-target="#detailModal">
+                                                          查看方案詳情
+                                                      </div>
+                                                      {/* 手機板 */}
+                                                      <div
+                                                          className={`d-sm-none d-flex justify-content-between align-items-center`}>
+                                                          <div
+                                                              className={`fw-bold ${styles.fs20px}`}>
+                                                              NT${v.price}
+                                                              <span
+                                                                  className={`${styles.fs14px} fw-normal`}>
+                                                                  起
+                                                              </span>
+                                                          </div>
+                                                          <button
+                                                              className={`btn ${styles.colorPrimary} text-nowrap ${styles.chooseProjectBtn} px-4 py-2 ${styles.active}`}>
+                                                              取消選擇
+                                                          </button>
+                                                      </div>
+                                                      {/* 電腦版 */}
+                                                      <ul
+                                                          className={`d-none d-sm-block`}>
+                                                          {v.description
+                                                              .split("\n")
+                                                              .map((v, i) => {
+                                                                  return (
+                                                                      <li
+                                                                          key={
+                                                                              i
+                                                                          }
+                                                                          className={`mb-3`}>
+                                                                          {v}
+                                                                      </li>
+                                                                  );
+                                                              })}
+                                                      </ul>
+                                                  </div>
+                                                  <div
+                                                      className={`d-sm-flex d-none`}>
+                                                      <div className={`me-2`}>
+                                                          {v.originalPrice !=
+                                                          v.price ? (
+                                                              <>
+                                                                  <div
+                                                                      className={`text-nowrap text-white ${styles.fs14px} ${styles.bgSecondaryDeep} text-center rounded fw-bold`}>
+                                                                      {Math.round(
+                                                                          ((v.originalPrice -
+                                                                              v.price) /
+                                                                              v.originalPrice) *
+                                                                              100
+                                                                      )}
+                                                                      % OFF
+                                                                  </div>
+                                                                  <div
+                                                                      className={`text-nowrap text-end text-decoration-line-through ${styles.fs14px} text-secondary`}>
+                                                                      NT$
+                                                                      {
+                                                                          v.originalPrice
+                                                                      }
+                                                                  </div>
+                                                                  <div
+                                                                      className={`text-nowrap text-end fw-bold ${styles.fs18px}`}>
+                                                                      NT$
+                                                                      {v.price}
+                                                                  </div>
+                                                              </>
+                                                          ) : (
+                                                              <div
+                                                                  className={`text-nowrap text-end fw-bold ${styles.fs18px}`}>
+                                                                  NT${v.price}
+                                                              </div>
+                                                          )}
+                                                      </div>
+                                                      <button
+                                                          className={`btn ${styles.colorPrimary} text-nowrap ${styles.chooseProjectBtn} px-4 py-2 ${styles.active}`}>
+                                                          取消選擇
+                                                      </button>
+                                                  </div>
+                                              </div>
+                                              <div
+                                                  className={`row p-5 ${styles.collapseSession} d-none d-sm-flex`}>
+                                                  <h6
+                                                      className={`${styles.fs18px}`}>
+                                                      選擇日期、選項
+                                                  </h6>
+                                                  <div className={`col`}>
+                                                      <p>請選擇出發日期</p>
+                                                      {/* TODO: react套件的日曆 */}
+                                                      {/* <div className={`w-100 bg-secondary text-center my-2`}> */}
+                                                      <Calendar
+                                                          minDate={
+                                                              new Date(
+                                                                  v.earliestDate
+                                                              ) > new Date()
+                                                                  ? new Date(
+                                                                        v.earliestDate
+                                                                    )
+                                                                  : new Date(
+                                                                        tomorrow
+                                                                    )
+                                                          }
+                                                          maxDate={
+                                                              new Date(v.date)
+                                                          }
+                                                      />
+                                                  </div>
+                                                  <div
+                                                      className={`col d-flex flex-column justify-content-between`}>
+                                                      <div>
+                                                          <div
+                                                              className={`mb-3`}>
+                                                              <p className="">
+                                                                  場次時間
+                                                              </p>
+                                                              <div
+                                                                  className={`${styles.btns}`}>
+                                                                  {v.time
+                                                                      .split(
+                                                                          ","
+                                                                      )
+                                                                      .map(
+                                                                          (
+                                                                              time,
+                                                                              i
+                                                                          ) => {
+                                                                              return (
+                                                                                  <button
+                                                                                      type="button"
+                                                                                      key={
+                                                                                          i
+                                                                                      }
+                                                                                      className={`btn timeBTN ${styles.btn}`}
+                                                                                      onClick={(
+                                                                                          e
+                                                                                      ) => {
+                                                                                          const buttons =
+                                                                                              document.querySelectorAll(
+                                                                                                  `.timeBTN`
+                                                                                              );
+                                                                                          buttons.forEach(
+                                                                                              (
+                                                                                                  button
+                                                                                              ) => {
+                                                                                                  button.classList.remove(
+                                                                                                      `${styles.active}`
+                                                                                                  );
+                                                                                              }
+                                                                                          );
+                                                                                          e.target.classList.add(
+                                                                                              `${styles.active}`
+                                                                                          );
+                                                                                      }}>
+                                                                                      {
+                                                                                          time
+                                                                                      }
+                                                                                  </button>
+                                                                              );
+                                                                          }
+                                                                      )}
+                                                              </div>
+                                                          </div>
+                                                          {/* TODO: p2 規格先拔掉，有空再做 */}
+                                                          {/* <div className={`mb-3`}>
                                                 <p className="">規格</p>
                                                 <div
                                                     className={`${styles.btns}`}>
@@ -646,166 +786,124 @@ export default function Home() {
                                                     </button>
                                                 </div>
                                             </div> */}
-                                            {/* FIXME: p1 把選人數的做好 */}
-                                            <div>
-                                                <p className="">選擇數量</p>
-                                                <div
-                                                    className={`d-flex justify-content-between align-items-center`}>
-                                                    <p
-                                                        className={`m-0 fw-bold`}>
-                                                        人數
-                                                    </p>
-                                                    <div
-                                                        className={`d-flex align-items-center gap-2`}>
-                                                        <p
-                                                            className={`m-0 ${styles.fs14px} text-secondary`}>
-                                                            NT $400
-                                                            <span
-                                                                className={`fs-6 text-secondary fw-bold`}>
-                                                                NT${price}/每人
-                                                            </span>
-                                                        </p>
-                                                        <div
-                                                            className={`d-flex align-items-center gap-3`}>
-                                                            <button
-                                                                className={`${styles.iconBtn} d-flex align-items-center`}>
-                                                                <BsDashCircle />
-                                                            </button>
-                                                            <div>1</div>
-                                                            <button
-                                                                className={`${styles.iconBtn} d-flex align-items-center`}>
-                                                                <BsPlusCircle />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div
-                                            className={`d-flex justify-content-end align-items-end`}>
-                                            <div className={`me-2`}>
-                                                <div
-                                                    className={`text-secondary`}>
-                                                    總金額
-                                                    <span
-                                                        className={`ms-1 fs-4 text-black fw-bold`}>
-                                                        NT$0
-                                                    </span>
-                                                </div>
-                                                <div
-                                                    className={`text-secondary d-flex justify-content-end`}>
-                                                    優惠點數
-                                                    <span
-                                                        className={`ms-1 ${styles.secondaryDeepColor} d-flex align-items-center gap-1`}>
-                                                        <TbCoinFilled />0
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className={`d-flex gap-1`}>
-                                                <button
-                                                    className={`btn ${styles.btn} ${styles.btnPrimaryLight} ${styles.projectBtn}`}>
-                                                    加入購物車
-                                                </button>
-                                                <button
-                                                    className={`btn ${styles.btn} ${styles.btnPrimaryColor} ${styles.projectBtn}`}>
-                                                    立即訂購
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
+                                                          {/* FIXME: p1 把選人數的做好 */}
+                                                          <div>
+                                                              <p className="">
+                                                                  選擇數量
+                                                              </p>
+                                                              <div
+                                                                  className={`d-flex justify-content-between align-items-center`}>
+                                                                  <p
+                                                                      className={`m-0 fw-bold`}>
+                                                                      人數
+                                                                  </p>
+                                                                  <div
+                                                                      className={`d-flex align-items-center gap-2`}>
+                                                                      <p
+                                                                          className={`m-0 ${styles.fs14px} text-secondary`}>
+                                                                          NT $
+                                                                          {
+                                                                              v.originalPrice
+                                                                          }
+                                                                          <span
+                                                                              className={`fs-6 text-secondary fw-bold`}>
+                                                                              NT$
+                                                                              {
+                                                                                  v.price
+                                                                              }
+                                                                              /每人
+                                                                          </span>
+                                                                      </p>
+                                                                      <div
+                                                                          className={`d-flex align-items-center gap-3`}>
+                                                                          <button
+                                                                              type="button"
+                                                                              className={`${styles.iconBtn} d-flex align-items-center`}
+                                                                              onClick={() => {
+                                                                                  count >
+                                                                                  0
+                                                                                      ? setCount(
+                                                                                            count -
+                                                                                                1
+                                                                                        )
+                                                                                      : setCount(
+                                                                                            0
+                                                                                        );
+                                                                              }}>
+                                                                              <BsDashCircle />
+                                                                          </button>
+                                                                          <div>
+                                                                              {
+                                                                                  count
+                                                                              }
+                                                                          </div>
+                                                                          <button
+                                                                              type="button"
+                                                                              className={`${styles.iconBtn} d-flex align-items-center`}
+                                                                              onClick={() =>
+                                                                                  setCount(
+                                                                                      count +
+                                                                                          1
+                                                                                  )
+                                                                              }>
+                                                                              <BsPlusCircle />
+                                                                          </button>
+                                                                      </div>
+                                                                  </div>
+                                                              </div>
+                                                          </div>
+                                                      </div>
+                                                      <div
+                                                          className={`d-flex justify-content-end align-items-end`}>
+                                                          <div
+                                                              className={`me-2`}>
+                                                              <div
+                                                                  className={`text-secondary`}>
+                                                                  總金額
+                                                                  <span
+                                                                      className={`ms-1 fs-4 text-black fw-bold`}>
+                                                                      NT$
+                                                                      {v.price *
+                                                                          count}
+                                                                  </span>
+                                                              </div>
+                                                              {/* <div
+                                                                  className={`text-secondary d-flex justify-content-end`}>
+                                                                  優惠點數
+                                                                  <span
+                                                                      className={`ms-1 ${styles.secondaryDeepColor} d-flex align-items-center gap-1`}>
+                                                                      <TbCoinFilled />
+                                                                      0
+                                                                  </span>
+                                                              </div> */}
+                                                          </div>
+                                                          <div
+                                                              className={`d-flex gap-1`}>
+                                                              <button
+                                                                  className={`btn ${styles.btn} ${styles.btnPrimaryLight} ${styles.projectBtn}`}>
+                                                                  加入購物車
+                                                              </button>
+                                                              <button
+                                                                  className={`btn ${styles.btn} ${styles.btnPrimaryColor} ${styles.projectBtn}`}>
+                                                                  立即訂購
+                                                              </button>
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </form>
+                                  );
+                              })
+                            : "載入中"}
 
-                        {/* 方案卡片 */}
-                        <form action="">
-                            <div
-                                className={`${styles.activityProject} mb-3 p-5`}>
-                                <div
-                                    className={`d-flex justify-content-btween`}>
-                                    <div
-                                        className={`${styles.activityPlain} gap-3 me-sm-5`}>
-                                        <div
-                                            className={`d-flex align-items-center`}>
-                                            <h6
-                                                className={`m-0 fw-bold ${styles.fs20px}`}>
-                                                四人同行8折｜浮潛體驗－冬季時段（11-2月）
-                                            </h6>
-                                            <div
-                                                className={`d-none d-sm-block ${styles.hint}`}>
-                                                7天前可免費取消
-                                            </div>
-                                        </div>
-                                        <div
-                                            className={`${styles.earliestBookingDay} d-flex align-items-center gap-2`}>
-                                            <FaRegCheckCircle />
-                                            最早可預訂日：
-                                            <span>2025-01-05</span>
-                                        </div>
-                                        <div
-                                            type="button"
-                                            className={`${styles.fs14px} ${styles.colorPrimary} text-decoration-underline d-block d-sm-none`}
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#detailModal">
-                                            查看方案詳情
-                                        </div>
-                                        <div
-                                            className={`d-sm-none d-flex justify-content-between align-items-center`}>
-                                            <div
-                                                className={`fw-bold ${styles.fs20px}`}>
-                                                NT$330
-                                                <span
-                                                    className={`${styles.fs14px} fw-normal`}>
-                                                    起
-                                                </span>
-                                            </div>
-                                            <button
-                                                className={`btn ${styles.colorPrimary} text-nowrap ${styles.chooseProjectBtn} px-4 py-2 ${styles.active}`}>
-                                                取消選擇
-                                            </button>
-                                        </div>
-                                        <ul className={`d-none d-sm-block`}>
-                                            <li className={`mb-3`}>
-                                                3 歲以上至 60
-                                                歲之間的旅客皆可參與，未滿 6
-                                                歲須由家長陪同。
-                                            </li>
-                                            <li>
-                                                患有下列疾病者皆不適合參加此活動，請勿下單訂購：甲狀腺亢、高血壓、懼高症、氣喘、癲癇、懷孕婦女、心肺功能疾病(異常)及體驗潛水切結同意書所提及項目，如訂購後才告知有前述疾病並要求取消，則按取消政策辦理。如有隱匿身體狀況而參加活動，參加活動後發生事故或損害，後果自負。如有健康上疑慮，請來電電話
-                                                :
-                                                0918364235後再行報名，謝謝您的配合。
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div className={`d-sm-flex d-none`}>
-                                        <div className={`me-2`}>
-                                            <div
-                                                className={`text-nowrap text-white ${styles.fs14px} ${styles.bgSecondaryDeep} text-center rounded fw-bold`}>
-                                                17% OFF
-                                            </div>
-                                            <div
-                                                className={`text-nowrap text-end text-decoration-line-through ${styles.fs14px} text-secondary`}>
-                                                NT$400
-                                            </div>
-                                            <div
-                                                className={`text-nowrap text-end fw-bold ${styles.fs18px}`}>
-                                                NT$330
-                                            </div>
-                                        </div>
-                                        <button
-                                            className={`btn ${styles.colorPrimary} text-nowrap ${styles.chooseProjectBtn} px-4 py-2`}>
-                                            取消選擇
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-
-                        <button
+                        {/* <button
+                            type="button"
+                            onClick={(e) => {}}
                             className={`w-100 btn ${styles.btnWhite} d-flex gap-2 justify-content-center align-items-center`}>
                             查看更多方案
                             <BsChevronDown />
-                        </button>
+                        </button> */}
                         <button
                             className={`d-sm-none w-100 btn ${styles.btnPrimaryColor} mt-3`}>
                             立即訂購
@@ -830,14 +928,16 @@ export default function Home() {
                                         {description &&
                                         description.length > 0 ? (
                                             description.map((text, index) => (
-                                                <li className={styles.li}
-                                                    key={index}
-                                                   >
+                                                <li
+                                                    className={styles.li}
+                                                    key={index}>
                                                     {text}
                                                 </li>
                                             ))
                                         ) : (
-                                            <li className={styles.li}>資料載入中</li>
+                                            <li className={styles.li}>
+                                                資料載入中
+                                            </li>
                                         )}
                                     </ol>
                                     <div>
@@ -1191,7 +1291,14 @@ export default function Home() {
                             {/* {activities.map((v, i) => {
                                 return <RecommendCard key={i} activity={v} />;
                             })} */}
-                            <RecommendCard activity={activities} />
+                            {recommendActivity && recommendActivity.length > 0
+                                ? recommendActivity.map((v, i) => {
+                                      return (
+                                          <RecommendCard key={i} activity={v} />
+                                      );
+                                  })
+                                : "沒有推薦活動"}
+
                             <div
                                 className={`d-flex justify-content-center align-items-center`}>
                                 <button
