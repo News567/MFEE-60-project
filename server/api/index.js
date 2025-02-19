@@ -20,6 +20,7 @@ import rentRouter from "../routes/rent/index.js";
 import rentDetailRouter from "../routes/rent/detail.js";
 import rentRecommendedRouter from "../routes/rent/recommended.js";
 import articleRouter from "../routes/article/index.js";
+import articlesidebarRouter from "../routes/article/sidebar.js"; 
 import articleDetailRouter from "../routes/article/detail.js";
 // import articleCreateRouter from "../routes/article/create.js";
 
@@ -70,6 +71,7 @@ apiRouter.use("/rent", rentDetailRouter); // 負責 `/api/rent/:id`
 apiRouter.use("/rent", rentRecommendedRouter); // 負責 `/api/rent/`
 // 文章相關路由
 apiRouter.use("/article", articleRouter); // 負責 `/api/article`
+apiRouter.use("/article/sidebar", articlesidebarRouter);  // 側邊欄數據
 apiRouter.use("/article", articleDetailRouter); // 負責 `/api/article/:id`
 // apiRouter.use("/article/create", articleCreateRouter); // 負責 `/api/article/create`
 
