@@ -1,8 +1,7 @@
 import jwt from "jsonwebtoken";
 
-export const checkToken = (req, res, next) => {
+export function checkToken (req, res, next) {
   let token = req.get("Authorization");
-
   if (!token) {
     return res.status(401).json({
       status: "error",

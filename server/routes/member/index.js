@@ -2,16 +2,15 @@ import express, { json } from "express";
 import multer from "multer";
 import moment from "moment";
 import cors from "cors";
-import checkToken from "../../middleware/auth.js";
+import { checkToken } from "../../middleware/auth.js";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { pool } from "../../config/mysql.js";
 
 dotenv.config();
-const portNum = process.env.PORT || 3005;
 const upload = multer();
-const whiteList = ["http://localhost:5500", "http://localhost:3000"];
+const whiteList = ["http://localhost:3301", "http://localhost:3000"];
 const corsOptions = {
   credentials: true,
   origin(origin, callback) {
@@ -22,18 +21,20 @@ const corsOptions = {
     }
   },
 };
-const secretKey = process.env.JWT_SECRET_KEY;
 
-const app = express();
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const router = express.Router();
+router.use(cors(corsOptions));
+router.use(express.json());
+router.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => {
-  res.json({ status: "success", data: null, message: "首頁" });
+
+// 測試 API
+router.get("/", (req, res) => {
+  res.json({ status: "success", data: null, message: "會員首頁" });
 });
 
-app.get("/api/users", async (req, res) => {
+// 取得所有使用者
+router.get("/users", async (req, res) => {
   try {
     const [rows] = await pool.execute("SELECT * FROM `users`");
     res.status(200).json({
@@ -42,15 +43,37 @@ app.get("/api/users", async (req, res) => {
       message: "取得資料成功",
     });
   } catch (err) {
-    console.log(err);
     res.status(400).json({
       status: "error",
-      message: err.message ? err.message : "取得資料失敗",
+      message: err.message || "取得資料失敗",
     });
   }
 });
 
-app.get("/api/users/search", async (req, res) => {
+
+// const app = express();
+// app.use(cors(corsOptions));
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+// app.get("/api/users", async (req, res) => {
+//   try {
+//     const [rows] = await pool.execute("SELECT * FROM `users`");
+//     res.status(200).json({
+//       status: "success",
+//       data: rows,
+//       message: "取得資料成功",
+//     });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(400).json({
+//       status: "error",
+//       message: err.message ? err.message : "取得資料失敗",
+//     });
+//   }
+// });
+
+router.get("/users/search", async (req, res) => {
   const { q } = req.query;
   try {
     if (!q) throw new Error("請提供查詢字串");
@@ -72,15 +95,19 @@ app.get("/api/users/search", async (req, res) => {
   }
 });
 
-app.get("/api/users/:id", (req, res) => {
+router.get("/users/:id", async (req, res) => {
   const { id } = req.params;
-
   try {
     if (!id) throw new Error("請提供查詢字串");
 
+    const sql = "SELECT * FROM `users` WHERE id = ?";
+    const [rows] = await pool.execute(sql, [id]);
+
+    if (rows.length === 0) throw new Error("找不到使用者");
+
     res.status(200).json({
       status: "success",
-      data: {},
+      data: rows[0],
       message: `獲取特定 ID 的使用者: ${id}`,
     });
   } catch (err) {
@@ -92,7 +119,7 @@ app.get("/api/users/:id", (req, res) => {
   }
 });
 
-app.post("/api/users", upload.none(), async (req, res) => {
+router.post("/users", upload.none(), async (req, res) => {
   const { account, name, mail, password } = req.body;
 
   if (!account || !name || !mail || !password) {
@@ -124,7 +151,7 @@ app.post("/api/users", upload.none(), async (req, res) => {
   });
 });
 
-app.put("/api/users/:account", checkToken, upload.none(), async (req, res) => {
+router.put("/users/:account", checkToken, upload.none(), async (req, res) => {
   const { account } = req.params;
   console.log(account);
 
@@ -170,7 +197,7 @@ app.put("/api/users/:account", checkToken, upload.none(), async (req, res) => {
   }
 });
 
-app.delete("/api/users/:id", (req, res) => {
+router.delete("/users/:id", (req, res) => {
   const { id } = req.params;
   res.status(200).json({
     status: "success",
@@ -178,7 +205,7 @@ app.delete("/api/users/:id", (req, res) => {
   });
 });
 
-app.post("/api/users/login", upload.none(), async (req, res) => {
+router.post("/users/login", upload.none(), async (req, res) => {
   const { account, password } = req.body;
 
   try {
@@ -206,7 +233,7 @@ app.post("/api/users/login", upload.none(), async (req, res) => {
         mail: user.mail,
         head: user.head,
       },
-      secretKey,
+      process.env.JWT_SECRET,
       { expiresIn: "30m" }
     );
 
@@ -224,7 +251,7 @@ app.post("/api/users/login", upload.none(), async (req, res) => {
   }
 });
 
-app.post("/api/users/logout", checkToken, (req, res) => {
+router.post("/users/logout", checkToken, (req, res) => {
   // const token = jwt.sign(
   //   {
   //     account: "",
@@ -236,40 +263,42 @@ app.post("/api/users/logout", checkToken, (req, res) => {
   // );
   res.json({
     status: "success",
-    data: { token },
+    // data: { token },
     message: "登出成功",
   });
 });
 
-app.post("/api/users/register", async (req, res) => {
-  console.log("POST /api/users/register 请求到达"); 
+router.post("/users/register", async (req, res) => {
+  console.log("收到註冊請求:", req.body);
   const { account, password } = req.body;
 
   if (!account || !password) {
     return res.status(400).json({ message: "請填寫帳號和密碼" });
   }
   try {
+    // 檢查帳號是否已存在
+    const checkSql = "SELECT * FROM `users` WHERE account = ?";
+    const [existingUser] = await pool.execute(checkSql, [account]);
+
+    if (existingUser.length > 0) {
+      return res.status(409).json({ status: "exists", message: "帳號已存在" });
+    }
+    // 如果帳號不存在，則繼續註冊
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    const query = "INSERT INTO users (account, password) VALUES (?, ?)";
-
-    // 執行查詢並插入資料
-    pool.query(query, [account, hashedPassword], (err, result) => {
-      if (err) {
-        console.error("插入資料時發生錯誤:", err);
-        return res.status(500).json({ message: "Database error", error: err });
-      }
-      res.status(201).json({
-        message: "User registered successfully",
-        userId: result.insertId,
-      });
+    const sql =
+      "INSERT INTO `users` (`account`, `password`) VALUES (?, ?)";
+    const [result] = await pool.execute(sql, [account, hashedPassword]);
+    res.status(201).json({
+      message: "User registered successfully",
+      userId: result.insertId,
     });
   } catch (err) {
-    res.status(500).json({ message: "Error hashing password", error: err });
+    console.error("插入資料時發生錯誤:", err);
+    res.status(500).json({ message: "Database error", error: err });
   }
 });
 
-app.post("/api/users/status", checkToken, (req, res) => {
+router.post("/users/status", checkToken, (req, res) => {
   const { decoded } = req;
   const token = jwt.sign(
     {
@@ -279,7 +308,7 @@ app.post("/api/users/status", checkToken, (req, res) => {
       mail: decoded.mail,
       head: decoded.head,
     },
-    process.env.JWT_SECRET,
+    process.env.JWT_SECRET_KEY,
     { expiresIn: "30m" }
   );
   res.json({
@@ -288,34 +317,6 @@ app.post("/api/users/status", checkToken, (req, res) => {
     message: "狀態: 登入中",
   });
 });
-
-app.listen(portNum, () => {
-  console.log(`伺服器啟動中 http://localhost:${portNum}`);
-});
-
-function checkToken(req, res, next) {
-  let token = req.get("Authorization");
-  if (!token)
-    return res.status(401).json({
-      status: "error",
-      message: "無驗證資料, 請重新登入",
-    });
-  if (!token.startsWith("Bearer "))
-    return res.status(401).json({
-      status: "error",
-      message: "驗證資料錯誤, 請重新登入",
-    });
-  token = token.slice(7);
-  jwt.verify(token, secretKey, (err, decoded) => {
-    if (err)
-      return res.status(401).json({
-        status: "error",
-        message: "驗證資料失效, 請重新登入",
-      });
-    req.decoded = decoded;
-    next();
-  });
-}
 
 async function getRandomAvatar() {
   const api = "https://randomuser.me/api";
@@ -329,3 +330,6 @@ async function getRandomAvatar() {
     return "https://randomuser.me/api/portraits/men/7.jpg";
   }
 }
+
+export { checkToken };
+export default router;

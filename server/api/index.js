@@ -21,6 +21,7 @@ import rentDetailRouter from "../routes/rent/detail.js";
 import articleRouter from "../routes/article/index.js";
 import articleDetailRouter from "../routes/article/detail.js";
 // import articleCreateRouter from "../routes/article/create.js";
+import memberRouter from "../routes/member/index.js";
 
 // 建立 Express 應用程式
 const app = express();
@@ -70,6 +71,11 @@ apiRouter.use("/rent", rentDetailRouter); // 負責 `/api/rent/:id`
 apiRouter.use("/article", articleRouter); // 負責 `/api/article`
 apiRouter.use("/article", articleDetailRouter); // 負責 `/api/article/:id`
 // apiRouter.use("/article/create", articleCreateRouter); // 負責 `/api/article/create`
+
+// 會員相關路由
+apiRouter.use("/member", memberRouter);
+
+
 
 // 捕捉 404 錯誤
 app.use((req, res, next) => {

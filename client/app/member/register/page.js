@@ -9,39 +9,53 @@ export default function Register() {
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const { user, register } = useAuth() || {};
+  const [loading, setLoading] = useState(false);
+
 
   const onclick = async () => {
-    
-    console.log(account, password);
-    // 发送注册请求到后端
-    const response = await fetch('http://localhost:3005/api/users/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ account, password }),
-    });
+    setLoading(true);
+    try {
+      console.log("Sending request to /api/member/users/register");
+      const response = await fetch("http://localhost:3005/api/member/users/register", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ account, password }),
+      });
+      // 嘗試解析 JSON，即使 response 非 2xx
+      let data = await response.json().catch(() => ({}));
 
-    const data = await response.json();
-    if (data.success) {
-      console.log("waiting");
-    } else {
-      console.log("wrong");
+      if (response.ok) {
+        if (data.status === "success") {
+          alert("註冊成功，請登入");
+          window.location.href = "/member/login";
+        }
+      } else if (response.status === 409) { // 確認是帳號已存在
+        alert("此帳號已存在，請直接登入");
+        window.location.href = "/member/login";
+      } else {
+        alert("註冊失敗，請檢查您的資訊");
+      }
+    } catch (error) {
+      console.error("錯誤:", error);
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
-    if (user === null || user === undefined) {
-      setCheckingAuth(false);  // 如果 user 是 null 或 undefined，就設置為 false
+    if (!user) {
+      setCheckingAuth(false);
     }
   }, [user]);
 
   if (checkingAuth) {
-    return <></>;
+    return <div>載入中...</div>;
   }
   return (
     <div className={styles.loginPage}>
       <div className={styles.main}>
-        <img src="/DiveIn logo-light.png" alt="logo" className={styles.logo} />
+        <img src="/image/DiveIn-logo-dark-final.png" alt="logo" className={styles.logo} />
         <div className={styles.line1}></div>
         <div className={styles.sectionLogin}>
           <h3>註冊</h3>
@@ -77,13 +91,13 @@ export default function Register() {
             </div>
             <div className={styles.loginGoogle}>
               <div className={styles.googleBox}>
-                <img src="/ic_google.svg" alt="Google logo" />
+                <img src="/img/ic_google.svg" alt="Google logo" />
                 <h6>Continue with Google</h6>
               </div>
             </div>
             <div className={styles.loginLine}>
               <div className={styles.lineBox}>
-                <img src="/line.png" alt="Line logo" />
+                <img src="/img/line.png" alt="Line logo" />
                 <h6>Continue with Line</h6>
               </div>
             </div>
