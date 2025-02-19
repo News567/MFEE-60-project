@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // Next.js 的路由
+import { useRouter, useSearchParams } from "next/navigation"; // Next.js 的路由
 import "./articleAside.css";
 
 const Sidebar = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentCategory = searchParams.get("category"); // 取得當前 URL 的 category 參數
+
   const [sidebarData, setSidebarData] = useState({ sidebar: {} });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -57,36 +60,41 @@ const Sidebar = () => {
     <aside className="col-3">
       {/* 分类区域 */}
       {categoryBig.map((bigCategory) => (
-        <div key={bigCategory.id} className="aside-category p-2 mb-2">
+        <div key={bigCategory.id} className="aside-category">
           <div className="aside-title">{bigCategory.name}</div>
           <div className="aside-category-list">
             {categorySmall
               .filter((small) => small.category_big_id === bigCategory.id)
-              .map((smallCategory) => (
-                <div
-                  className="aside-category-item d-flex justify-content-between"
-                  key={smallCategory.id}
-                >
+              .map((smallCategory) => {
+                const isActive =
+                  currentCategory === smallCategory.category_small_name;
+
+                return (
                   <div
-                    className="aside-category-title"
-                    onClick={() =>
-                      handleCategoryClick(smallCategory.category_small_name)
-                    }
-                    style={{ cursor: "pointer" }}
+                    className="aside-category-item d-flex justify-content-between"
+                    key={smallCategory.id}
                   >
-                    {smallCategory.category_small_name}
+                    <div
+                      className={`aside-category-title ${isActive ? "active" : ""}`}
+                      onClick={() =>
+                        handleCategoryClick(smallCategory.category_small_name)
+                      }
+                      style={{ cursor: "pointer" }}
+                    >
+                      {smallCategory.category_small_name}
+                    </div>
+                    <div className="aside-category-amount">
+                      (<span>{smallCategory.article_count}</span>)
+                    </div>
                   </div>
-                  <div className="aside-category-amount">
-                    (<span>{smallCategory.article_count}</span>)
-                  </div>
-                </div>
-              ))}
+                );
+              })}
           </div>
         </div>
       ))}
 
       {/* 最近文章 */}
-      <div className="aside-recent p-2 mb-2">
+      <div className="aside-recent">
         <div className="aside-recent-article-list">
           <div className="aside-title">最近文章</div>
           {latest_articles.map((article) => (
@@ -106,7 +114,7 @@ const Sidebar = () => {
       </div>
 
       {/* 标签区域 */}
-      <div className="aside-tag p-2 mb-2">
+      <div className="aside-tag">
         <div className="aside-title">標籤區域</div>
         <div className="aside-tag-area">
           {random_tags.map((tag) => (

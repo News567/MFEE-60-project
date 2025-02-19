@@ -18,16 +18,16 @@
 .article-list {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between; /* 讓每行的兩個卡片左右對齊 */
 }
 
 .article-list-card {
-  width: calc(50% - 20px); /* 預設在較大螢幕上每兩個卡片並排顯示 */
-  width: 400px; /* 固定寬度 */
-  height: 430px; /* 固定高度 */
+  margin: 8px;
+  width: 450px; /* 固定寬度 */
+  height: 380px; /* 固定高度 */
   display: flex;
   flex-direction: column;
   overflow: hidden; /* 隱藏超出部分 */
-  padding: 0 10px;
 }
 
 .article-list-card-text {
@@ -109,13 +109,14 @@
 
 .custom-pagination {
   display: flex;
-  justify-content: flex-end; /* 置右 */
+  justify-content: flex-end; /* 讓分頁按鈕置中 */
   background-color: white;
-  padding: 10px;
   list-style: none;
-  margin: 20px 0;
-  width: 100%; /* 確保寬度佔滿父容器 */
+  margin: 70px 0;
+  width: 100%;
+  gap: 5px;
 }
+
 .page-item {
   display: inline-block;
 }
@@ -133,8 +134,22 @@
   font-weight: 300;
   cursor: pointer;
   transition: background-color 0.3s;
-  border: none;
-  box-shadow: none;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.page-item.active .page-link {
+  background-color: #ffd500;
+  color: black;
+}
+
+.page-link:hover {
+  background-color: rgba(255, 213, 0, 0.3);
+}
+
+.page-link:disabled {
+  color: #ccc;
+  cursor: not-allowed;
 }
 
 /* 翻頁器項目 hover 效果 */
@@ -148,7 +163,7 @@
 
 .page-item.active .page-link {
   background-color: #ffd500;
-  color: black !important;
+  color: black;
 }
 
 .page-link:focus {
