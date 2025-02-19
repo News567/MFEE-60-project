@@ -1,4 +1,5 @@
 "use client";
+import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import "./articleList.css";
 import "./articleAside.css";
@@ -9,19 +10,29 @@ import ArticleCard from "./articleCard";
 const API_BASE_URL = "http://localhost:3005/api";
 
 const ArticleListPage = () => {
+  const searchParams = useSearchParams();
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
-    // 客戶端請求文章資料
     const fetchArticles = async () => {
-      const res = await fetch("http://localhost:3005/api/article");
+      const category = searchParams.get("category");
+      const tag = searchParams.get("tag");
 
+      let url = `${API_BASE_URL}/article`;
+      if (category) {
+        url += `?category=${encodeURIComponent(category)}`;
+      }
+      if (tag) {
+        url += `?tag=${encodeURIComponent(tag)}`;
+      }
+
+      const res = await fetch(url);
       const data = await res.json();
-      setArticles(data.data); // 根據後端返回的結構設定
+      setArticles(data.data);
     };
 
     fetchArticles();
-  }, []);
+  }, [searchParams]);
 
   if (!articles) {
     return <div>載入中...</div>;

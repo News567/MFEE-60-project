@@ -1,137 +1,156 @@
-.article-list .article-list-card-photo {
-    width: 100%; /* 確保寬度佔滿父容器 */
-    height: 50vh; /* 高度設定為視窗高度的 50% */
-    position: relative; /* 設置為相對定位 */
-    z-index: 1; /* 確保圖片在文字之上 */
-    overflow: hidden; /* 隱藏超出容器的部分 */
-  }
-  
-  .article-list .article-list-card-photo img {
-    width: 100%; /* 圖片寬度佔滿容器 */
-    height: 100%; /* 圖片高度佔滿容器 */
-    object-fit: cover; /* 確保圖片不會變形，超出部分裁切 */
-    object-position: center; /* 圖片居中顯示 */
-  }
-  
-  .article-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px; /* 設定卡片之間的間距 */
-  }
-  
+.article-list-card-photo {
+  position: relative; /* 相对定位 */
+  width: 100%; /* 确保图片容器占满父元素 */
+  height: 40%; /* 圖片區域佔卡片高度的40% */
+  overflow: hidden; /* 隐藏超出部分 */
+}
+
+.article-list-card-photo-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 根據長邊適配並裁剪 */
+  object-position: center; /* 圖片居中 */
+}
+
+.article-list {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.article-list-card {
+  width: calc(50% - 20px); /* 預設在較大螢幕上每兩個卡片並排顯示 */
+  width: 400px; /* 固定寬度 */
+  height: 430px; /* 固定高度 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 隱藏超出部分 */
+  padding: 0 10px;
+}
+
+.article-list-card-text {
+  flex: 3; /* 佔據 3 份 */
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 10px; /* 添加內邊距 */
+}
+
+@media (max-width: 768px) {
   .article-list-card {
-    width: calc(50% - 20px); /* 預設在較大螢幕上每兩個卡片並排顯示 */
-    height: 517px;
-    display: flex;
-    flex-direction: column;
-    border-radius: 8px;
+    width: 100%; /* 在手機螢幕上，每個卡片單獨顯示 */
   }
-  
-  .article-list-card-photo {
-    width: 100%;
-    height: 250px;
-    object-fit: cover;
-  }
-  
-  .article-list-card-title,
-  .article-list-card-info,
-  .article-list-card-content,
-  .article-list-card-btn {
-    padding: 10px;
-  }
-  
-  @media (max-width: 768px) {
-    .article-list-card {
-      width: 100%; /* 在手機螢幕上，每個卡片單獨顯示 */
-    }
-  }
-  
-  .article-list-card-title {
-    padding-left: 0;
-  }
-  
-  .article-list-card-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0;
-  }
-  
-  .article-list-card-author,
-  .article-list-card-publishtime {
-    margin-right: 10px;
-  }
-  
-  .article-list-card-comment {
-    margin-left: auto; /* 置於右側 */
-  }
-  
-  .article-list-card-content {
-    padding-left: 0;
-  }
-  
-  .article-list-card-btn {
-    display: flex;
-    justify-content: flex-end; /* 按鈕置右 */
-    padding-right: 10px;
-  }
-  
-  .article-list-card-btn .btn {
-    border-radius: 30px; /* 控制邊框圓角大小 */
-    color: black;
-    background-color: #ffd500;
-    padding: 5px 30px; /* 上下 5px，高度更扁，左右 30px，讓寬度更長 */
-    font-size: 16px;
-  }
-  
-  /* pagination 分頁*/
-  
-  .custom-pagination {
-    display: flex;
-    justify-content: flex-end; /* 置右 */
-    background-color: white;
-    padding: 10px;
-    list-style: none;
-    margin: 20px 0; 
-    width: 100%; /* 確保寬度佔滿父容器 */
-  }
-  .page-item {
-    display: inline-block;
-  }
-  
-  .page-link {
-    display: inline-block;
-    width: 40px;
-    height: 40px;
-    text-align: center;
-    line-height: 40px;
-    text-decoration: none;
-    color: black;
-    background-color: white;
-    font-size: 16px;
-    font-weight: 300; 
-    cursor: pointer;
-    transition: background-color 0.3s;
-    border: none;
-    box-shadow: none;
-  }
-  
-  /* 翻頁器項目 hover 效果 */
-  .page-item:hover {
-    background-color: rgba(255, 213, 0, 0.3); /* 黃色透明 */
-  }
-  
-  .page-link:hover {
-    background-color: #ffd500;
-  }
-  
-  .page-item.active .page-link {
-    background-color: #ffd500;
-    color: black !important;
-  }
-  
-  .page-link:focus {
-    outline: none;
-  }
-  
-  
+}
+
+.article-list-card-title {
+  color: rgba(0, 0, 0, 0.8);
+  font-size: 20px;
+  font-weight: 700;
+  margin: 10px 0;
+}
+
+.article-list-card-info {
+  color: #898989;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: normal;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 7px;
+}
+.article-list-card-info .article-list-icon {
+  margin-right: 7px;
+}
+.article-list-card-info .article-list-card-author {
+  margin-right: 15px;
+}
+
+.article-list-card-author,
+.article-list-card-publishtime {
+  margin-right: 10px;
+}
+
+.article-list-card-comment {
+  margin-left: auto; /* 置於右側 */
+}
+.article-list-card-content {
+  color: #898989;
+  font-size: 14px;
+  font-weight: 400;
+  padding: 5px 0;
+  display: -webkit-box; /* 必須使用 -webkit-box */
+  -webkit-line-clamp: 3; /* 限制顯示三行 */
+  -webkit-box-orient: vertical; /* 垂直排列 */
+  overflow: hidden; /* 隱藏超出部分 */
+  text-overflow: ellipsis; /* 顯示省略號 */
+  white-space: normal; /* 確保文本可以換行 */
+  max-height: calc(3 * 1.7em); /* 根据行高限制最大高度，1.2em 为行高 */
+}
+
+.article-list-card-btn {
+  display: flex;
+  justify-content: flex-end; /* 按鈕置右 */
+  padding-right: 10px;
+  padding: 5px 0;
+  margin-top: auto; /* 將按鈕區域推到父容器底部 */
+}
+
+.article-list-card-btn .btn {
+  border-radius: 30px; /* 控制邊框圓角大小 */
+  color: black;
+  background-color: #ffd500;
+  padding: 4px 33px; /* 上下 5px，高度更扁，左右 30px，讓寬度更長 */
+  font-size: 16px;
+}
+
+/* pagination 分頁*/
+
+.custom-pagination {
+  display: flex;
+  justify-content: flex-end; /* 置右 */
+  background-color: white;
+  padding: 10px;
+  list-style: none;
+  margin: 20px 0;
+  width: 100%; /* 確保寬度佔滿父容器 */
+}
+.page-item {
+  display: inline-block;
+}
+
+.page-link {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  line-height: 40px;
+  text-decoration: none;
+  color: black;
+  background-color: white;
+  font-size: 16px;
+  font-weight: 300;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border: none;
+  box-shadow: none;
+}
+
+/* 翻頁器項目 hover 效果 */
+.page-item:hover {
+  background-color: rgba(255, 213, 0, 0.3); /* 黃色透明 */
+}
+
+.page-link:hover {
+  background-color: #ffd500;
+}
+
+.page-item.active .page-link {
+  background-color: #ffd500;
+  color: black !important;
+}
+
+.page-link:focus {
+  outline: none;
+}

@@ -23,10 +23,12 @@ router.get("/:id", async (req, res) => {
       LEFT JOIN article_tag_big atb ON a.id = atb.article_id
       LEFT JOIN article_tag_small ats ON atb.article_tag_small_id = ats.id
       -- 連接圖片表，並抓取所有與該文章相關的圖片
-LEFT JOIN article_image ai ON a.id = ai.article_id AND ai.is_main = 1      
-      `,
-      [articleId]
+      LEFT JOIN article_image ai ON a.id = ai.article_id AND ai.is_main = 1
+      WHERE a.id = ?
+      `, 
+      [articleId] // ✅ 確保只查詢特定 articleId
     );
+    
 
     if (articleRows.length === 0) {
       return res.status(404).json({
