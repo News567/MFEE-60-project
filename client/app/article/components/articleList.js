@@ -18,13 +18,16 @@ const ArticleListPage = () => {
     currentPage: 1,
   });
 
+  // 文章篩選選項
+  const [sortOption, setSortOption] = useState("all"); // 初始值為 all，表示顯示所有文章
+
   useEffect(() => {
     const fetchArticles = async () => {
       const page = parseInt(searchParams.get("page")) || 1;
       const category = searchParams.get("category");
       const tag = searchParams.get("tag");
 
-      let url = `${API_BASE_URL}/article?page=${page}`;
+      let url = `${API_BASE_URL}/article?page=${page}&sort=${sortOption}`;
       if (category) url += `&category=${encodeURIComponent(category)}`;
       if (tag) url += `&tag=${encodeURIComponent(tag)}`;
 
@@ -38,7 +41,7 @@ const ArticleListPage = () => {
     };
 
     fetchArticles();
-  }, [searchParams]);
+  }, [searchParams, sortOption]);
 
   // 切換頁面
   const goToPage = (page) => {
@@ -46,6 +49,11 @@ const ArticleListPage = () => {
     const params = new URLSearchParams(searchParams);
     params.set("page", page);
     router.push(`?${params.toString()}`);
+  };
+
+  // 處理篩選條件變更
+  const handleSortChange = (e) => {
+    setSortOption(e.target.value);
   };
 
   if (!articles) {
@@ -58,11 +66,44 @@ const ArticleListPage = () => {
         <Sidebar />
 
         <div className="article-list col-9">
+          <div className="article-controls">
+            {/* 篩選 */}
+            <div className="filter">
+              <select
+                value={sortOption}
+                onChange={handleSortChange}
+                className="form-select"
+              >
+                {sortOption === "all" && <option value="all">所有文章</option>}{" "}
+                {/* 初始顯示 '所有文章' */}
+                <option value="newest">最新文章</option>
+                <option value="popular">熱門文章</option>
+              </select>
+            </div>
+            {/* 跳頁面btn */}
+            <div className="article-controls-btn">
+              <button className="btn">
+                {" "}
+                <span className="btn-icon">
+                  <i class="fa-solid fa-pen"></i>
+                </span>
+                新增文章
+              </button>
+              <button className="btn">
+                <span className="btn-icon">
+                  <i class="fa-solid fa-bookmark"></i>
+                </span>
+                我的文章
+              </button>
+            </div>
+          </div>
+
+          {/* 文章card */}
           {articles.map((article) => (
             <ArticleCard key={article.id} article={article} />
           ))}
 
-          {/* 分頁按鈕 */}
+          {/* 分頁 */}
           <div className="custom-pagination">
             <div className="page-item">
               <button
@@ -85,7 +126,6 @@ const ArticleListPage = () => {
               </button>
             </div>
 
-            {/* 當前頁面與前後頁數 */}
             {pagination.currentPage > 1 && (
               <div className="page-item">
                 <button
