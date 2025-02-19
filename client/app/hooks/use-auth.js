@@ -17,7 +17,7 @@ export function AuthProvider({ children }){
   const loginRoute = "/";
 
   const login = async (account, password) => {
-    let API = "http://localhost:3005/api/users/login";
+    let API = "http://localhost:3005/api/member/users/login";
     
     const formData = new FormData();
     formData.append("account", account);

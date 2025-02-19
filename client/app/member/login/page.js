@@ -76,10 +76,10 @@ export default function Login() {
               </div>
             </div>
             <div className={styles.fcBox}>
-              <Link href="/forgot" className={styles.ftext}>
+              <Link href="/member/forgot" className={styles.ftext}>
                 忘記密碼？
               </Link>
-              <Link href="/register" className={styles.ctext}>
+              <Link href="/member/register" className={styles.ctext}>
                 註冊新帳號！
               </Link>
             </div>

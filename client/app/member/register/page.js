@@ -15,7 +15,6 @@ export default function Register() {
   const onclick = async () => {
     setLoading(true);
     try {
-      console.log("Sending request to /api/member/users/register");
       const response = await fetch("http://localhost:3005/api/member/users/register", {
         method: 'POST',
         headers: {
@@ -100,6 +99,11 @@ export default function Register() {
                 <img src="/img/line.png" alt="Line logo" />
                 <h6>Continue with Line</h6>
               </div>
+            </div>
+            <div className={styles.fcBox}>
+              <Link href="/member/login" className={styles.ftext}>
+                我有帳號！
+              </Link>
             </div>
           </div>
         </div>
