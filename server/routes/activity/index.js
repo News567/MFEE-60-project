@@ -30,8 +30,7 @@ router.get("/", async (req, res) => {
     if (sort === 4) orderBy = "price DESC";
 
     // 設定行程時間查詢
-    const duration = req.query.duration;
-    let durationCondition = "";
+    let duration = req.query.duration;
 
     try {
         let sql = `SELECT 
@@ -43,25 +42,10 @@ router.get("/", async (req, res) => {
             LEFT JOIN activity_city ON activity.activityCity_id = activity_city.id
             LEFT JOIN activity_image ON activity.id = activity_image.activity_id AND activity_image.isMain = 1
             LEFT JOIN activity_country ON activity_city.activityCountry_id = activity_country.id
-            WHERE activity.price BETWEEN ${minPrice} AND ${maxPrice}
-            ORDER BY ${orderBy}
-            LIMIT ? OFFSET ?`;
+            WHERE activity.price BETWEEN ${minPrice} AND ${maxPrice} `
+
         if (location) {
-            sql = `
-                SELECT 
-                    activity.*, 
-                    activity_country.name AS country,
-                    activity_city.name AS city_name, 
-                    activity_image.imgUrl AS main_image
-                FROM activity
-                LEFT JOIN activity_city ON activity.activityCity_id = activity_city.id
-                LEFT JOIN activity_image ON activity.id = activity_image.activity_id AND activity_image.isMain = 1
-                LEFT JOIN activity_country ON activity_city.activityCountry_id = activity_country.id
-                WHERE activity.price BETWEEN ${minPrice} AND ${maxPrice}
-                AND
-                activity.activityCity_id = ${location}
-                ORDER BY ${orderBy}
-                LIMIT ? OFFSET ?`;
+            sql += ` AND activity.activityCity_id = ${location} `
         }
         if (language) {
             // 確保 language 是陣列，如果不是，就轉換成陣列
@@ -74,71 +58,24 @@ router.get("/", async (req, res) => {
                         return `activity.language LIKE '%${v}%'`;
                     })
                     .join(" OR ");
-                sql = `
-                    SELECT 
-                        activity.*, 
-                        activity_country.name AS country,
-                        activity_city.name AS city_name, 
-                        activity_image.imgUrl AS main_image
-                    FROM activity
-                    LEFT JOIN activity_city ON activity.activityCity_id = activity_city.id
-                    LEFT JOIN activity_image ON activity.id = activity_image.activity_id AND activity_image.isMain = 1
-                    LEFT JOIN activity_country ON activity_city.activityCountry_id = activity_country.id
-                    WHERE activity.price BETWEEN ${minPrice} AND ${maxPrice}
-                    AND ${languageCondition}
-                    ORDER BY ${orderBy}
-                    LIMIT ? OFFSET ?`;
+                sql += ` AND (${languageCondition}) `;
                 console.log(sql);
             } else {
-                sql = `
-                SELECT 
-                    activity.*, 
-                    activity_country.name AS country,
-                    activity_city.name AS city_name, 
-                    activity_image.imgUrl AS main_image
-                FROM activity
-                LEFT JOIN activity_city ON activity.activityCity_id = activity_city.id
-                LEFT JOIN activity_image ON activity.id = activity_image.activity_id AND activity_image.isMain = 1
-                LEFT JOIN activity_country ON activity_city.activityCountry_id = activity_country.id
-                WHERE activity.price BETWEEN ${minPrice} AND ${maxPrice}
-                AND activity.language LIKE '%${languageArray[0]}%'
-                ORDER BY ${orderBy}
-                LIMIT ? OFFSET ?`;
+                sql += ` AND activity.language LIKE '%${languageArray[0]}%' `;
             }
         }
         if (country) {
-            console.log("country" + country);
-            sql = `
-                SELECT 
-                    activity.*, 
-                    activity_country.name AS country,
-                    activity_city.name AS city_name, 
-                    activity_image.imgUrl AS main_image
-                FROM activity
-                LEFT JOIN activity_city ON activity.activityCity_id = activity_city.id
-                LEFT JOIN activity_image ON activity.id = activity_image.activity_id AND activity_image.isMain = 1
-                LEFT JOIN activity_country ON activity_city.activityCountry_id = activity_country.id
-                WHERE activity.price BETWEEN ${minPrice} AND ${maxPrice}
-                AND activity_country.name LIKE '%${country}%'
-                ORDER BY ${orderBy}
-                LIMIT ? OFFSET ?`;
+            sql += ` AND activity_country.name LIKE '%${country}%' `;
         }
         if (duration) {
-            let durationArray = [];
-            switch (duration) {
-                case "less4":
-                    console.log("less4");
-                    durationArray=["1小時", "2小時", "3小時", "4小時"];
-                    durationCondition = durationArray
-                        .map((v) => {
-                            return `activity.duration LIKE '%${v}%'`;
-                        })
-                        .join(" OR ");
-                    break;
-                case "4toDay":
-                    console.log("4toDay");
-                    durationArray = [
-                        "5小時",
+            const durationArray = (Array.isArray(duration) ? duration : [duration])
+            let selectedDurations = []
+            durationArray.forEach((v) => {
+                if (v == "less4") {
+                    selectedDurations.push("1小時", "2小時", "3小時", "4小時")
+                }
+                if (v == "4toDay") {
+                    selectedDurations.push("5小時",
                         "6小時",
                         "7小時",
                         "8小時",
@@ -146,50 +83,65 @@ router.get("/", async (req, res) => {
                         "10小時",
                         "11小時",
                         "12小時",
-                        "13小時"
-                    ];
-                    durationCondition = durationArray
-                        .map((v) => {
-                            return `activity.duration LIKE '%${v}%'`;
-                        })
-                        .join(" OR ");
-                    break;
+                        "13小時")
 
-                case "oneToTwo":
-                    durationArray = [
-                        "1日",
+                }
+                if (v == "oneToTwo") {
+                    selectedDurations.push("1日",
                         "1天",
                         "1.5日",
                         "1.5天",
                         "2日",
-                        "2天"
-                    ];
-                    durationCondition = durationArray
-                        .map((v) => {
-                            return `activity.duration LIKE '%${v}%'`;
-                        })
-                        .join(" OR ");
-                    break;
-                case "twoDaysUp":
-                    break;
+                        "2天")
+                }
+                if (v == "twoDaysUp") {
+                    selectedDurations.push("3日", "4日", "5日", "6日", "7日")
+                }
+            })
+            if (selectedDurations.length > 0) {
+                const durationCondition = selectedDurations
+                    .map((v) => {
+                        return `activity.duration LIKE '%${v}%'`;
+                    })
+                    .join(" OR ");
+                sql += ` AND (${durationCondition}) `;
             }
-            sql = `
-            SELECT 
-                activity.*, 
-                activity_country.name AS country,
-                activity_city.name AS city_name, 
-                activity_image.imgUrl AS main_image
-            FROM activity
-            LEFT JOIN activity_city ON activity.activityCity_id = activity_city.id
-            LEFT JOIN activity_image ON activity.id = activity_image.activity_id AND activity_image.isMain = 1
-            LEFT JOIN activity_country ON activity_city.activityCountry_id = activity_country.id
-            WHERE activity.price BETWEEN ${minPrice} AND ${maxPrice}
-            AND ${durationCondition}
-            ORDER BY ${orderBy}
-            LIMIT ? OFFSET ?`;
-        }
+            // let durationArray = [];
+            // if (duration == "less4") {
+            //     durationArray = [...durationArray, "1小時", "2小時", "3小時", "4小時"];
+            // }
+            // if (duration == "4toDay") {
+            //     durationArray = [...durationArray,
+            //         "5小時",
+            //         "6小時",
+            //         "7小時",
+            //         "8小時",
+            //         "9小時",
+            //         "10小時",
+            //         "11小時",
+            //         "12小時",
+            //         "13小時"]
+            // }
+            // if (duration == "oneToTwo") {
+            //     durationArray = [...durationArray,
+            //         "1日",
+            //         "1天",
+            //         "1.5日",
+            //         "1.5天",
+            //         "2日",
+            //         "2天"
+            //     ]
+            // }
+            // if (duration == "twoDaysUp") {
+            //     durationArray = [...durationArray, "3日", "4日", "5日", "6日", "7日"]
+            // }
 
+        }
+        sql += ` ORDER BY ${orderBy}
+        LIMIT ? OFFSET ? `;
+        console.log(sql);
         const [rows] = await pool.execute(sql, [limit, firstActivity]);
+
         // 取得產品總數
         const [[{ totalCount }]] = await pool.execute(`
         SELECT COUNT(*) AS totalCount FROM activity
@@ -208,6 +160,7 @@ router.get("/", async (req, res) => {
                 currentPage: page,
                 limit,
             },
+            sql: sql
         });
     } catch (error) {
         res.status(500).json({

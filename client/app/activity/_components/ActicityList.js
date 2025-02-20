@@ -9,6 +9,7 @@ import ProductCard from "./ProductCard";
 import { FaRegCalendar } from "react-icons/fa";
 import Calendar from "react-calendar";
 import "./Calendar.css";
+import { max } from "lodash";
 
 // API 基礎 URL
 const API_BASE_URL = "http://localhost:3005/api";
@@ -47,57 +48,58 @@ export default function ProductList() {
     const [error, setError] = useState(null);
 
     // 處理 URL 更新
-    const updateURL = (
-        newPage,
-        newLimit,
-        newSort,
-        newLocation,
-        newCountry,
-        language,
-        minPrice,
-        maxPrice,
-        newDuration
-    ) => {
-        const params = new URLSearchParams();
-        // 先確保變數不是 undefined，若是則設置默認值
-        params.set("page", (newPage || 1).toString()); // 如果 newPage 是 undefined，則使用 1
-        params.set("limit", (newLimit || 24).toString()); // 如果 newLimit 是 undefined，則使用 24
-        params.set("sort", (newSort || 1).toString()); // 如果 newSort 是 undefined，則使用 1
-        if (newLocation) {
-            params.set("location", (newLocation || "").toString());
-        } // 如果 newLocation 是 undefined，則使用空字串
-        if (newCountry) {
-            params.set("country", (newCountry || "").toString());
-        }
-        if (language) {
-            if (language.length > 1) {
-                language.map((v) => {
-                    params.append("language", v.toString());
-                });
-            } else {
-                params.set("language", language.toString());
-            }
-        }
-        if (minPrice) {
-            params.set("minPrice", minPrice.toString());
-        }
-        if (maxPrice) {
-            params.set("maxPrice", maxPrice.toString());
-        }
-        if (newDuration) {
-            params.set("duration", newDuration.toString());
-        }
+    // const updateURL = (
+    //     newPage,
+    //     newLimit,
+    //     newSort,
+    //     newLocation,
+    //     newCountry,
+    //     language,
+    //     minPrice,
+    //     maxPrice,
+    //     newDuration
+    // ) => {
+    //     const params = new URLSearchParams();
+    //     // 先確保變數不是 undefined，若是則設置默認值
+    //     params.set("page", (newPage || 1).toString()); // 如果 newPage 是 undefined，則使用 1
+    //     params.set("limit", (newLimit || 24).toString()); // 如果 newLimit 是 undefined，則使用 24
+    //     params.set("sort", (newSort || 1).toString()); // 如果 newSort 是 undefined，則使用 1
+    //     if (newLocation) {
+    //         params.set("location", (newLocation || "").toString());
+    //     } // 如果 newLocation 是 undefined，則使用空字串
+    //     if (newCountry) {
+    //         params.set("country", (newCountry || "").toString());
+    //     }
+    //     if (language) {
+    //         if (language.length > 1) {
+    //             language.map((v) => {
+    //                 params.append("language", v.toString());
+    //             });
+    //         } else {
+    //             params.set("language", language.toString());
+    //         }
+    //     }
+    //     if (minPrice) {
+    //         params.set("minPrice", minPrice.toString());
+    //     }
+    //     if (maxPrice) {
+    //         params.set("maxPrice", maxPrice.toString());
+    //     }
+    //     if (newDuration) {
+    //         params.set("duration", newDuration.toString());
+    //     }
 
-        router.push(`/activity?${params.toString()}`, undefined, {
-            shallow: true,
-        });
-    };
+    //     router.push(`/activity?${params.toString()}`, undefined, {
+    //         shallow: true,
+    //     });
+    // };
 
     // 獲取產品資料
     // FIXME: - 有依賴問題
     useEffect(() => {
-        fetchActivity(page, limit, selectedSort.value, location); // 讓 API 依照當前排序方式請求
-    }, [page, limit, selectedSort.value, location]); // 監聽 selectedSort.value
+        console.log("有動");
+        fetchActivity(page, limit, selectedSort.value, location,country,language,minPrice,maxPrice,duration); // 讓 API 依照當前排序方式請求
+    }, [page, limit, selectedSort.value, location,country,language,minPrice,maxPrice,duration]); // 監聽 selectedSort.value
 
     // 每頁顯示按鈕
     const handleDisplayChange = (newLimit, displayText) => {
@@ -109,6 +111,7 @@ export default function ProductList() {
 
     // 處理排序
     const handleSort = (text, value) => {
+        console.log("text:"+text , "value:"+value);
         setSelectedSort({ text, value });
         setShowDropdown(false); // 關閉下拉選單
 
@@ -131,8 +134,8 @@ export default function ProductList() {
             default:
                 break;
         }
-        fetchActivity(page, limit, value);
-        updateURL(page, limit, value); // ✅ 更新 URL
+        // fetchActivity(page, limit, value);
+        // updateURL(page, limit, value); // ✅ 更新 URL
     };
 
     // 處理react-calendar的選定日期
@@ -143,23 +146,24 @@ export default function ProductList() {
         const formData = new FormData(e.target);
         const choselanguage = formData.getAll("language");
         const minPrice = formData.get("minPrice");
+        console.log("minPrice:"+minPrice);
         const maxPrice = formData.get("maxPrice");
         const duration = formData.getAll("duration");
         setLanguage(choselanguage);
         setMinPrice(minPrice);
         setMaxPrice(maxPrice);
         setDuration(duration);
-        updateURL(
-            page,
-            limit,
-            selectedSort.value,
-            location,
-            country,
-            choselanguage,
-            minPrice,
-            maxPrice,
-            duration
-        );
+        // updateURL(
+        //     page,
+        //     limit,
+        //     selectedSort.value,
+        //     location,
+        //     country,
+        //     choselanguage,
+        //     minPrice,
+        //     maxPrice,
+        //     duration
+        // );
     };
 
     // 處理點擊外部關閉下拉選單
@@ -180,6 +184,7 @@ export default function ProductList() {
         itemsPerPage,
         sortValue,
         location,
+        country,
         language,
         minPrice,
         maxPrice,
@@ -187,25 +192,45 @@ export default function ProductList() {
     ) => {
         try {
             setLoading(true);
-            // let url = `${API_BASE_URL}/activity?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}&location=${location}`;
-            // if (language) {
-            //     if (language.length > 1) {
-            //         language.map((v) => {
-            //             url += `&language=${v}`;
-            //         });
-            //     } else {
-            //         url += `&language=${language}`;
-            //     }
-            // }
-            console.log(`${API_BASE_URL}/activity?${searchParams.toString()}`);
-            const response = await axios.get(`${API_BASE_URL}/activity?${searchParams.toString()}`);
+            let url = `${API_BASE_URL}/activity?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}&location=${location}`;
+            if(country){
+                url += `&country=${country}`;
+            }
+            if (language) {
+                if (language.length > 1) {
+                    language.map((v) => {
+                        url += `&language=${v}`;
+                    });
+                } else {
+                    url += `&language=${language}`;
+                }
+            }
+            if(minPrice){
+                url += `&minPrice=${minPrice}`
+            }
+            if(maxPrice){
+                url += `&maxPrice=${maxPrice}`
+            }
+            if(duration){
+                if (duration.length > 1) {
+                    duration.map((v) => {
+                        url += `&duration=${v}`;
+                    });
+                } else {
+                    url += `&duration=${duration}`;
+                }
+            }
+            console.log(url);
+            // console.log(`${API_BASE_URL}/activity?${searchParams.toString()}`);
+            // const response = await axios.get(`${API_BASE_URL}/activity?activity?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}&location=${location}}`);
+            const response = await axios.get(url);
             console.log("API Response:", response.data);
             if (response.data.status === "success") {
                 setProducts(response.data.data);
                 setTotalPages(response.data.pagination.totalPages);
                 setPage(response.data.pagination.currentPage);
-                updateURL(response.data.pagination.currentPage, itemsPerPage);
-                console.log("API Response:", response.data.data);
+                // updateURL(response.data.pagination.currentPage, itemsPerPage);
+                // console.log("API Response:", response.data.data);
             } else {
                 setError("獲取活動資料失敗");
             }
@@ -237,15 +262,15 @@ export default function ProductList() {
                                         href="#"
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            const newCountry = 1;
+                                            const newCountry = "台灣";
                                             setCountry(newCountry);
-                                            updateURL(
-                                                page,
-                                                limit,
-                                                selectedSort.value,
-                                                "",
-                                                newCountry
-                                            );
+                                            // updateURL(
+                                            //     page,
+                                            //     limit,
+                                            //     selectedSort.value,
+                                            //     "",
+                                            //     newCountry
+                                            // );
                                         }}>
                                         台灣
                                     </a>
@@ -257,12 +282,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 1;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 屏東
                                             </a>
@@ -274,12 +299,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 2;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 台東
                                             </a>
@@ -291,12 +316,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 3;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 澎湖
                                             </a>
@@ -308,12 +333,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 4;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 綠島
                                             </a>
@@ -325,12 +350,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 5;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 蘭嶼
                                             </a>
@@ -342,12 +367,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 7;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 小琉球
                                             </a>
@@ -359,12 +384,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 8;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 其他
                                             </a>
@@ -375,10 +400,18 @@ export default function ProductList() {
                                     className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
                                     <a
                                         href="#"
-                                        // onClick={(e) => {
-                                        //     e.preventDefault();
-                                        //     handleCategoryFilter("蛙鞋");
-                                        // }}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            const newCountry = "日本";
+                                            setCountry(newCountry);
+                                            // updateURL(
+                                            //     page,
+                                            //     limit,
+                                            //     selectedSort.value,
+                                            //     "",
+                                            //     newCountry
+                                            // );
+                                        }}
                                     >
                                         日本
                                     </a>
@@ -390,12 +423,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 10;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 沖繩
                                             </a>
@@ -407,12 +440,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 11;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 石垣島
                                             </a>
@@ -424,12 +457,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 12;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 其他
                                             </a>
@@ -440,10 +473,18 @@ export default function ProductList() {
                                     className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
                                     <a
                                         href="#"
-                                        // onClick={(e) => {
-                                        //     e.preventDefault();
-                                        //     handleCategoryFilter("蛙鞋");
-                                        // }}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            const newCountry = "菲律賓";
+                                            setCountry(newCountry);
+                                            // updateURL(
+                                            //     page,
+                                            //     limit,
+                                            //     selectedSort.value,
+                                            //     "",
+                                            //     newCountry
+                                            // );
+                                        }}
                                     >
                                         菲律賓
                                     </a>
@@ -455,12 +496,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 13;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 長灘島
                                             </a>
@@ -472,12 +513,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 14;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 宿霧
                                             </a>
@@ -489,12 +530,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 15;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 薄荷島
                                             </a>
@@ -506,12 +547,12 @@ export default function ProductList() {
                                                     e.preventDefault();
                                                     const newLocation = 16;
                                                     setLocation(newLocation);
-                                                    updateURL(
-                                                        page,
-                                                        limit,
-                                                        selectedSort.value,
-                                                        newLocation
-                                                    );
+                                                    // updateURL(
+                                                    //     page,
+                                                    //     limit,
+                                                    //     selectedSort.value,
+                                                    //     newLocation
+                                                    // );
                                                 }}>
                                                 其他
                                             </a>
@@ -537,13 +578,15 @@ export default function ProductList() {
                                         onClick={(e) => {
                                             e.preventDefault();
                                             const newLocation = "";
+                                            const newCountry = ""
                                             setLocation(newLocation);
-                                            updateURL(
-                                                page,
-                                                limit,
-                                                selectedSort.value,
-                                                newLocation
-                                            );
+                                            setCountry(newCountry)
+                                            // updateURL(
+                                            //     page,
+                                            //     limit,
+                                            //     selectedSort.value,
+                                            //     newLocation
+                                            // );
                                         }}>
                                         所有活動
                                     </a>
@@ -608,7 +651,7 @@ export default function ProductList() {
                                                 name="language"
                                             />
                                             <label htmlFor="language-english">
-                                                英文 (4)
+                                                英文
                                             </label>
                                         </div>
                                         <div className={styles.checkboxItem}>
@@ -620,7 +663,7 @@ export default function ProductList() {
                                                 name="language"
                                             />
                                             <label htmlFor="language-chinese">
-                                                中文 (15)
+                                                中文
                                             </label>
                                         </div>
                                         <div className={styles.checkboxItem}>
@@ -632,7 +675,7 @@ export default function ProductList() {
                                                 name="language"
                                             />
                                             <label htmlFor="language-jp">
-                                                日文 (15)
+                                                日文
                                             </label>
                                         </div>
                                         <div className={styles.checkboxItem}>
@@ -644,7 +687,7 @@ export default function ProductList() {
                                                 name="language"
                                             />
                                             <label htmlFor="language-korean">
-                                                韓文 (15)
+                                                韓文
                                             </label>
                                         </div>
                                         <div className={styles.checkboxItem}>
@@ -656,7 +699,7 @@ export default function ProductList() {
                                                 name="language"
                                             />
                                             <label htmlFor="language-cantonese">
-                                                廣東話 (15)
+                                                廣東話
                                             </label>
                                         </div>
                                     </div>
@@ -691,7 +734,7 @@ export default function ProductList() {
                                                 name="duration"
                                             />
                                             <label htmlFor="duration-less4">
-                                                少於4小時 (4)
+                                                少於4小時
                                             </label>
                                         </div>
                                         <div className={styles.checkboxItem}>
@@ -703,7 +746,7 @@ export default function ProductList() {
                                                 name="duration"
                                             />
                                             <label htmlFor="duration-4toDay">
-                                                4小時-1日 (15)
+                                                4小時-1日
                                             </label>
                                         </div>
                                         <div className={styles.checkboxItem}>
@@ -715,7 +758,7 @@ export default function ProductList() {
                                                 name="duration"
                                             />
                                             <label htmlFor="oneToTwo">
-                                                1日-2日 (15)
+                                                1日-2日
                                             </label>
                                         </div>
                                         <div className={styles.checkboxItem}>
@@ -727,7 +770,7 @@ export default function ProductList() {
                                                 name="duration"
                                             />
                                             <label htmlFor="twoDaysUp">
-                                                2日以上 (15)
+                                                2日以上
                                             </label>
                                         </div>
                                     </div>
@@ -748,7 +791,7 @@ export default function ProductList() {
                             </div>
 
                             <button className="btn btn-primary w-100 mb-3">
-                                套用篩選(0/20)
+                                套用篩選
                             </button>
                         </form>
 
