@@ -19,12 +19,11 @@ import groupDetailRouter from "../routes/group/detail.js";
 import rentRouter from "../routes/rent/index.js";
 import rentDetailRouter from "../routes/rent/detail.js";
 import rentRecommendedRouter from "../routes/rent/recommended.js";
-import articleRouter from "../routes/article/article.js"; // 文章列表 & 文章細節
-import articleSidebarRouter from "../routes/article/sidebar.js"; // 側邊欄
-import articleCreateRouter from "../routes/article/create.js"; // 新增文章
-import articleCreateDatabaseRouter from "../routes/article/create_database.js"; // 表單分類 & 標籤
-import replyRouter from "../routes/article/reply.js"; // 留言 & 回覆
-import likeRouter from "../routes/article/like.js"; // 文章 & 留言的喜歡/不喜歡
+import articleRouter from "../routes/article/index.js"; // 文章列表 & 動態文章頁
+import articleCreateRouter from "../routes/article/create.js"; // 取得新建文章所需的分類/標籤 & 新增文章
+import articleSidebarRouter from "../routes/article/sidebar.js"; // 側邊欄篩選數據
+import articleReplyRouter from "../routes/article/reply.js"; // 留言 & 回覆
+import articleLikeRouter from "../routes/article/like.js"; // 文章與留言按讚
 // 建立 Express 應用程式
 const app = express();
 // 設定 CORS
@@ -71,12 +70,11 @@ apiRouter.use("/rent", rentRouter); // 負責 `/api/rent`
 apiRouter.use("/rent", rentDetailRouter); // 負責 `/api/rent/:id`
 apiRouter.use("/rent", rentRecommendedRouter); // 負責 `/api/rent/`
 // 文章相關路由
-apiRouter.use("/article", articleRouter); // `/api/article`
-apiRouter.use("/article/sidebar", articleSidebarRouter); // `/api/article/sidebar`
-apiRouter.use("/article/create", articleCreateRouter); // `/api/article/create`
-apiRouter.use("/article/create_database", articleCreateDatabaseRouter); // `/api/article/create_database`
-apiRouter.use("/article/reply", replyRouter); // `/api/article/reply`
-apiRouter.use("/article/like", likeRouter); // `/api/article/like`
+apiRouter.use("/article", articleRouter); // `/api/article` 文章列表 & 文章內容
+apiRouter.use("/article", articleCreateRouter); // `/api/article/create` 新增文章、取得新建文章所需數據
+apiRouter.use("/article", articleSidebarRouter); // `/api/article/sidebar` 側邊欄篩選數據
+apiRouter.use("/article", articleReplyRouter); // `/api/article/reply` 留言 & 回覆
+apiRouter.use("/article", articleLikeRouter); // `/api/article/like` 文章 & 留言按讚
 
 // 捕捉 404 錯誤
 app.use((req, res, next) => {

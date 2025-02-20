@@ -1,42 +1,12 @@
-import express from "express";
-import multer from "multer";
-import { pool } from "../../config/mysql.js";
+import multer from 'multer';  // 使用 ES 模块导入
+// 或者如果使用 CommonJS 语法：
+// const multer = require('multer');
 
+import express from "express";
+import { pool } from "../../config/mysql.js";
 const router = express.Router();
 
-// 初始化 multer 用于处理图片上传
 const upload = multer({ dest: "uploads/" });
-
-// 1️⃣ 获取新建文章所需数据：分类和标签
-router.get("/", async (req, res) => {
-  try {
-    // 获取所有大分类
-    const [bigCategories] = await pool.execute(`
-      SELECT id, name FROM article_category_big
-    `);
-
-    // 获取所有标签
-    const [tags] = await pool.execute(`
-      SELECT tag_name FROM article_tag_small
-    `);
-
-    res.json({
-      status: "success",
-      data: {
-        bigCategories,
-        tags: tags.map(tag => tag.tag_name),
-      },
-    });
-  } catch (error) {
-    console.error("❌ 获取新建文章所需数据失败：", error);
-    res.status(500).json({
-      status: "error",
-      message: "获取新建文章所需数据失败",
-    });
-  }
-});
-
-// 2️⃣ 提交新文章
 router.post("/", upload.single("cover_image"), async (req, res) => {
   const { title, content, article_category_small_id, users_id, tags } = req.body;
   const coverImage = req.file;
@@ -53,7 +23,7 @@ router.post("/", upload.single("cover_image"), async (req, res) => {
 
     const articleId = articleResult.insertId;
 
-    // 处理封面图片
+    // 處理封面圖片
     if (coverImage) {
       await pool.execute(
         `
@@ -64,10 +34,10 @@ router.post("/", upload.single("cover_image"), async (req, res) => {
       );
     }
 
-    // 处理标签
+    // 處理標籤
     const tagList = JSON.parse(tags);
     for (const tagName of tagList) {
-      // 检查标签是否存在
+      // 檢查標籤是否存在
       const [tagResult] = await pool.execute(
         `
         SELECT id FROM article_tag_small WHERE tag_name = ?
@@ -77,7 +47,7 @@ router.post("/", upload.single("cover_image"), async (req, res) => {
 
       let tagId;
       if (tagResult.length === 0) {
-        // 如果标签不存在，则创建新标签
+        // 如果標籤不存在，則創建新標籤
         const [newTagResult] = await pool.execute(
           `
           INSERT INTO article_tag_small (tag_name)
@@ -90,7 +60,7 @@ router.post("/", upload.single("cover_image"), async (req, res) => {
         tagId = tagResult[0].id;
       }
 
-      // 将标签与文章关联
+      // 將標籤與文章關聯
       await pool.execute(
         `
         INSERT INTO article_tag_big (article_id, article_tag_small_id)
@@ -105,10 +75,10 @@ router.post("/", upload.single("cover_image"), async (req, res) => {
       articleId,
     });
   } catch (error) {
-    console.error("❌ 创建文章失败：", error);
+    console.error("❌ 創建文章失敗：", error);
     res.status(500).json({
       status: "error",
-      message: "创建文章失败",
+      message: "創建文章失敗",
     });
   }
 });
