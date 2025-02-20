@@ -1,3 +1,7 @@
+import multer from 'multer';  // 使用 ES 模块导入
+// 或者如果使用 CommonJS 语法：
+// const multer = require('multer');
+
 import express from "express";
 import { pool } from "../../config/mysql.js";
 const router = express.Router();

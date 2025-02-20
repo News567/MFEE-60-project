@@ -4,7 +4,7 @@
   margin-bottom: 20px; /* 添加底部间距 */
   display: flex;
   justify-content: space-between; /* 将筛选器和按钮区域分开 */
-  padding: 10px 0; /* 添加一些内边距 */
+  padding: 8px 0 15px 0; /* 添加一些内边距 */
   background-color: #fff; /* 设置背景颜色 */
   margin: 0 8px;
 }

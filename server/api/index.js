@@ -22,7 +22,7 @@ import rentRecommendedRouter from "../routes/rent/recommended.js";
 import articleRouter from "../routes/article/index.js";
 import articlesidebarRouter from "../routes/article/sidebar.js"; 
 import articleDetailRouter from "../routes/article/detail.js";
-// import articleCreateRouter from "../routes/article/create.js";
+import articleCreateRouter from "../routes/article/create.js";
 
 // 建立 Express 應用程式
 const app = express();
@@ -73,7 +73,7 @@ apiRouter.use("/rent", rentRecommendedRouter); // 負責 `/api/rent/`
 apiRouter.use("/article", articleRouter); // 負責 `/api/article`
 apiRouter.use("/article/sidebar", articlesidebarRouter);  // 側邊欄數據
 apiRouter.use("/article", articleDetailRouter); // 負責 `/api/article/:id`
-// apiRouter.use("/article/create", articleCreateRouter); // 負責 `/api/article/create`
+apiRouter.use("/article/create", articleCreateRouter); // 負責 `/api/article/create`
 
 // 捕捉 404 錯誤
 app.use((req, res, next) => {

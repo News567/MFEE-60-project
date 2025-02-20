@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import "./articleCreate.css";
 import "../components/articleAside.css";
-
 import Sidebar from "../components/sidebar";
 
 export default function ArticleCreate() {
@@ -17,6 +16,35 @@ export default function ArticleCreate() {
   const [newTag, setNewTag] = useState(""); // 新增標籤輸入框的值
   const [coverImage, setCoverImage] = useState(null); // 封面圖片
   const [isLoading, setIsLoading] = useState(false); // 加載狀態
+  const [categorySmallOptions, setCategorySmallOptions] = useState([]); // 小分類選項
+
+  // 取得大分類選項
+  const [categoryBigOptions, setCategoryBigOptions] = useState([]);
+
+  useEffect(() => {
+    // 載入大分類資料
+    const fetchCategoryBig = async () => {
+      const response = await fetch("/api/categoryBig");
+      const data = await response.json();
+      setCategoryBigOptions(data);
+    };
+    fetchCategoryBig();
+  }, []);
+
+  // 根據大分類載入小分類選項
+  useEffect(() => {
+    if (categoryBig) {
+      const fetchCategorySmall = async () => {
+        const response = await fetch(`/api/categorySmall?categoryBigId=${categoryBig}`);
+        const data = await response.json();
+        setCategorySmallOptions(data);
+      };
+      fetchCategorySmall();
+    } else {
+      setCategorySmallOptions([]);
+      setCategorySmall(""); // 清除小分類選擇
+    }
+  }, [categoryBig]); // 僅在 categoryBig 改變時更新小分類選項
 
   // 處理標籤輸入
   const handleTagInput = (e) => {
@@ -44,9 +72,24 @@ export default function ArticleCreate() {
     }
   };
 
+  // 驗證表單
+  const validateForm = () => {
+    if (title.length > 60) {
+      alert("標題不能超過 60 個字！");
+      return false;
+    }
+    if (!categoryBig || !categorySmall) {
+      alert("請選擇完整的文章分類！");
+      return false;
+    }
+    return true;
+  };
+
   // 提交表單
   const handleSubmit = async (e, isDraft = false) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setIsLoading(true);
 
     const formData = new FormData();
@@ -55,6 +98,7 @@ export default function ArticleCreate() {
     formData.append("article_category_small_id", categorySmall);
     formData.append("users_id", 1); // 假設用戶 ID 為 1，實際應從登入狀態獲取
     formData.append("tags", JSON.stringify(tags)); // 將標籤轉為 JSON 字串
+    formData.append("status", isDraft ? "draft" : "published"); // 設定狀態為草稿或已發表
     if (coverImage) {
       formData.append("cover_image", coverImage);
     }
@@ -67,7 +111,7 @@ export default function ArticleCreate() {
 
       if (response.ok) {
         const result = await response.json();
-        alert("文章創建成功！");
+        alert(isDraft ? "草稿儲存成功！" : "文章發表成功！");
         router.push(`/article/${result.articleId}`); // 跳轉到文章詳情頁面
       } else {
         const errorData = await response.json();
@@ -83,15 +127,11 @@ export default function ArticleCreate() {
 
   return (
     <div className="container mt-4">
-      {/* Grid Layout */}
       <div className="row">
-        {/* Left Aside (1/4) */}
         <Sidebar />
-        {/* Right ArticleCreate (3/4) */}
         <div className="article-create col-9">
           <div className="title">發表新文章</div>
 
-          {/* 上傳封面縮圖 */}
           <div className="secondaryTitle">上傳封面縮圖</div>
           <div className="image-upload-box mt-3">
             <label htmlFor="imageUpload" className="upload-square">
@@ -100,6 +140,7 @@ export default function ArticleCreate() {
                   src={URL.createObjectURL(coverImage)}
                   alt="封面圖片"
                   className="uploaded-image"
+                  style={{ width: "150px", height: "150px", objectFit: "cover" }} // 設定圖片為 150x150
                 />
               ) : (
                 <span>點擊上傳圖片</span>
@@ -113,7 +154,6 @@ export default function ArticleCreate() {
             </label>
           </div>
 
-          {/* 文章標題 */}
           <div className="secondaryTitle">標題</div>
           <input
             id="title"
@@ -125,7 +165,6 @@ export default function ArticleCreate() {
             onChange={(e) => setTitle(e.target.value)}
           />
 
-          {/* 文章分類選擇 */}
           <div className="secondaryTitle">文章分類</div>
           <div className="form-item item-bottom">
             <select
@@ -136,9 +175,11 @@ export default function ArticleCreate() {
               onChange={(e) => setCategoryBig(e.target.value)}
             >
               <option value="">請選擇</option>
-              <option value="official">官方資訊</option>
-              <option value="course">課程與體驗</option>
-              <option value="exchange">交流</option>
+              {categoryBigOptions.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
             </select>
             <select
               name="subcategory"
@@ -149,29 +190,14 @@ export default function ArticleCreate() {
               disabled={!categoryBig}
             >
               <option value="">請選擇</option>
-              {/* 根據大分類動態加載小分類 */}
-              {categoryBig === "official" && (
-                <>
-                  <option value="1">公告</option>
-                  <option value="2">活動</option>
-                </>
-              )}
-              {categoryBig === "course" && (
-                <>
-                  <option value="3">課程</option>
-                  <option value="4">體驗</option>
-                </>
-              )}
-              {categoryBig === "exchange" && (
-                <>
-                  <option value="5">討論</option>
-                  <option value="6">分享</option>
-                </>
-              )}
+              {categorySmallOptions.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* 文章內容 */}
           <div className="secondaryTitle">內容</div>
           <textarea
             id="content"
@@ -183,7 +209,6 @@ export default function ArticleCreate() {
             rows={10}
           />
 
-          {/* 標籤 */}
           <div className="secondaryTitle Tag">標籤</div>
           <div className="tag">
             {tags.map((tag, index) => (
@@ -206,7 +231,6 @@ export default function ArticleCreate() {
             onKeyDown={addTag}
           />
 
-          {/* 按鈕區域 */}
           <div className="btnarea">
             <button
               className="btn article-create-btn"
@@ -217,14 +241,14 @@ export default function ArticleCreate() {
             </button>
             <button
               className="btn article-create-btn"
-              onClick={handleSubmit}
+              onClick={(e) => handleSubmit(e, false)}
               disabled={isLoading}
             >
-              {isLoading ? "發表中..." : "發表文章"}
+              {isLoading ? "儲存中..." : "發表文章"}
             </button>
           </div>
-        </div>{" "}
-      </div>{" "}
+        </div>
+      </div>
     </div>
   );
 }
