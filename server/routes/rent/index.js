@@ -101,7 +101,8 @@ router.get("/", async (req, res) => {
       SELECT
         ri.id, ri.name, ri.price, ri.price2, ri.description, ri.description2,
         ri.stock, ri.created_at, ri.update_at, ri.deposit, ri.is_like, ri.rent_category_small_id,
-        rcs.name AS category_small, rcb.name AS category_big,
+        rcs.name AS category_small, rcb.id AS rent_category_big_id,  -- 新增：大分類 ID,
+        rcb.name AS category_big,
         ri_img.img_url AS img_url,  -- 只獲取 is_main = 1 的圖片
         rb.id AS brand_id,  -- 取得品牌 ID
         rb.name AS brand_name,  -- 取得品牌名稱
