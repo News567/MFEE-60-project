@@ -134,11 +134,8 @@ export default function ProductList() {
             default:
                 break;
         }
-        // fetchActivity(page, limit, value);
-        // updateURL(page, limit, value); // ✅ 更新 URL
     };
 
-    // 處理react-calendar的選定日期
 
     // 處理側邊欄篩選
     const handleFilter = (e) => {
@@ -153,17 +150,6 @@ export default function ProductList() {
         setMinPrice(minPrice);
         setMaxPrice(maxPrice);
         setDuration(duration);
-        // updateURL(
-        //     page,
-        //     limit,
-        //     selectedSort.value,
-        //     location,
-        //     country,
-        //     choselanguage,
-        //     minPrice,
-        //     maxPrice,
-        //     duration
-        // );
     };
 
     // 處理點擊外部關閉下拉選單
@@ -221,16 +207,12 @@ export default function ProductList() {
                 }
             }
             console.log(url);
-            // console.log(`${API_BASE_URL}/activity?${searchParams.toString()}`);
-            // const response = await axios.get(`${API_BASE_URL}/activity?activity?page=${currentPage}&limit=${itemsPerPage}&sort=${sortValue}&location=${location}}`);
             const response = await axios.get(url);
             console.log("API Response:", response.data);
             if (response.data.status === "success") {
                 setProducts(response.data.data);
                 setTotalPages(response.data.pagination.totalPages);
                 setPage(response.data.pagination.currentPage);
-                // updateURL(response.data.pagination.currentPage, itemsPerPage);
-                // console.log("API Response:", response.data.data);
             } else {
                 setError("獲取活動資料失敗");
             }
@@ -264,13 +246,6 @@ export default function ProductList() {
                                             e.preventDefault();
                                             const newCountry = "台灣";
                                             setCountry(newCountry);
-                                            // updateURL(
-                                            //     page,
-                                            //     limit,
-                                            //     selectedSort.value,
-                                            //     "",
-                                            //     newCountry
-                                            // );
                                         }}>
                                         台灣
                                     </a>
@@ -581,12 +556,6 @@ export default function ProductList() {
                                             const newCountry = ""
                                             setLocation(newLocation);
                                             setCountry(newCountry)
-                                            // updateURL(
-                                            //     page,
-                                            //     limit,
-                                            //     selectedSort.value,
-                                            //     newLocation
-                                            // );
                                         }}>
                                         所有活動
                                     </a>

@@ -5,6 +5,7 @@ import styles from "./detail.module.css";
 // import "./detail.css";
 import "./Calendar.css";
 import { useCart } from "@/hooks/cartContext";
+import { useRouter } from "next/router";
 
 // import icons
 import {
@@ -112,12 +113,13 @@ export default function Home() {
     }, [activities]);
 
     // 加入購物車
-    const handleAddToCart = async () => {
+    const [selectedDate,setSelectedDate] = useState("")
+   const [selectedTime,setSelectedTime] = useState("")
+//    const []
+    const handleAddToCart = async (e) => {
         //放入要送往後端的useState 取得目前你點擊得商品/租賃/活動
-        //規格
-        //舉例
-        const currentRental = getCurrentRental();
-        const currentActivity = getCurrentActivity();
+        const formData = new FormData(e.target);
+        console.log(formData);
 
         try {
             //---- 發送購物車請求----
@@ -127,7 +129,7 @@ export default function Home() {
                 userId: 1, //(寫死)
                 type: "activity", //(寫死)
                 projectId: 1, //(綁定資料來源)
-                quantity: 1, //(綁定按鈕)
+                quantity: { count }, //(綁定按鈕)
                 date: "2025-02-20", //(綁定按鈕)
                 time: "10:00:00", //(綁定按鈕)
             };
@@ -344,7 +346,7 @@ export default function Home() {
                                     <div className={styles.promotionalWords}>
                                         <ul>
                                             {introduction &&
-                                            introduction.length > 0 ? (
+                                                introduction.length > 0 ? (
                                                 introduction.map(
                                                     (text, index) => (
                                                         <li
@@ -568,211 +570,189 @@ export default function Home() {
                         {/* 方案卡片 */}
                         {projects && projects.length > 0
                             ? projects.map((v, i) => {
-                                  return (
-                                      <form key={i} action="">
-                                          <div
-                                              className={`${styles.activityProject} mb-3 p-5`}>
-                                              <div
-                                                  className={`d-flex justify-content-between`}>
-                                                  <div
-                                                      className={`${styles.activityPlain} gap-3 me-sm-5`}>
-                                                      <div
-                                                          className={`d-flex align-items-center`}>
-                                                          <h6
-                                                              className={`m-0 fw-bold ${styles.fs20px}`}>
-                                                              {v.name}
-                                                          </h6>
-                                                          {/* TODO: p2 先放著，想一下要不要做可以取消 */}
-                                                          {/* <div
+                                return (
+                                    <form key={i} action="">
+                                        <div
+                                            className={`${styles.activityProject} mb-3 p-5`}>
+                                            <div
+                                                className={`d-flex justify-content-between`}>
+                                                <div
+                                                    className={`${styles.activityPlain} gap-3 me-sm-5`}>
+                                                    <div
+                                                        className={`d-flex align-items-center`}>
+                                                        <h6
+                                                            className={`m-0 fw-bold ${styles.fs20px}`}>
+                                                            {v.name}
+                                                        </h6>
+                                                        {/* TODO: p2 先放著，想一下要不要做可以取消 */}
+                                                        {/* <div
                                                               className={`ms-2 d-none d-sm-block ${styles.hint}`}>
                                                               7天前可免費取消
                                                           </div> */}
-                                                      </div>
-                                                      <div
-                                                          className={`${styles.earliestBookingDay} d-flex align-items-center gap-2`}>
-                                                          <FaRegCheckCircle />
-                                                          最早可預訂日：
-                                                          <span>
-                                                              {new Date(
-                                                                  v.earliestDate
-                                                              ) > new Date()
-                                                                  ? v.earliestDate
-                                                                  : new Date(
-                                                                        tomorrow
-                                                                    )
-                                                                        .toISOString()
-                                                                        .split(
-                                                                            "T"
-                                                                        )[0]}
-                                                          </span>
-                                                      </div>
-                                                      <div
-                                                          type="button"
-                                                          className={`${styles.fs14px} ${styles.colorPrimary} text-decoration-underline d-block d-sm-none`}
-                                                          data-bs-toggle="modal"
-                                                          data-bs-target="#detailModal">
-                                                          查看方案詳情
-                                                      </div>
-                                                      {/* 手機板 */}
-                                                      <div
-                                                          className={`d-sm-none d-flex justify-content-between align-items-center`}>
-                                                          <div
-                                                              className={`fw-bold ${styles.fs20px}`}>
-                                                              NT${v.price}
-                                                              <span
-                                                                  className={`${styles.fs14px} fw-normal`}>
-                                                                  起
-                                                              </span>
-                                                          </div>
-                                                          <button
-                                                              className={`btn ${styles.colorPrimary} text-nowrap ${styles.chooseProjectBtn} px-4 py-2 ${styles.active}`}>
-                                                              取消選擇
-                                                          </button>
-                                                      </div>
-                                                      {/* 電腦版 */}
-                                                      <ul
-                                                          className={`d-none d-sm-block`}>
-                                                          {v.description
-                                                              .split("\n")
-                                                              .map((v, i) => {
-                                                                  return (
-                                                                      <li
-                                                                          key={
-                                                                              i
-                                                                          }
-                                                                          className={`mb-3`}>
-                                                                          {v}
-                                                                      </li>
-                                                                  );
-                                                              })}
-                                                      </ul>
-                                                  </div>
-                                                  <div
-                                                      className={`d-sm-flex d-none`}>
-                                                      <div className={`me-2`}>
-                                                          {v.originalPrice !=
-                                                          v.price ? (
-                                                              <>
-                                                                  <div
-                                                                      className={`text-nowrap text-white ${styles.fs14px} ${styles.bgSecondaryDeep} text-center rounded fw-bold`}>
-                                                                      {Math.round(
-                                                                          ((v.originalPrice -
-                                                                              v.price) /
-                                                                              v.originalPrice) *
-                                                                              100
-                                                                      )}
-                                                                      % OFF
-                                                                  </div>
-                                                                  <div
-                                                                      className={`text-nowrap text-end text-decoration-line-through ${styles.fs14px} text-secondary`}>
-                                                                      NT$
-                                                                      {
-                                                                          v.originalPrice
-                                                                      }
-                                                                  </div>
-                                                                  <div
-                                                                      className={`text-nowrap text-end fw-bold ${styles.fs18px}`}>
-                                                                      NT$
-                                                                      {v.price}
-                                                                  </div>
-                                                              </>
-                                                          ) : (
-                                                              <div
-                                                                  className={`text-nowrap text-end fw-bold ${styles.fs18px}`}>
-                                                                  NT${v.price}
-                                                              </div>
-                                                          )}
-                                                      </div>
-                                                      <button
-                                                          className={`btn ${styles.colorPrimary} text-nowrap ${styles.chooseProjectBtn} px-4 py-2 ${styles.active}`}>
-                                                          取消選擇
-                                                      </button>
-                                                  </div>
-                                              </div>
-                                              <div
-                                                  className={`row p-5 ${styles.collapseSession} d-none d-sm-flex`}>
-                                                  <h6
-                                                      className={`${styles.fs18px}`}>
-                                                      選擇日期、選項
-                                                  </h6>
-                                                  <div className={`col`}>
-                                                      <p>請選擇出發日期</p>
-                                                      {/* TODO: react套件的日曆 */}
-                                                      {/* <div className={`w-100 bg-secondary text-center my-2`}> */}
-                                                      <Calendar
-                                                          minDate={
-                                                              new Date(
-                                                                  v.earliestDate
-                                                              ) > new Date()
-                                                                  ? new Date(
-                                                                        v.earliestDate
-                                                                    )
-                                                                  : new Date(
-                                                                        tomorrow
-                                                                    )
-                                                          }
-                                                          maxDate={
-                                                              new Date(v.date)
-                                                          }
-                                                      />
-                                                  </div>
-                                                  <div
-                                                      className={`col d-flex flex-column justify-content-between`}>
-                                                      <div>
-                                                          <div
-                                                              className={`mb-3`}>
-                                                              <p className="">
-                                                                  場次時間
-                                                              </p>
-                                                              <div
-                                                                  className={`${styles.btns}`}>
-                                                                  {v.time
-                                                                      .split(
-                                                                          ","
-                                                                      )
-                                                                      .map(
-                                                                          (
-                                                                              time,
-                                                                              i
-                                                                          ) => {
-                                                                              return (
-                                                                                  <button
-                                                                                      type="button"
-                                                                                      key={
-                                                                                          i
-                                                                                      }
-                                                                                      className={`btn timeBTN ${styles.btn}`}
-                                                                                      onClick={(
-                                                                                          e
-                                                                                      ) => {
-                                                                                          const buttons =
-                                                                                              document.querySelectorAll(
-                                                                                                  `.timeBTN`
-                                                                                              );
-                                                                                          buttons.forEach(
-                                                                                              (
-                                                                                                  button
-                                                                                              ) => {
-                                                                                                  button.classList.remove(
-                                                                                                      `${styles.active}`
-                                                                                                  );
-                                                                                              }
-                                                                                          );
-                                                                                          e.target.classList.add(
-                                                                                              `${styles.active}`
-                                                                                          );
-                                                                                      }}>
-                                                                                      {
-                                                                                          time
-                                                                                      }
-                                                                                  </button>
-                                                                              );
-                                                                          }
-                                                                      )}
-                                                              </div>
-                                                          </div>
-                                                          {/* TODO: p2 規格先拔掉，有空再做 */}
-                                                          {/* <div className={`mb-3`}>
+                                                    </div>
+                                                    <div
+                                                        className={`${styles.earliestBookingDay} d-flex align-items-center gap-2`}>
+                                                        <FaRegCheckCircle />
+                                                        最早可預訂日：
+                                                        <span>
+                                                            {new Date(
+                                                                v.earliestDate
+                                                            ) > new Date()
+                                                                ? v.earliestDate
+                                                                : new Date(
+                                                                    tomorrow
+                                                                )
+                                                                    .toISOString()
+                                                                    .split(
+                                                                        "T"
+                                                                    )[0]}
+                                                        </span>
+                                                    </div>
+                                                    <div
+                                                        type="button"
+                                                        className={`${styles.fs14px} ${styles.colorPrimary} text-decoration-underline d-block d-sm-none`}
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#detailModal">
+                                                        查看方案詳情
+                                                    </div>
+                                                    {/* 手機板 */}
+                                                    <div
+                                                        className={`d-sm-none d-flex justify-content-between align-items-center`}>
+                                                        <div
+                                                            className={`fw-bold ${styles.fs20px}`}>
+                                                            NT${v.price}
+                                                            <span
+                                                                className={`${styles.fs14px} fw-normal`}>
+                                                                起
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            className={`btn ${styles.colorPrimary} text-nowrap ${styles.chooseProjectBtn} px-4 py-2 ${styles.active}`}>
+                                                            取消選擇
+                                                        </button>
+                                                    </div>
+                                                    {/* 電腦版 */}
+                                                    <ul
+                                                        className={`d-none d-sm-block`}>
+                                                        {v.description
+                                                            .split("\n")
+                                                            .map((v, i) => {
+                                                                return (
+                                                                    <li
+                                                                        key={
+                                                                            i
+                                                                        }
+                                                                        className={`mb-3`}>
+                                                                        {v}
+                                                                    </li>
+                                                                );
+                                                            })}
+                                                    </ul>
+                                                </div>
+                                                <div
+                                                    className={`d-sm-flex d-none`}>
+                                                    <div className={`me-2`}>
+                                                        {v.originalPrice !=
+                                                            v.price ? (
+                                                            <>
+                                                                <div
+                                                                    className={`text-nowrap text-white ${styles.fs14px} ${styles.bgSecondaryDeep} text-center rounded fw-bold`}>
+                                                                    {Math.round(
+                                                                        ((v.originalPrice -
+                                                                            v.price) /
+                                                                            v.originalPrice) *
+                                                                        100
+                                                                    )}
+                                                                    % OFF
+                                                                </div>
+                                                                <div
+                                                                    className={`text-nowrap text-end text-decoration-line-through ${styles.fs14px} text-secondary`}>
+                                                                    NT$
+                                                                    {
+                                                                        v.originalPrice
+                                                                    }
+                                                                </div>
+                                                                <div
+                                                                    className={`text-nowrap text-end fw-bold ${styles.fs18px}`}>
+                                                                    NT$
+                                                                    {v.price}
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <div
+                                                                className={`text-nowrap text-end fw-bold ${styles.fs18px}`}>
+                                                                NT${v.price}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        className={`btn ${styles.colorPrimary} text-nowrap ${styles.chooseProjectBtn} px-4 py-2 ${styles.active}`}>
+                                                        取消選擇
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div
+                                                className={`row p-5 ${styles.collapseSession} d-none d-sm-flex`}>
+                                                <h6
+                                                    className={`${styles.fs18px}`}>
+                                                    選擇日期、選項
+                                                </h6>
+                                                <div className={`col`}>
+                                                    <p>請選擇出發日期</p>
+                                                    {/* TODO: react套件的日曆 */}
+                                                    {/* <div className={`w-100 bg-secondary text-center my-2`}> */}
+                                                    <Calendar
+                                                        minDate={
+                                                            new Date(
+                                                                v.earliestDate
+                                                            ) > new Date()
+                                                                ? new Date(
+                                                                    v.earliestDate
+                                                                )
+                                                                : new Date(
+                                                                    tomorrow
+                                                                )
+                                                        }
+                                                        maxDate={
+                                                            new Date(v.date)
+                                                        }
+                                                    />
+                                                </div>
+                                                <div
+                                                    className={`col d-flex flex-column justify-content-between`}>
+                                                    <div>
+                                                        <div
+                                                            className={`mb-3`}>
+                                                            <p className="">
+                                                                場次時間
+                                                            </p>
+                                                            {/* prettier-ignore */}
+                                                            <div className={`${styles.btns}`}>
+                                                                {v.time.split(",").map((time, i) => {
+                                                                    return (
+                                                                        <button
+                                                                            type="button"
+                                                                            key={i}
+                                                                            className={`btn timeBTN ${styles.btn}`}
+                                                                            onClick={(e) => {
+                                                                                const buttons =
+                                                                                    document.querySelectorAll(`.timeBTN`);
+                                                                                buttons.forEach(
+                                                                                    (button) => {
+                                                                                        button.classList.remove(`${styles.active}`);
+                                                                                    });
+                                                                                e.target.classList.add(`${styles.active}`);
+                                                                                setSelectedTime(time)
+                                                                            }}>
+                                                                            {time}
+                                                                        </button>
+                                                                    );
+                                                                }
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        {/* TODO: p2 規格先拔掉，有空再做 */}
+                                                        {/* <div className={`mb-3`}>
                                                 <p className="">規格</p>
                                                 <div
                                                     className={`${styles.btns}`}>
@@ -786,88 +766,86 @@ export default function Home() {
                                                     </button>
                                                 </div>
                                             </div> */}
-                                                          {/* FIXME: p1 把選人數的做好 */}
-                                                          <div>
-                                                              <p className="">
-                                                                  選擇數量
-                                                              </p>
-                                                              <div
-                                                                  className={`d-flex justify-content-between align-items-center`}>
-                                                                  <p
-                                                                      className={`m-0 fw-bold`}>
-                                                                      人數
-                                                                  </p>
-                                                                  <div
-                                                                      className={`d-flex align-items-center gap-2`}>
-                                                                      <p
-                                                                          className={`m-0 ${styles.fs14px} text-secondary`}>
-                                                                          NT $
-                                                                          {
-                                                                              v.originalPrice
-                                                                          }
-                                                                          <span
-                                                                              className={`fs-6 text-secondary fw-bold`}>
-                                                                              NT$
-                                                                              {
-                                                                                  v.price
-                                                                              }
-                                                                              /每人
-                                                                          </span>
-                                                                      </p>
-                                                                      <div
-                                                                          className={`d-flex align-items-center gap-3`}>
-                                                                          <button
-                                                                              type="button"
-                                                                              className={`${styles.iconBtn} d-flex align-items-center`}
-                                                                              onClick={() => {
-                                                                                  count >
-                                                                                  0
-                                                                                      ? setCount(
-                                                                                            count -
-                                                                                                1
-                                                                                        )
-                                                                                      : setCount(
-                                                                                            0
-                                                                                        );
-                                                                              }}>
-                                                                              <BsDashCircle />
-                                                                          </button>
-                                                                          <div>
-                                                                              {
-                                                                                  count
-                                                                              }
-                                                                          </div>
-                                                                          <button
-                                                                              type="button"
-                                                                              className={`${styles.iconBtn} d-flex align-items-center`}
-                                                                              onClick={() =>
-                                                                                  setCount(
-                                                                                      count +
-                                                                                          1
-                                                                                  )
-                                                                              }>
-                                                                              <BsPlusCircle />
-                                                                          </button>
-                                                                      </div>
-                                                                  </div>
-                                                              </div>
-                                                          </div>
-                                                      </div>
-                                                      <div
-                                                          className={`d-flex justify-content-end align-items-end`}>
-                                                          <div
-                                                              className={`me-2`}>
-                                                              <div
-                                                                  className={`text-secondary`}>
-                                                                  總金額
-                                                                  <span
-                                                                      className={`ms-1 fs-4 text-black fw-bold`}>
-                                                                      NT$
-                                                                      {v.price *
-                                                                          count}
-                                                                  </span>
-                                                              </div>
-                                                              {/* <div
+                                                        {/* FIXME: p1 把選人數的做好 */}
+                                                        <div>
+                                                            <p className="">
+                                                                選擇數量
+                                                            </p>
+                                                            <div
+                                                                className={`d-flex justify-content-between align-items-center`}>
+                                                                <p
+                                                                    className={`m-0 fw-bold`}>
+                                                                    人數
+                                                                </p>
+                                                                <div
+                                                                    className={`d-flex align-items-center gap-2`}>
+                                                                    <p
+                                                                        className={`m-0 ${styles.fs14px} text-secondary`}>
+                                                                        NT $
+                                                                        {
+                                                                            v.originalPrice
+                                                                        }
+                                                                        <span
+                                                                            className={`fs-6 text-secondary fw-bold`}>
+                                                                            NT$
+                                                                            {
+                                                                                v.price
+                                                                            }
+                                                                            /每人
+                                                                        </span>
+                                                                    </p>
+                                                                    <div
+                                                                        className={`d-flex align-items-center gap-3`}>
+                                                                        <button
+                                                                            type="button"
+                                                                            className={`${styles.iconBtn} d-flex align-items-center`}
+                                                                            onClick={() => {
+                                                                                count >
+                                                                                    0
+                                                                                    ? setCount(
+                                                                                        count -
+                                                                                        1
+                                                                                    )
+                                                                                    : setCount(
+                                                                                        0
+                                                                                    );
+                                                                            }}>
+                                                                            <BsDashCircle />
+                                                                        </button>
+                                                                        <div>
+                                                                            {count}
+                                                                        </div>
+                                                                        <button
+                                                                            type="button"
+                                                                            className={`${styles.iconBtn} d-flex align-items-center`}
+                                                                            onClick={() =>
+                                                                                setCount(
+                                                                                    count +
+                                                                                    1
+                                                                                )
+                                                                            }>
+                                                                            <BsPlusCircle />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        className={`d-flex justify-content-end align-items-end`}>
+                                                        <div
+                                                            className={`me-2`}>
+                                                            <div
+                                                                className={`text-secondary`}>
+                                                                總金額
+                                                                <span
+                                                                    className={`ms-1 fs-4 text-black fw-bold`}>
+                                                                    NT$
+                                                                    {v.price *
+                                                                        count}
+                                                                </span>
+                                                            </div>
+                                                            {/* <div
                                                                   className={`text-secondary d-flex justify-content-end`}>
                                                                   優惠點數
                                                                   <span
@@ -876,25 +854,25 @@ export default function Home() {
                                                                       0
                                                                   </span>
                                                               </div> */}
-                                                          </div>
-                                                          <div
-                                                              className={`d-flex gap-1`}>
-                                                              <button
-                                                                  className={`btn ${styles.btn} ${styles.btnPrimaryLight} ${styles.projectBtn}`}>
-                                                                  加入購物車
-                                                              </button>
-                                                              <button
-                                                                  className={`btn ${styles.btn} ${styles.btnPrimaryColor} ${styles.projectBtn}`}>
-                                                                  立即訂購
-                                                              </button>
-                                                          </div>
-                                                      </div>
-                                                  </div>
-                                              </div>
-                                          </div>
-                                      </form>
-                                  );
-                              })
+                                                        </div>
+                                                        <div
+                                                            className={`d-flex gap-1`}>
+                                                            <button
+                                                                className={`btn ${styles.btn} ${styles.btnPrimaryLight} ${styles.projectBtn}`}>
+                                                                加入購物車
+                                                            </button>
+                                                            <button
+                                                                className={`btn ${styles.btn} ${styles.btnPrimaryColor} ${styles.projectBtn}`}>
+                                                                立即訂購
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                );
+                            })
                             : "載入中"}
 
                         {/* <button
@@ -926,7 +904,7 @@ export default function Home() {
                                     </p>
                                     <ol className={`${styles.mb25px}`}>
                                         {description &&
-                                        description.length > 0 ? (
+                                            description.length > 0 ? (
                                             description.map((text, index) => (
                                                 <li
                                                     className={styles.li}
@@ -1293,10 +1271,10 @@ export default function Home() {
                             })} */}
                             {recommendActivity && recommendActivity.length > 0
                                 ? recommendActivity.map((v, i) => {
-                                      return (
-                                          <RecommendCard key={i} activity={v} />
-                                      );
-                                  })
+                                    return (
+                                        <RecommendCard key={i} activity={v} />
+                                    );
+                                })
                                 : "沒有推薦活動"}
 
                             <div

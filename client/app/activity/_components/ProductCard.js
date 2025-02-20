@@ -24,8 +24,8 @@ export default function ProductCard({ product }) {
           <Image
             src={`/image/activity/${product.id}/${product.main_image}` || "/image/activity/1.jpg"}
             alt={product.name || "商品圖片"}
-            width={200}
-            height={200}
+            width={1000}
+            height={1000}
             className="w-100"
           />
           <div className={styles.productOverlay}>

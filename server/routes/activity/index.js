@@ -72,7 +72,7 @@ router.get("/", async (req, res) => {
             let selectedDurations = []
             durationArray.forEach((v) => {
                 if (v == "less4") {
-                    selectedDurations.push("1小時", "2小時", "3小時", "4小時")
+                    selectedDurations.push("1小時", "2小時","2.5小時", "3小時", "4小時")
                 }
                 if (v == "4toDay") {
                     selectedDurations.push("5小時",
