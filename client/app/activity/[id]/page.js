@@ -113,14 +113,22 @@ export default function Home() {
     }, [activities]);
 
     // 加入購物車
-    const [selectedDate,setSelectedDate] = useState("")
-   const [selectedTime,setSelectedTime] = useState("")
-//    const []
+    const [selectedDate, setSelectedDate] = useState("")
+    const doSelectedDate = (newDate) => {
+        const dateToString = (new Date(newDate)).toISOString().split('T')[0]; 
+        setSelectedDate(dateToString)
+    }
+    const [selectedTime, setSelectedTime] = useState("")
+    //    const []
     const handleAddToCart = async (e) => {
         //放入要送往後端的useState 取得目前你點擊得商品/租賃/活動
+        e.preventDefault()
         const formData = new FormData(e.target);
-        console.log(formData);
-
+        const projectId = formData.get("projectId")
+        console.log(projectId);
+        console.log(count);
+        console.log(selectedDate);
+        console.log(selectedTime);
         try {
             //---- 發送購物車請求----
 
@@ -128,16 +136,16 @@ export default function Home() {
             const activity = {
                 userId: 1, //(寫死)
                 type: "activity", //(寫死)
-                projectId: 1, //(綁定資料來源)
-                quantity: { count }, //(綁定按鈕)
-                date: "2025-02-20", //(綁定按鈕)
-                time: "10:00:00", //(綁定按鈕)
+                projectId: projectId, //(綁定資料來源)
+                quantity: count, //(綁定按鈕)
+                date: selectedDate, //(綁定按鈕)
+                time: selectedTime, //(綁定按鈕)
             };
 
             //   下面不動
             const response = await axios.post(
-                `${API_BASE_URL}/cart/add`,
-                cartData
+                `${api}/cart/add`,
+                activity
             );
 
             if (response.data.success) {
@@ -571,7 +579,8 @@ export default function Home() {
                         {projects && projects.length > 0
                             ? projects.map((v, i) => {
                                 return (
-                                    <form key={i} action="">
+                                    <form key={i} onSubmit={handleAddToCart} action="">
+                                        <input type="hidden" name="projectId" value={v.id} />
                                         <div
                                             className={`${styles.activityProject} mb-3 p-5`}>
                                             <div
@@ -702,6 +711,7 @@ export default function Home() {
                                                     {/* TODO: react套件的日曆 */}
                                                     {/* <div className={`w-100 bg-secondary text-center my-2`}> */}
                                                     <Calendar
+                                                        onChange={doSelectedDate}
                                                         minDate={
                                                             new Date(
                                                                 v.earliestDate
