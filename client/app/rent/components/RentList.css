@@ -492,6 +492,7 @@
 .main .product-lists .card .card-body .product-brand {
   color: var(--gray-600-color);
   font-size: 13px;
+  font-weight: 400;
 }
 
 .main .product-lists .card .card-body .product-name {

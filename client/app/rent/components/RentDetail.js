@@ -6,6 +6,7 @@ import dynamic from "next/dynamic"; // 動態導入，動態加載 flatpickr，�
 import { useParams } from "next/navigation"; // 獲取 url 當中的 id，useParams修改為useSearchParams 更改
 import Head from "next/head";
 import Image from "next/image";
+import Link from "next/link";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import "./flatpickr.css"; // 我定義的小日曆css
@@ -90,13 +91,18 @@ export default function RentProductDetail() {
             console.log("data.rent_category_small_id:", categoryId);
 
             const response = await fetch(
-              `${API_BASE_URL}/api/rent/${id}/recommended?brand=${encodeURIComponent(brand)}&category=${categoryId}`
+              `${API_BASE_URL}/api/rent/${id}/recommended?brand=${encodeURIComponent(
+                brand
+              )}&category=${categoryId}`
             );
 
             if (!response.ok) {
               throw new Error("無法獲取推薦商品");
             }
             const result = await response.json();
+
+            // console.log("📌 API 返回的完整資料:", result);
+
             setRecommendedProducts(result.data || []);
           } catch (err) {
             console.error("獲取推薦商品失敗:", err);
@@ -140,6 +146,29 @@ export default function RentProductDetail() {
     const price2 = document.querySelector(".product-price2");
 
     // 如果產品沒有特價，隱藏特價欄位並恢復原價樣式
+    if (!product?.price2) {
+      if (price2) {
+        price2.classList.add("hidden");
+        // price2.style.margin = "0";
+      } // 隱藏特價欄位
+      if (price) {
+        price.classList.remove("strikethrough"); // 移除劃線樣式
+      }
+    } else {
+      // 如果產品有特價，改變原價樣式
+      if (price) {
+        price.classList.add("strikethrough"); // 添加劃線樣式
+        price.style.fontSize = "16px";
+        price.style.fontWeight = "400";
+      }
+    }
+  }, [product]); // 當 product 更新時執行
+  // 根據是否有特價動態調整價格樣式
+  useEffect(() => {
+    const price = document.querySelector(".product-price");
+    const price2 = document.querySelector(".product-price2");
+
+    // 如果產品沒有特價，隱藏特價欄位並恢復原價樣式（你可能會喜歡)
     if (!product?.price2) {
       if (price2) {
         price2.classList.add("hidden");
@@ -622,54 +651,103 @@ export default function RentProductDetail() {
           <h3 className="you-may-like-title">你可能會喜歡</h3>
         </div>
         <div className="row you-may-like-products">
-          {recommendedProducts.map((item) => (
+          {recommendedProducts.map((product) => (
             <div
-              key={item.id}
+              key={product.id}
               className="col-12 col-sm-6 col-md-4 col-lg-3 you-may-like-product mb-4"
             >
-              <div className="card border-0 h-100">
-                <Image
-                  src={item.images[0]?.img_url || "/rent/no-img.png"}
-                  className="card-img-top product-img w-100"
-                  alt={item.name}
-                  width={148}
-                  height={148}
-                  layout="responsive"
-                  priority
-                  unoptimized
-                />
-                <div className="py-2 px-0 d-flex flex-column justify-content-start align-items-center card-body">
-                  <p className="product-brand">{item.brand}</p>
-                  <p className="product-name">{item.name}</p>
-                  {item.price2 && (
-                    <h6 className="product-price2">NT ${item.price2}</h6>
-                  )}
-                  <h6 className="product-price">NT ${item.price}</h6>
-                  <div className="d-flex flex-row justify-content-center align-items-center product-color">
-                    {item.specifications &&
-                      item.specifications.map(
-                        (spec, index) =>
-                          spec.color_rgb && (
+              <Link
+                href={`/rent/${product.id}`}
+                passHref
+                style={{
+                  cursor: "pointer",
+                  textDecoration: "none",
+                  color: "none",
+                }}
+              >
+                <div className="card border-0 h-100">
+                  <div className="d-flex justify-content-center align-items-center img-container">
+                    <Image
+                      src={product.img_url || "/img/rent/no-img.png"}
+                      className="product-img"
+                      alt={product.name}
+                      layout="intrinsic"
+                      width={248}
+                      height={248}
+                      objectFit="contain"
+                      priority
+                      unoptimized
+                    />
+                  </div>
+                  <div className="p-0 d-flex flex-column justify-content-start align-items-center card-body">
+                    <p className="product-brand">{product.brand}</p>
+                    <p className="product-name text-center">{product.name}</p>
+
+                    <div
+                      className={`price-container d-flex gap-3 ${
+                        product.price2 ? "has-discount" : ""
+                      }`}
+                    >
+                      <h6 className="product-price">NT$ {product.price} 元</h6>
+                      {product.price2 && (
+                        <h6 className="product-price2">
+                          NT$ {product.price2} 元
+                        </h6>
+                      )}
+                    </div>
+                    <div className="d-flex flex-row justify-content-center align-items-center product-color">
+                      {product.color_rgb && product.color_rgb !== "無顏色" ? (
+                        // 先將顏色陣列分割出來
+                        product.color_rgb
+                          .split(",")
+                          .slice(0, 3)
+                          .map((color, index) => (
                             <span
                               key={index}
                               className="color-box"
-                              style={{ backgroundColor: spec.color_rgb }}
+                              style={{ backgroundColor: color.trim() }}
                             ></span>
-                          )
+                          ))
+                      ) : (
+                        <span
+                          className="color-box"
+                          style={{
+                            backgroundColor: "transparent",
+                            border: "none",
+                          }}
+                        ></span>
                       )}
-                  </div>
 
-                  {/* 右上角hover */}
-                  <div className="icon-container d-flex flex-row">
-                    <div className="icon d-flex justify-content-center align-items-center">
-                      <i className="bi bi-heart"></i>
+                      {/* 若顏色數量超過3，顯示 '...' */}
+                      {product.color_rgb &&
+                        product.color_rgb !== "無顏色" &&
+                        product.color_rgb.split(",").length > 3 && (
+                          <span
+                            className="color-box"
+                            style={{
+                              backgroundColor: "transparent",
+                              border: "none",
+                              textAlign: "center",
+                              lineHeight: "7.5px",
+                            }}
+                          >
+                            ...
+                          </span>
+                        )}
                     </div>
-                    <div className="icon d-flex justify-content-center align-items-center">
-                      <i className="bi bi-cart"></i>
+
+                    {/* hover出現收藏 & 加入購物車 */}
+                    <div className="icon-container d-flex flex-row">
+                      <div className="icon d-flex justify-content-center align-items-center">
+                        <i className="bi bi-heart"></i>
+                      </div>
+                      <div className="icon d-flex justify-content-center align-items-center">
+                        <i className="bi bi-cart"></i>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
           ))}
         </div>

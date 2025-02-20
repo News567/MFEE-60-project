@@ -6,7 +6,7 @@ const router = express.Router();
 // 根據當前商品資料推薦相似商品
 router.get("/:id/recommended", async (req, res) => {
   console.log("請求到達 /recommended 路由"); // 確認請求是否到達
-  console.log("路由參數 ID:", req.params.id);  // 打印路由參數
+  console.log("路由參數 ID:", req.params.id); // 打印路由參數
 
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.setHeader("Pragma", "no-cache");
@@ -66,8 +66,8 @@ SELECT
     ri_img.img_url AS img_url,
     rb.id AS brand_id, 
     rb.name AS brand_name,
-    COALESCE(GROUP_CONCAT(DISTINCT rc.name ORDER BY rc.id ASC SEPARATOR ', '), '無顏色') AS color_name, 
-    COALESCE(GROUP_CONCAT(DISTINCT rc.rgb ORDER BY rc.id ASC SEPARATOR ', '), '無顏色') AS color_rgb
+   NULLIF(GROUP_CONCAT(DISTINCT rc.name ORDER BY rc.id ASC SEPARATOR ', '), '') AS color_name, 
+    NULLIF(GROUP_CONCAT(DISTINCT rc.rgb ORDER BY rc.id ASC SEPARATOR ', '), '') AS color_rgb
 FROM 
     rent_item ri
 JOIN 
@@ -103,17 +103,17 @@ LIMIT 4;  -- 限制推薦數量
     console.log("SQL 查詢結果:", rows); // 這裡確認資料庫回傳的資料
 
     // 將資料轉換為前端預期的格式
-    const formattedData = rows.map((item) => ({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      price2: item.price2,
-      rent_category_small_id: item.rent_category_small_id,
-      rent_category_small_name: item.rent_category_small_name,
-      category_big: item.category_big,
-      brand: item.brand_name,
-      images: item.img_url ? [{ img_url: item.img_url }] : [],
-      specifications: item.color_rgb ? [{ color_rgb: item.color_rgb }] : [],
+    const formattedData = rows.map((product) => ({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      price2: product.price2,
+      rent_category_small_id: product.rent_category_small_id,
+      rent_category_small_name: product.rent_category_small_name,
+      category_big: product.category_big,
+      brand: product.brand_name,
+      img_url: product.img_url || null,
+      color_rgb: product.color_rgb,
     }));
 
     console.log("格式化後的資料:", formattedData); // 確認格式化後的資料是否包含 rent_category_small_id
