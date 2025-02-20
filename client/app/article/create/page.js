@@ -15,16 +15,14 @@ export default function ArticleCreate() {
   const [coverImage, setCoverImage] = useState(null); // 封面圖片
   const [isLoading, setIsLoading] = useState(false); // 加載狀態
   const [categorySmallOptions, setCategorySmallOptions] = useState([]); // 小分類選項
+  const [categoryBigOptions, setCategoryBigOptions] = useState([]); // 大分類選項
 
-  // 分類選項
-  const [categoryBigOptions, setCategoryBigOptions] = useState([]);
-
+  // 載入大分類資料
   useEffect(() => {
-    // 載入大分類資料
     const fetchCategoryBig = async () => {
-      const response = await fetch("/api/categoryBig");
+      const response = await fetch("/api/article"); // 修正為正確的 API 路徑
       const data = await response.json();
-      setCategoryBigOptions(data);
+      setCategoryBigOptions(data.data.bigCategories);
     };
     fetchCategoryBig();
   }, []);
