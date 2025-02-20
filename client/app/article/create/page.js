@@ -1,9 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import "./articleCreate.css";
-import "../components/articleAside.css";
 import Sidebar from "../components/sidebar";
 
 export default function ArticleCreate() {
@@ -18,7 +16,7 @@ export default function ArticleCreate() {
   const [isLoading, setIsLoading] = useState(false); // 加載狀態
   const [categorySmallOptions, setCategorySmallOptions] = useState([]); // 小分類選項
 
-  // 取得大分類選項
+  // 分類選項
   const [categoryBigOptions, setCategoryBigOptions] = useState([]);
 
   useEffect(() => {
@@ -44,7 +42,7 @@ export default function ArticleCreate() {
       setCategorySmallOptions([]);
       setCategorySmall(""); // 清除小分類選擇
     }
-  }, [categoryBig]); // 僅在 categoryBig 改變時更新小分類選項
+  }, [categoryBig]);
 
   // 處理標籤輸入
   const handleTagInput = (e) => {
@@ -132,6 +130,7 @@ export default function ArticleCreate() {
         <div className="article-create col-9">
           <div className="title">發表新文章</div>
 
+          {/* 封面圖片 */}
           <div className="secondaryTitle">上傳封面縮圖</div>
           <div className="image-upload-box mt-3">
             <label htmlFor="imageUpload" className="upload-square">
@@ -140,7 +139,11 @@ export default function ArticleCreate() {
                   src={URL.createObjectURL(coverImage)}
                   alt="封面圖片"
                   className="uploaded-image"
-                  style={{ width: "150px", height: "150px", objectFit: "cover" }} // 設定圖片為 150x150
+                  style={{
+                    width: "150px",
+                    height: "150px",
+                    objectFit: "cover",
+                  }} // 設定圖片為 150x150
                 />
               ) : (
                 <span>點擊上傳圖片</span>
@@ -154,6 +157,7 @@ export default function ArticleCreate() {
             </label>
           </div>
 
+          {/* 標題 */}
           <div className="secondaryTitle">標題</div>
           <input
             id="title"
@@ -165,31 +169,31 @@ export default function ArticleCreate() {
             onChange={(e) => setTitle(e.target.value)}
           />
 
+          {/* 文章分類 */}
           <div className="secondaryTitle">文章分類</div>
           <div className="form-item item-bottom">
             <select
-              name="active"
               id="sltActive"
               className="category1"
               value={categoryBig}
               onChange={(e) => setCategoryBig(e.target.value)}
             >
-              <option value="">請選擇</option>
+              <option value="">請選擇大分類</option>
               {categoryBigOptions.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
               ))}
             </select>
+
             <select
-              name="subcategory"
               id="sltSubCategory"
               className="category2"
               value={categorySmall}
               onChange={(e) => setCategorySmall(e.target.value)}
               disabled={!categoryBig}
             >
-              <option value="">請選擇</option>
+              <option value="">請選擇小分類</option>
               {categorySmallOptions.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
@@ -198,6 +202,7 @@ export default function ArticleCreate() {
             </select>
           </div>
 
+          {/* 文章內容 */}
           <div className="secondaryTitle">內容</div>
           <textarea
             id="content"
@@ -209,6 +214,7 @@ export default function ArticleCreate() {
             rows={10}
           />
 
+          {/* 標籤 */}
           <div className="secondaryTitle Tag">標籤</div>
           <div className="tag">
             {tags.map((tag, index) => (
@@ -231,6 +237,7 @@ export default function ArticleCreate() {
             onKeyDown={addTag}
           />
 
+          {/* 提交按鈕 */}
           <div className="btnarea">
             <button
               className="btn article-create-btn"
