@@ -26,7 +26,10 @@ router.get("/categories", async (req, res) => {
 
     rows.forEach((row) => {
       // 檢查是否遇到新的大分類
-      if (!currentBigCategory || currentBigCategory.category_big_id !== row.category_big_id) {
+      if (
+        !currentBigCategory ||
+        currentBigCategory.category_big_id !== row.category_big_id
+      ) {
         // 先將上一個大分類資料推入結果陣列
         if (currentBigCategory) {
           categories.push(currentBigCategory);
