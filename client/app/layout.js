@@ -6,10 +6,13 @@ import "../public/globals.css";
 import Header from "./components/Header/header";
 import Footer from "./components/Footer/footer";
 import Breadcrumb from "./components/Breadcrumb/breadcrumb";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import Script from "next/script";
 
 import { Noto_Sans_TC } from "next/font/google";
+import { FavoriteProvider } from "@/hooks/useFavorite";
 
 const notoSansTC = Noto_Sans_TC({
   weight: ["400", "500", "600", "700"], // 你可以選擇不同的字重
@@ -17,7 +20,7 @@ const notoSansTC = Noto_Sans_TC({
 });
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",  
+  variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
@@ -33,7 +36,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="zh-TW">
       <head>
         <link
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -64,6 +67,7 @@ export default function RootLayout({ children }) {
         <CartProvider>
           {/* <Breadcrumb /> */}
           {children}
+          <ToastContainer />
         </CartProvider>
         <Footer />
       </body>

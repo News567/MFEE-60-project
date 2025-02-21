@@ -216,114 +216,20 @@
   padding: 20px;
 }
 
-.productCard {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.productCard:hover {
-  /* transform: translateY(-5px); */
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.productImage {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-}
-
-.productInfo {
-  padding: 15px;
-}
-
-.productTitle {
-  margin: 0 0 10px 0;
-  font-size: 1.1em;
-  color: var(--text-color);
-}
-
-.productPrice {
-  color: var(--primary-color);
-  font-weight: bold;
-  font-size: 1.2em;
-}
-
-/* 分頁 */
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin: 20px 0;
-}
-
-.pageButton {
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.pageButton:hover {
-  background: var(--hover-bg);
-  color: var(--primary-color);
-}
-
-.pageButton.active {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
-/* 排序工具欄 */
-.sortToolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-  background: white;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.sortOptions {
-  display: flex;
-  gap: 15px;
-}
-
-.sortButton {
-  padding: 8px 15px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: var(--text-color);
-  transition: color 0.3s ease;
-}
-
-.sortButton:hover,
-.sortButton.active {
-  color: var(--primary-color);
-}
-
-/* 商品卡片 */
 .productItem {
-  margin-bottom: 20px;
+  width: 100%;
+  height: 100%;
   position: relative;
   cursor: pointer;
   transition: transform 0.3s ease;
-}
-
-.productItem:hover {
-  /* transform: translateY(-5px); */
+  margin-bottom: 0;
 }
 
 .productImg {
   position: relative;
   width: 100%;
-  padding-bottom: 100%; /* 保持1:1的宽高比 */
+  padding-bottom: 100%;
+  margin-bottom: 1rem;
 }
 
 .productImg img {
@@ -349,18 +255,23 @@
   align-items: center;
   justify-content: flex-end;
   padding-bottom: 1rem;
-  z-index: 10;
+  z-index: 2;
 }
 
-.productImg:hover .productOverlay {
+.productLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  height: 100%;
+}
+
+.productLink:hover .productOverlay {
   opacity: 1;
 }
 
 .productInfo {
-  width: 100%;
-  max-width: 200px;
-  padding: 10px 0;
-  word-break: break-word;
+  padding: 0.5rem;
+  text-align: left;
 }
 
 .brandName {
@@ -397,7 +308,6 @@
 
 .filterTitle {
   font-weight: 500;
-  /* margin: 15px 0 10px; */
   color: #333;
 }
 
@@ -506,21 +416,6 @@
   font-size: 1rem;
 }
 
-.productLink {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-  position: relative;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
-
-.productLink:hover {
-  text-decoration: none;
-  color: inherit;
-}
-
 .selectedFilters {
   padding: 10px 15px;
   margin-bottom: 15px;
@@ -551,4 +446,58 @@
   background-color: #fafafa;
   border-color: #40a9ff;
   color: #40a9ff;
+}
+
+.productListContainer {
+  position: relative;
+  min-height: 200px;
+}
+
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 100;
+}
+
+.loadingOverlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.fadeIn {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 調整按鈕樣式 */
+.iconButton {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.iconButton:hover {
+  transform: scale(1.1);
 }

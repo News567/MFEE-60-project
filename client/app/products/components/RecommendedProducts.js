@@ -1,7 +1,66 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { useParams } from "next/navigation";
+import axios from "axios";
 
-export default function RecommendedProducts({ products }) {
+const API_BASE_URL = "http://localhost:3005/api";
+
+export default function RecommendedProducts() {
+  const params = useParams();
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchRecommendedProducts = async () => {
+      try {
+        // 先獲取當前商品的分類
+        const productResponse = await axios.get(
+          `${API_BASE_URL}/products/${params.id}`
+        );
+
+        if (productResponse.data.status === "success") {
+          const currentProduct = productResponse.data.data;
+
+          // 使用現有的 products API 獲取同分類商品
+          const recommendedResponse = await axios.get(
+            `${API_BASE_URL}/products`,
+            {
+              params: {
+                category_id: currentProduct.category_id,
+                limit: 8,
+                page: 1,
+              },
+            }
+          );
+
+          if (recommendedResponse.data.status === "success") {
+            // 過濾掉當前商品
+            const filteredProducts = recommendedResponse.data.data
+              .filter((p) => p.id !== currentProduct.id)
+              .map((p) => ({
+                id: p.id,
+                name: p.name,
+                description: p.description || "",
+                imgSrc: p.main_image,
+                salePrice: `NT$${p.price}`,
+                originalPrice: p.original_price ? `NT$${p.original_price}` : "",
+              }));
+
+            setRecommendedProducts(filteredProducts);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching recommended products:", error);
+      }
+    };
+
+    if (params.id) {
+      fetchRecommendedProducts();
+    }
+  }, [params.id]);
+
+  if (recommendedProducts.length === 0) return null;
+
   return (
     <div className="mt-5">
       <h3 className="text-center mb-4">你可能會喜歡</h3>
@@ -14,11 +73,11 @@ export default function RecommendedProducts({ products }) {
         {/* 商品清單區塊 */}
         <div className="products-slider">
           <div className="products-track">
-            {products.map((product, index) => (
+            {recommendedProducts.map((product, index) => (
               <div key={index} className="product-slide">
                 <div className="product-img mb-2 position-relative">
                   <Image
-                    src={product.imgSrc}
+                    src={`/img/product/${product.imgSrc}`}
                     alt={product.name}
                     width={200}
                     height={200}
@@ -43,9 +102,11 @@ export default function RecommendedProducts({ products }) {
                     {product.description}
                   </div>
                   <div className="text-danger fw-bold">{product.salePrice}</div>
-                  <div className="text-decoration-line-through text-secondary">
-                    {product.originalPrice}
-                  </div>
+                  {product.originalPrice && (
+                    <div className="text-decoration-line-through text-secondary">
+                      {product.originalPrice}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

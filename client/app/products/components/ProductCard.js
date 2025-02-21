@@ -5,28 +5,61 @@ import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import styles from "./products.module.css";
 import useFavorite from "@/hooks/useFavorite";
 import { useCart } from "@/hooks/cartContext";
+import useToast from "@/hooks/useToast";
+import { useState } from "react";
 
 export default function ProductCard({ product }) {
-  const { isFavorite, toggleFavorite, loading } = useFavorite(product.id);
-
+  const {
+    isFavorite,
+    toggleFavorite,
+    loading: favoriteLoading,
+  } = useFavorite(product.id, "product");
   const { addToCart } = useCart();
+  const { showToast } = useToast();
+  const [imageLoaded, setImageLoaded] = useState(false);
 
-  const handleCartClick = (e) => {
+  const handleCartClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product);
+
+    try {
+      // 如果沒有 variants，使用商品本身的資料建立預設變體
+      const cartData = {
+        userId: 1, // 暫時寫死
+        type: "product",
+        variantId: product.variant_id, // 直接使用商品 ID
+        quantity: 1,
+      };
+      console.log("🚀 DEBUG: cartData =", cartData);
+
+      const success = await addToCart(1, cartData);
+      if (success) {
+        showToast ? showToast("商品已加入購物車") : alert("成功加入購物車！");
+      }
+    } catch (error) {
+      console.error("加入購物車失敗:", error);
+      alert("加入購物車失敗，請稍後再試");
+    }
   };
 
   return (
-    <div className={`col-lg-3 col-md-4 col-sm-6 ${styles.productItem}`}>
+    <div
+      className={`${styles.productItem} ${imageLoaded ? styles.fadeIn : ""}`}
+    >
       <Link href={`/products/${product.id}`} className={styles.productLink}>
         <div className={styles.productImg}>
           <Image
             src={`/img/product/${product.main_image}`}
             alt={product.name || "商品圖片"}
-            width={200}
-            height={200}
-            className="w-100"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            style={{
+              objectFit: "cover",
+              opacity: imageLoaded ? 1 : 0,
+              transition: "opacity 0.3s ease-in",
+            }}
+            onLoadingComplete={() => setImageLoaded(true)}
+            priority={false}
           />
           <div className={styles.productOverlay}>
             <button
@@ -34,18 +67,23 @@ export default function ProductCard({ product }) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                toggleFavorite();
+                if (!favoriteLoading) {
+                  toggleFavorite();
+                }
               }}
               style={{ border: "none", background: "none" }}
-              disabled={loading}
+              disabled={favoriteLoading}
             >
               {isFavorite ? (
-                <AiFillHeart color="red" size={24} />
+                <AiFillHeart color="red" size={36} />
               ) : (
-                <AiOutlineHeart color="white" size={24} />
+                <AiOutlineHeart color="white" size={36} />
               )}
             </button>
-            <button className="btn btn-primary w-75" onClick={handleCartClick}>
+            <button
+              className="btn btn-primary w-75 mt-2"
+              onClick={handleCartClick}
+            >
               加入購物車
             </button>
           </div>

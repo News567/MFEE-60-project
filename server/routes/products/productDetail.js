@@ -26,9 +26,7 @@ router.get("/:id", async (req, res) => {
     `;
     const [productRows] = await pool.execute(productSql, [productId]);
     if (productRows.length === 0) {
-      return res
-        .status(404)
-        .json({ status: "error", message: "Product not found" });
+      return res.status(404).json({ status: "error", message: "目前無此商品" });
     }
     const product = productRows[0];
 

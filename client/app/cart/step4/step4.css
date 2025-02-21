@@ -1,0 +1,85 @@
+.cartCss4 {
+  --primary-color: #219ebc;
+  --primary-hover: #cab331;
+  --primary-light: #e6f3f7;
+}
+
+/* 成功訊息樣式 */
+.success-message {
+  padding: 2rem;
+}
+
+.success-icon {
+  font-size: 4rem;
+  color: var(--primary-color);
+}
+
+/* 卡片樣式 */
+.cartCss4 .card {
+  border: none;
+  box-shadow: 0 0 15px rgba(0,0,0,0.05);
+}
+
+.cartCss4 .card-header {
+  background-color: var(--primary-color);
+  color: white;
+  border-bottom: none;
+}
+
+/* 訂單明細樣式 */
+.section-title {
+  color: #666;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.item-row {
+  padding: 1rem;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.item-name {
+  font-weight: 500;
+}
+
+.item-spec {
+  font-size: 0.875rem;
+}
+
+/* 資訊組樣式 */
+.info-group {
+  margin-bottom: 1rem;
+}
+
+.info-group label {
+  display: block;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+/* 按鈕樣式 */
+.cartCss4 .btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.cartCss4 .btn-primary:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.cartCss4 .btn-outline-primary {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.cartCss4 .btn-outline-primary:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}

@@ -225,3 +225,92 @@
   background-color: var(--primary-color);
   border-color: var(--primary-color);
 }
+
+/* 購物車商品響應式樣式 */
+@media (max-width: 768px) {
+  .cartCss .cart-item {
+    padding: 15px 0;
+    position: relative;
+  }
+
+  .cartCss .product-name {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .cartCss .checkbox-wrapper {
+    position: absolute;
+    top: 15px;
+    left: 0;
+  }
+
+  .cartCss .product-image {
+    margin-left: 25px;
+  }
+
+  .cartCss .spec-display {
+    height: auto;
+    padding: 8px;
+    background-color: var(--primary-light);
+    border-radius: 4px;
+  }
+
+  .cartCss .quantity-wrapper {
+    max-width: 120px;
+    margin-left: auto;
+  }
+
+  .cartCss .text-muted,
+  .cartCss .text-danger {
+    font-size: 14px;
+  }
+
+  /* 調整按鈕大小 */
+  .cartCss .btn.p-0 {
+    font-size: 13px;
+    padding: 4px 8px !important;
+  }
+
+  /* 優化間距 */
+  .cartCss .mb-3 {
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* 調整規格區域 */
+  .cartCss .spec-row {
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 2px;
+  }
+
+  /* 隱藏修改按鈕 */
+  .cartCss .edit-mark {
+    display: block;
+    position: static;
+    margin-top: 4px;
+    text-align: right;
+  }
+}
+
+/* 購物車頭部響應式調整 */
+@media (max-width: 576px) {
+  .cartCss .card-header h5 {
+    font-size: 16px;
+  }
+
+  .cartCss .batch-action {
+    font-size: 12px;
+  }
+}
+
+/* 全選區域響應式調整 */
+@media (max-width: 768px) {
+  .cartCss .batch-action {
+    padding: 4px 8px !important;
+  }
+
+  .cartCss input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+  }
+}

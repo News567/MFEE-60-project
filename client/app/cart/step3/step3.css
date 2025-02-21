@@ -1,0 +1,75 @@
+.cartCss3 {
+  --primary-color: #219ebc;
+  --primary-hover: #cab331;
+  --primary-light: #e6f3f7;
+}
+
+.cartCss3 .card-header {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.cartCss3 .activity-item {
+  padding: 15px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.cartCss3 .activity-item.active {
+  border-color: var(--primary-color);
+  background-color: var(--primary-light);
+}
+
+.cartCss3 .activity-item.completed {
+  opacity: 0.7;
+}
+
+.cartCss3 .activity-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cartCss3 .activity-number {
+  width: 24px;
+  height: 24px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.cartCss3 .activity-details {
+  padding-left: 34px;
+}
+
+.cartCss3 .detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  color: #666;
+  font-size: 14px;
+}
+
+.cartCss3 .price {
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-top: 10px;
+}
+
+.cartCss3 .btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.cartCss3 .btn-primary:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}

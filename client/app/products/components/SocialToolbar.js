@@ -1,12 +1,22 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function SocialToolbar() {
   const [currentPosition, setCurrentPosition] = useState(0);
   const [maxScroll, setMaxScroll] = useState(0);
   const thumbnailListRef = useRef(null);
   const itemHeight = 48; // 40px高度 + 8px間距
+
+  // 瀏覽紀錄
+  const [historyItems, setHistoryItems] = useState([]);
+
+  useEffect(() => {
+    const storedHistory =
+      JSON.parse(localStorage.getItem("browsingHistory")) || [];
+    setHistoryItems(storedHistory);
+  }, []);
 
   useEffect(() => {
     if (thumbnailListRef.current) {
@@ -27,6 +37,12 @@ export default function SocialToolbar() {
     }
 
     setCurrentPosition(newPosition);
+  };
+
+  //清除紀錄
+  const handleClearHistory = () => {
+    localStorage.removeItem("browsingHistory");
+    setHistoryItems([]);
   };
 
   return (
@@ -63,21 +79,13 @@ export default function SocialToolbar() {
               transition: "transform 0.3s ease",
             }}
           >
-            <li className="thumbnail-item">
-              <img src="/images/1.webp" alt="歷史記錄" />
-            </li>
-            <li className="thumbnail-item">
-              <img src="/images/1.webp" alt="歷史記錄" />
-            </li>
-            <li className="thumbnail-item">
-              <img src="/images/1.webp" alt="歷史記錄" />
-            </li>
-            <li className="thumbnail-item">
-              <img src="/images/1.webp" alt="歷史記錄" />
-            </li>
-            <li className="thumbnail-item">
-              <img src="/images/1.webp" alt="歷史記錄" />
-            </li>
+            {historyItems.map((item, index) => (
+              <Link href={`/products/${item.id}`} key={index}>
+                <li className="thumbnail-item">
+                  <img src={`/img/product/${item.image}`} alt={item.name} />
+                </li>
+              </Link>
+            ))}
           </ul>
         </div>
 
@@ -90,7 +98,9 @@ export default function SocialToolbar() {
         </button>
       </div>
 
-      <div className="clear-btn">清除記錄</div>
+      <div className="clear-btn" onClick={handleClearHistory}>
+        清除記錄
+      </div>
     </div>
   );
 }
