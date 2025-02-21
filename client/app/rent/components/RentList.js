@@ -277,31 +277,54 @@ export default function RentList() {
     setShowSmallCategoryDropdown(!showSmallCategoryDropdown);
   };
 
-  // 更新選擇的大分類
-  const handleCategorySelect = useCallback(
-    (bigCategory) => {
-      setSelectedBigCategory(bigCategory.category_big_id); // 設置當前選擇的大分類
-      setSelectedSmallCategory(null); // 重置小分類選中狀態
-      setCurrentPage(1); // 重置分頁
-      setSelectedCategoryText(`${bigCategory.category_big_name}`); // 更新選擇的大分類文字
-      debouncedFetchProducts(
-        1,
-        sort,
-        itemsPerPage,
-        bigCategory.category_big_id,
-        null
-      ); // 篩選大分類商品
-      updateUrlParams(1, itemsPerPage, sort, bigCategory.category_big_id, null); // 更新 URL 參數
+  // 清除大小分類條件
+  const handleClearCategory = useCallback(() => {
+    setSelectedBigCategory(null); // 清除大分類
+    setSelectedSmallCategory(null); // 清除小分類
+    setSelectedCategoryText(""); // 清除分類文字
+    setCurrentPage(1); // 重置分頁
+    debouncedFetchProducts(1, sort, itemsPerPage, null, null); // 重新獲取商品列表
+    updateUrlParams(1, itemsPerPage, sort, null, null); // 更新 URL 參數
+  }, [debouncedFetchProducts, updateUrlParams, sort, itemsPerPage]);
 
-      // 根據大分類設定小分類選項
-      const smallCategoriesForSelectedCategory =
-        bigCategories.find(
-          (cat) => cat.category_big_id === bigCategory.category_big_id
-        )?.category_small || [];
-      setSmallCategories(smallCategoriesForSelectedCategory); // 更新小分類選項
-    },
-    [debouncedFetchProducts, updateUrlParams, bigCategories, sort, itemsPerPage]
-  );
+  // 更新選擇的大分類
+  // const handleCategorySelect = useCallback(
+  //   (bigCategory) => {
+  //     setSelectedBigCategory(bigCategory.category_big_id); // 設置當前選擇的大分類
+  //     setSelectedSmallCategory(null); // 重置小分類選中狀態
+  //     setCurrentPage(1); // 重置分頁
+  //     setSelectedCategoryText(`${bigCategory.category_big_name}`); // 更新選擇的大分類文字
+  //     debouncedFetchProducts(
+  //       1,
+  //       sort,
+  //       itemsPerPage,
+  //       bigCategory.category_big_id,
+  //       null
+  //     ); // 篩選大分類商品
+  //     updateUrlParams(1, itemsPerPage, sort, bigCategory.category_big_id, null); // 更新 URL 參數
+
+  //     // 根據大分類設定小分類選項
+  //     const smallCategoriesForSelectedCategory =
+  //       bigCategories.find(
+  //         (cat) => cat.category_big_id === bigCategory.category_big_id
+  //       )?.category_small || [];
+  //     setSmallCategories(smallCategoriesForSelectedCategory); // 更新小分類選項
+  //   },
+  //   [debouncedFetchProducts, updateUrlParams, bigCategories, sort, itemsPerPage]
+  // );
+  const handleCategorySelect = (bigCategory) => {
+    setSelectedBigCategory(bigCategory.category_big_id);
+    setSelectedSmallCategory(null); // 清空小分类选择
+    setCurrentPage(1);
+    debouncedFetchProducts(
+      1,
+      sort,
+      itemsPerPage,
+      bigCategory.category_big_id,
+      null
+    );
+    updateUrlParams(1, itemsPerPage, sort, bigCategory.category_big_id, null);
+  };
 
   // 更新選擇的小分類
   const handleSmallCategorySelect = useCallback(
@@ -542,35 +565,55 @@ export default function RentList() {
           <div className="row">
             {/* Sidebar */}
             <div className="col-12 col-lg-3 col-md-4 order-2 order-md-1 d-flex flex-column sidebar">
-              {/* 1. 產品分類區塊 */}
-              <div className="d-flex flex-column sidebar-lists product-category">
-                <div
-                  className={`d-flex justify-content-between align-items-center sidebar-lists-title ${
-                    showCategoryDropdown ? "open" : ""
-                  }`}
-                  onClick={toggleCategoryDropdown}
-                  style={{ cursor: "pointer" }}
-                >
-                  <h6>產品分類</h6>
-                  <i className="bi bi-chevron-down"></i>
-                </div>
+              <div className="d-flex flex-column sidebar-category">
+                {/* 1. 商品類別區塊 */}
+                <div className="d-flex flex-column sidebar-lists product-category">
+                  <div
+                    className={`d-flex justify-content-between align-items-center sidebar-lists-title ${
+                      showCategoryDropdown ? "open" : ""
+                    }`}
+                    onClick={toggleCategoryDropdown}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <h6>商品類別</h6>
+                    <i className="bi bi-chevron-down"></i>
+                  </div>
 
-                {showCategoryDropdown && (
-                  <div className="sidebar-dropdown">
-                    {bigCategories.map((bigCategory) => (
-                      <div
-                        key={bigCategory.category_big_id}
-                        className={`sidebar-dropdown-item ${
-                          selectedBigCategory === bigCategory.category_big_id
-                            ? "selected"
-                            : ""
-                        }`}
-                        onClick={() => handleCategorySelect(bigCategory)}
-                      >
-                        {bigCategory.category_big_name}
-                        {/* 小分類選單 */}
-                        {selectedBigCategory ===
-                          bigCategory.category_big_id && (
+                  {showCategoryDropdown && (
+                    <div className="sidebar-dropdown">
+                      {bigCategories.map((bigCategory) => (
+                        <div
+                          key={bigCategory.category_big_id}
+                          className={`sidebar-dropdown-item ${
+                            selectedBigCategory === bigCategory.category_big_id
+                              ? "selected"
+                              : ""
+                          }`}
+                          onClick={() => handleCategorySelect(bigCategory)}
+                        >
+                          {bigCategory.category_big_name}
+                          {/* 小分類選單 */}
+                          {/* {selectedBigCategory ===
+                            bigCategory.category_big_id && (
+                            <div className="small-category-dropdown">
+                              {bigCategory.category_small.map((small) => (
+                                <div
+                                  key={small.id}
+                                  className={`small-category-dropdown-item ${
+                                    selectedSmallCategory === small.id
+                                      ? "selected"
+                                      : ""
+                                  }`}
+                                  onClick={(e) => {
+                                    e.stopPropagation(); // 阻止事件冒泡
+                                    handleSmallCategorySelect(small);
+                                  }}
+                                >
+                                  {small.name}
+                                </div>
+                              ))}
+                            </div>
+                          )} */}
                           <div className="small-category-dropdown">
                             {bigCategory.category_small.map((small) => (
                               <div
@@ -589,11 +632,23 @@ export default function RentList() {
                               </div>
                             ))}
                           </div>
-                        )}
-                      </div>
-                    ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* 2. 品牌專區區塊 */}
+                <div className="d-flex flex-column sidebar-lists brand-category">
+                  <div className="d-flex justify-content-between align-items-center sidebar-lists-title">
+                    <h6>品牌專區</h6>
+                    <i className="bi bi-chevron-down"></i>
                   </div>
-                )}
+                  <ul>
+                    <li>aaa</li>
+                    <li>aaa</li>
+                    <li>aaa</li>
+                  </ul>
+                </div>
               </div>
 
               {/* 篩選按鈕 */}
@@ -788,7 +843,7 @@ export default function RentList() {
                   立即選擇您需要的裝備，靈活設定租期，並享受多日租賃優惠活動。準備好迎接海底奇觀了嗎？租得安心，潛得盡興，輕鬆開啟您的深海冒險之旅！
                 </p>
                 <Image
-                  src="/img/rentimg.jpg"
+                  src="/image/rent/rentimg.jpg"
                   alt="輕鬆租賃，探索深海無負擔！"
                   className="main-img w-100"
                   width={420} // 設定圖片的寬度
@@ -800,9 +855,23 @@ export default function RentList() {
 
               {/* Main Select */}
               <div className="d-flex flex-row justify-content-between align-items-center">
+                {/* 大小分類的篩選顯示 & 清除 */}
                 <div className="selected-category-text">
-                  目前顯示：{selectedCategoryText || "所有租借商品"}
+                  {selectedCategoryText ? selectedCategoryText : "全館租借商品"}
+                  {(selectedBigCategory || selectedSmallCategory) && (
+                    <span
+                      className="ms-2 clear-category-icon"
+                      onClick={(e) => {
+                        e.stopPropagation(); // 阻止事件冒泡
+                        handleClearCategory(); // 清除分類條件
+                      }}
+                      style={{ cursor: "pointer" }} // 設置滑鼠指針樣式
+                    >
+                      <i className="bi bi-x"></i>
+                    </span>
+                  )}
                 </div>
+                {/* 排序與一頁資料數量顯示 */}
                 <div className="py-3 d-flex flex-row justify-content-end gap-2 align-items-center main-select">
                   {/* 排序選項 */}
                   <div className="d-flex flex-row justify-content-between align-items-center select-order">
