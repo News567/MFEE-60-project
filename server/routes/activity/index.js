@@ -37,9 +37,9 @@ router.get("/", async (req, res) => {
                 activity.*, 
                 activity_country.name AS country,
                 activity_city.name AS city_name, 
-                activity_image.imgUrl AS main_image
+                activity_image.img_url AS main_image
             FROM activity
-            LEFT JOIN activity_city ON activity.activityCity_id = activity_city.id
+            LEFT JOIN activity_city ON activity.activity_city_id = activity_city.id
             LEFT JOIN activity_image ON activity.id = activity_image.activity_id AND activity_image.is_main = 1
             LEFT JOIN activity_country ON activity_city.activity_country_id = activity_country.id
             WHERE activity.price BETWEEN ${minPrice} AND ${maxPrice} `

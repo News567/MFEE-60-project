@@ -112,7 +112,7 @@ export default function GroupHomePage() {
                             );
                         })
                     ) : (
-                        <div>No groups available</div>
+                        <div>沒有揪團</div>
                     )}
 
                     {/* <div className="group-card">

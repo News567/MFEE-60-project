@@ -104,7 +104,7 @@ export default function GroupCard({ group }) {
                     <div>已揪：0</div>
                 </div>
                 <div className="color-primary">
-                    揪團截止:{group.signEndDate}
+                    揪團截止:{group.sign_end_date}
                 </div>
             </div>
         </div>
