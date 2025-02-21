@@ -20,7 +20,7 @@ router.get("/", async (req, res) => {
     );
 
     const [activities] = await pool.execute(
-      `SELECT f.*, a.name, a.introduction, ai.imgUrl as image_url, a.price
+      `SELECT f.*, a.name, a.introduction, ai.img_url as image_url, a.price
        FROM favorites f
        JOIN activity a ON f.activity_id = a.id
        LEFT JOIN activity_image ai ON a.id = ai.activity_id AND ai.isMain = 1
