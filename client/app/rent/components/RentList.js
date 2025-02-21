@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 // import Link from "next/link";
 import "./RentList.css";
 import "../../../public/globals.css";
+import RentBrand from "./RentBrand";
 import { debounce } from "lodash"; // 新增 debounce 解決刷新有參數的介面資料閃動問題
 
 export default function RentList() {
@@ -28,6 +29,9 @@ export default function RentList() {
   const [showSmallCategoryDropdown, setShowSmallCategoryDropdown] =
     useState(false); // 控制小分類下拉顯示
   const [selectedSmallCategory, setSelectedSmallCategory] = useState(null); // 當前選中的小分類 ID
+
+  // sidebar 品牌
+  const [brands, setBrands] = useState([]);
 
   const router = useRouter(); // 動態更新網址參數（根據每頁顯示資料數、分頁、排序條件）
   const searchParams = useSearchParams();
@@ -93,6 +97,24 @@ export default function RentList() {
     },
     [itemsPerPage]
   );
+
+  // 從後端獲取品牌資料
+  const fetchBrands = useCallback(async () => {
+    try {
+      const API_BASE_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
+      const response = await fetch(`${API_BASE_URL}/api/rent/brandcategories`);
+      const result = await response.json();
+
+      if (result && result.success) {
+        setBrands(result.data);
+      } else {
+        console.error("API 返回的資料格式不正確:", result);
+      }
+    } catch (error) {
+      console.error("品牌資料獲取失敗:", error);
+    }
+  }, []);
 
   // 使用 debounce 減少頻繁請求，解決頁面刷新閃動問題
   const debouncedFetchProducts = useMemo(
@@ -316,7 +338,7 @@ export default function RentList() {
     setSelectedBigCategory(bigCategory.category_big_id);
     setSelectedSmallCategory(null); // 清空小分类选择
     setCurrentPage(1);
-    setSelectedCategoryText(`${bigCategory.category_big_name}`); 
+    setSelectedCategoryText(`${bigCategory.category_big_name}`);
     debouncedFetchProducts(
       1,
       sort,
@@ -403,12 +425,29 @@ export default function RentList() {
     (limit) => {
       setItemsPerPage(limit);
       setCurrentPage(1);
-      updateUrlParams(1, limit, sort, selectedBigCategory, selectedSmallCategory);
-      debouncedFetchProducts(1, sort, limit, selectedBigCategory, selectedSmallCategory);
+      updateUrlParams(
+        1,
+        limit,
+        sort,
+        selectedBigCategory,
+        selectedSmallCategory
+      );
+      debouncedFetchProducts(
+        1,
+        sort,
+        limit,
+        selectedBigCategory,
+        selectedSmallCategory
+      );
     },
-    [sort, selectedBigCategory, selectedSmallCategory, updateUrlParams, debouncedFetchProducts]
+    [
+      sort,
+      selectedBigCategory,
+      selectedSmallCategory,
+      updateUrlParams,
+      debouncedFetchProducts,
+    ]
   );
-  
 
   // 處理商品卡片點擊事件
   const handleProductClick = useCallback(
@@ -642,7 +681,7 @@ export default function RentList() {
                 </div>
                 {/* 2. 品牌專區區塊 */}
                 <div className="d-flex flex-column sidebar-lists brand-category">
-                  <div className="d-flex justify-content-between align-items-center sidebar-lists-title">
+                  {/* <div className="d-flex justify-content-between align-items-center sidebar-lists-title">
                     <h6>品牌專區</h6>
                     <i className="bi bi-chevron-down"></i>
                   </div>
@@ -650,7 +689,8 @@ export default function RentList() {
                     <li>aaa</li>
                     <li>aaa</li>
                     <li>aaa</li>
-                  </ul>
+                  </ul> */}
+                  <RentBrand brands={brands} />
                 </div>
               </div>
 

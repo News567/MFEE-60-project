@@ -18,6 +18,7 @@ import groupListRouter from "../routes/group/list.js";
 import groupDetailRouter from "../routes/group/detail.js";
 import rentRouter from "../routes/rent/index.js";
 import rentCategoryRouter from "../routes/rent/categories.js";
+import rentBrandCategoryRouter from "../routes/rent/brandcategories.js";
 import rentFilterRouter from "../routes/rent/filter.js";
 import rentDetailRouter from "../routes/rent/detail.js";
 import rentRecommendedRouter from "../routes/rent/recommended.js";
@@ -72,6 +73,7 @@ apiRouter.use("/group", groupDetailRouter)
 // 租借相關路由
 apiRouter.use("/rent", rentRouter); // 負責 `/api/rent`
 apiRouter.use("/rent", rentCategoryRouter); // 負責 `/api/rent/categories`
+apiRouter.use("/rent", rentBrandCategoryRouter); // 負責 `/api/rent/brandcategories`
 apiRouter.use("/rent", rentFilterRouter); // 負責 `/api/rent/filter`
 apiRouter.use("/rent", rentDetailRouter); // 負責 `/api/rent/:id`
 apiRouter.use("/rent", rentRecommendedRouter); // 負責 `/api/rent/:id/recommended`
