@@ -6,14 +6,14 @@ import Link from "next/link";
 
 export default function Login() {
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [account, setAccount] = useState("");
+  const [accountOrEmail, setAccountEmail] = useState("");
   const [password, setPassword] = useState("");
   const { user, login } = useAuth() || {};
 
-  const onclick = () => {
-    console.log(account, password);
+  const handleLogin = () => {
+    console.log(accountOrEmail, password);
     if (typeof login === 'function') {
-      login(account, password);
+      login(accountOrEmail, password);
     } else {
       console.error('login is not a function');
     }
@@ -38,9 +38,9 @@ export default function Login() {
             type="text"
             name="account"
             className={styles.wordbox}
-            value={account}
+            value={accountOrEmail}
             onChange={(e) => {
-              setAccount(e.target.value);
+              setAccountEmail(e.target.value);
             }}
             placeholder="電話號碼 / 使用者帳號 / Email"
           />
@@ -55,7 +55,7 @@ export default function Login() {
             placeholder="密碼"
           />
           <div className={styles.loginWays}>
-            <div className={styles.loginBtn} onClick={onclick}>
+            <div className={styles.loginBtn} onClick={handleLogin}>
               <h6>登入</h6>
             </div>
             <div className={styles.or}>

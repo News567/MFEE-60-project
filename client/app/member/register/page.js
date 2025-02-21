@@ -3,45 +3,42 @@ import { useAuth } from "@/hooks/use-auth";
 import styles from "../Login.module.css";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Register() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [account, setAccount] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { user, register } = useAuth() || {};
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
+  const handleRegister = async () => {
+    if (loading) return;
 
-  const onclick = async () => {
+    if (!account.trim()) {
+      alert("請輸入使用者帳號");
+      return;
+    }
+    if (!password.trim()) {
+      alert("請輸入密碼");
+      return;
+    }
+
     setLoading(true);
-    try {
-      const response = await fetch("http://localhost:3005/api/member/users/register", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ account, password }),
-      });
-      // 嘗試解析 JSON，即使 response 非 2xx
-      let data = await response.json().catch(() => ({}));
 
-      if (response.ok) {
-        if (data.status === "success") {
-          alert("註冊成功，請登入");
-          window.location.href = "/member/login";
-        }
-      } else if (response.status === 409) { // 確認是帳號已存在
-        alert("此帳號已存在，請直接登入");
-        window.location.href = "/member/login";
-      } else {
-        alert("註冊失敗，請檢查您的資訊");
-      }
+    try {
+      await register(account, email, password);
+      router.push("/member/login");
     } catch (error) {
-      console.error("錯誤:", error);
+      console.error("註冊錯誤:", error);
+      alert("註冊失敗，請稍後再試");
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     if (!user) {
       setCheckingAuth(false);
@@ -66,7 +63,17 @@ export default function Register() {
             onChange={(e) => {
               setAccount(e.target.value);
             }}
-            placeholder="電話號碼 / 使用者帳號 / Email"
+            placeholder="使用者帳號"
+          />
+          <input
+            type="email"
+            name="email"
+            className={styles.wordbox}
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value)
+            }}
+            placeholder="Email (選填)"
           />
           <input
             type="password"
@@ -80,7 +87,7 @@ export default function Register() {
           />
 
           <div className={styles.loginWays}>
-            <div className={styles.loginBtn} onClick={onclick}>
+            <div className={styles.loginBtn} onClick={handleRegister}>
               <h6>註冊</h6>
             </div>
             <div className={styles.or}>

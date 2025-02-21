@@ -206,32 +206,28 @@ router.delete("/users/:id", (req, res) => {
 });
 
 router.post("/users/login", upload.none(), async (req, res) => {
-  const { account, password } = req.body;
+  const { accountOrEmail, password } = req.body;
+
+  if ((!accountOrEmail) || !password) {
+    return res.status(400).json({ message: "請提供帳號/Email 和密碼" });
+  }
 
   try {
-    if (!account || !password) throw new Error("請提供帳號和密碼");
-
-    console.log("收到的帳號:", account); // 打印收到的帳號
-    const sql = "SELECT * FROM `users` WHERE account = ?;";
-    const [rows] = await pool.execute(sql, [account]);
-
-    if (rows.length == 0) throw new Error("找不到使用者");
+    const sql = "SELECT * FROM `users` WHERE account = ? OR email = ?";
+    const [rows] = await pool.execute(sql, [accountOrEmail, accountOrEmail]);
+    
+    if (rows.length == 0) throw new Error("帳號或 Email 不存在");
 
     const user = rows[0];
-    console.log("資料庫查詢結果:", user); // 打印資料庫查詢結果
 
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log("密碼比對結果:", isMatch); // 打印密碼比對結果
-
     if (!isMatch) throw new Error("帳號或密碼錯誤");
 
     const token = jwt.sign(
       {
         id: user.id,
         account: user.account,
-        name: user.name,
-        mail: user.mail,
-        head: user.head,
+        email: user.email,
       },
       process.env.JWT_SECRET,
       { expiresIn: "30m" }
@@ -269,27 +265,24 @@ router.post("/users/logout", checkToken, (req, res) => {
 });
 
 router.post("/users/register", async (req, res) => {
-  console.log("收到註冊請求:", req.body);
-  const { account, password } = req.body;
+  const { account, email, password } = req.body;
 
-  if (!account || !password) {
-    return res.status(400).json({ message: "請填寫帳號和密碼" });
+  if ((!account && !email) || !password) {
+    return res.status(400).json({ message: "請提供帳號、Email 或密碼" });
   }
   try {
-    // 檢查帳號是否已存在
-    const checkSql = "SELECT * FROM `users` WHERE account = ?";
-    const [existingUser] = await pool.execute(checkSql, [account]);
+    const checkSql = "SELECT * FROM `users` WHERE account = ? OR email = ?";
+    const [existingUser] = await pool.execute(checkSql, [account, email]);
 
     if (existingUser.length > 0) {
-      return res.status(409).json({ status: "exists", message: "帳號已存在" });
+      return res.status(409).json({ status: "exists", message: "帳號或 Email 已存在" });
     }
-    // 如果帳號不存在，則繼續註冊
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql =
-      "INSERT INTO `users` (`account`, `password`) VALUES (?, ?)";
-    const [result] = await pool.execute(sql, [account, hashedPassword]);
+      "INSERT INTO `users` (`account`, `email`, `password`) VALUES (?, ?, ?)";
+    const [result] = await pool.execute(sql, [account, email, hashedPassword]);
     res.status(201).json({
-      message: "User registered successfully",
+      message: "註冊成功",
       userId: result.insertId,
     });
   } catch (err) {
