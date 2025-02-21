@@ -3,10 +3,11 @@ import { useState } from "react";
 import CartFlow from "../components/cartFlow";
 import ActivityForm from "./components/ActivityForm";
 import ActivitySummary from "./components/ActivitySummary";
-import "./step3.css";
+import "./step2.css";
 
 export default function Cart3() {
   const [currentActivity, setCurrentActivity] = useState(0);
+  // axios 取得當前活動資訊
   const activities = [
     {
       id: 1,
@@ -23,10 +24,10 @@ export default function Cart3() {
 
   const handleNext = () => {
     if (currentActivity < activities.length - 1) {
-      setCurrentActivity(prev => prev + 1);
+      setCurrentActivity((prev) => prev + 1);
     } else {
       // 所有活動都填寫完成，導向下一步
-      router.push("/cart/step2");
+      router.push("/cart/step3");
     }
   };
 
@@ -46,16 +47,16 @@ export default function Cart3() {
                 </span>
               </div>
               <div className="card-body">
-                <ActivityForm 
+                <ActivityForm
                   activity={activities[currentActivity]}
                   onSubmit={handleNext}
                 />
               </div>
             </div>
           </div>
-          
+
           <div className="col-md-4">
-            <ActivitySummary 
+            <ActivitySummary
               activities={activities}
               currentIndex={currentActivity}
             />

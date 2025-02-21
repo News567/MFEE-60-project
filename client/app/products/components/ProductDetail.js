@@ -57,7 +57,7 @@ export default function ProductDetail() {
       {
         id: product.id,
         name: product.name,
-        price: product.price,
+        price: product.variants[0].price,
         image: `/img/product/${product.main_image}`,
       },
       ...storedHistory.filter((item) => item.id !== product.id),
