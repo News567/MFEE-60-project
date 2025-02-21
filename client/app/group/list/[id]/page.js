@@ -140,9 +140,9 @@ export default function GroupDetailPage() {
                     <div className="group-detail text-center d-flex flex-column middle-section">
                         <div className="fs-20px">揪團主：{group.user_name}</div>
                         <div className="fs-20px">揪團上架：{group.created_at}</div>
-                        <div className="fs-20px">揪團截止：{group.signEndDate}</div>
+                        <div className="fs-20px">揪團截止：{group.sign_end_date}</div>
                         <div className="d-none d-sm-flex justify-content-center time-cards">
-                        {group.signEndDate ? (<CountDownCard date={new Date(group.signEndDate)} />): "載入中"}
+                        {group.signEndDate ? (<CountDownCard date={new Date(group.sign_end_date)} />): "載入中"}
                             
                         </div>
                         <hr className="hr" />
@@ -150,7 +150,7 @@ export default function GroupDetailPage() {
                             <div>
                                 <i className="bi bi-person-check-fill color-primary fs-26px" />
                             </div>
-                            已揪 0 ／ 剩餘 {group.maxNumber}
+                            已揪 0 ／ 剩餘 {group.max_number}
                         </div>
                         <div className="fw-bold fs-18px">人數</div>
                         {/* FIXME: 設定好可選人數限制 */}

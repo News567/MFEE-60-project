@@ -5,11 +5,11 @@ const router = express.Router();
 router.get("/:id", async (req, res) => {
     try {
         const id = req.params.id;
-        const sql = `SELECT activity.*, activity_city.name AS city_name, activity_country.name AS country, GROUP_CONCAT(activity_image.imgUrl) AS images
+        const sql = `SELECT activity.*, activity_city.name AS city_name, activity_country.name AS country, GROUP_CONCAT(activity_image.img_url) AS images
     FROM activity 
     LEFT JOIN activity_image ON activity.id = activity_image.activity_id
-    LEFT JOIN activity_city ON activity.activityCity_id = activity_city.id
-    LEFT JOIN activity_country ON activity_city.activityCountry_id = activity_country.id
+    LEFT JOIN activity_city ON activity.activity_city_id = activity_city.id
+    LEFT JOIN activity_country ON activity_city.activity_country_id = activity_country.id
     WHERE activity.id = ?
     GROUP BY activity.id `;
         const [rows] = await pool.execute(sql, [id]);
@@ -17,12 +17,12 @@ router.get("/:id", async (req, res) => {
         const projectSQL = `SELECT * FROM activity_project WHERE activity_id = ${id}`;
         const [project] = await pool.execute(projectSQL);
 
-        const citiyId = rows[0].activityCity_id;
-        const recommendSQL = `SELECT activity.*, activity_image.imgUrl, activity_city.name AS recommedCity
+        const citiyId = rows[0].activity_city_id;
+        const recommendSQL = `SELECT activity.*, activity_image.img_url, activity_city.name AS recommedCity
                                 FROM activity
                                 LEFT JOIN activity_image ON activity_image.activity_id = activity.id
-                                LEFT JOIN activity_city ON activity.activityCity_id = activity_city.id
-                                WHERE activity.activityCity_id = ${citiyId} AND activity_image.isMain = 1 AND activity.id <> ${id}
+                                LEFT JOIN activity_city ON activity.activity_city_id = activity_city.id
+                                WHERE activity.activity_city_id = ${citiyId} AND activity_image.is_main = 1 AND activity.id <> ${id}
                                 ORDER BY activity.price DESC `;
         const [recommend] = await pool.execute(recommendSQL);
         console.log(rows);

@@ -6,17 +6,16 @@ router.get("/list/:id", async (req, res) => {
     try {
         // res.json({message:"連接成功"})
         const id = req.params.id;
-
         const sql = `SELECT groups.*, 
         activity_city.name AS city_name, 
-        groups_image.imgURL AS group_img, 
+        groups_image.img_url AS group_img, 
         activity_country.name AS country_name, 
         users.name AS user_name
         FROM groups 
         LEFT JOIN activity_city ON groups.groups_city_id = activity_city.id
         LEFT JOIN groups_image ON groups.id = groups_image.groups_id
-        LEFT JOIN activity_country ON activity_city.activityCountry_id = activity_country.id
-        LEFT JOIN users ON groups.member_id = users.id
+        LEFT JOIN activity_country ON activity_city.activity_country_id = activity_country.id
+        LEFT JOIN users ON groups.user_id = users.id
         WHERE groups.id = ${id}`;
         const [rows] = await pool.execute(sql);
         // console.log(rows[0]);

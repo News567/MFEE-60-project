@@ -9,6 +9,7 @@ import Breadcrumb from "./components/Breadcrumb/breadcrumb";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { AuthProvider } from "@/hooks/use-auth";
 import Script from "next/script";
 
 import { Noto_Sans_TC } from "next/font/google";
@@ -64,11 +65,13 @@ export default function RootLayout({ children }) {
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <Header />
-        <CartProvider>
-          {/* <Breadcrumb /> */}
-          {children}
+        <AuthProvider>
+          <CartProvider>
+            {/* <Breadcrumb /> */}
+            {children}
+          </CartProvider>
           <ToastContainer />
-        </CartProvider>
+        </AuthProvider>
         <Footer />
       </body>
     </html>

@@ -1,0 +1,151 @@
+/* Login.module.css */
+.loginPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 75px;
+}
+
+.main {
+  display: flex;
+  padding: 50px 100px;
+  align-items: center;
+  gap: 130px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+}
+
+.logo {
+  width: auto;
+  height: 432px;
+}
+
+.line1 {
+  width: 2px;
+  height: 550px;
+  border-radius: 30px;
+  background: #a3a3a3;
+}
+
+.sectionLogin {
+  display: flex;
+  padding: 20px 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 30px;
+}
+
+.sectionLogin h3 {
+  margin: 0;
+}
+
+.wordbox {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: 440px;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  border: 1px solid #898989;
+  background: #fff;
+}
+
+.wordbox p {
+  color: #b2b2b2;
+  margin: 0;
+}
+
+.loginWays {
+  display: flex;
+  /* padding: 0 35px; */
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.loginBtn {
+  display: flex;
+  width: 440px;
+  padding: 0 35px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50px;
+  background: #219ebc;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+}
+.loginBtn h6{
+  margin: 1rem;
+}
+
+.or {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.line2 {
+  width: 179px;
+  height: 1px;
+  border-radius: 30px;
+  background: #898989;
+}
+
+.or p {
+  margin: 0;
+  color: #898989;
+}
+
+.loginGoogle,
+.loginLine {
+  display: flex;
+  width: 440px;
+  padding: 15px 35px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50px;
+  border: 1px solid #a3a3a3;
+  cursor: pointer;
+}
+
+.googleBox,
+.lineBox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.googleBox img,
+.lineBox img {
+  width: 20px;
+  height: 20px;
+}
+
+.googleBox h6,
+.lineBox h6 {
+  text-align: center;
+  color: #053742;
+  margin: 0;
+}
+
+.fcBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ftext {
+  color: #000;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.ctext {
+  color: #ffb703;
+  cursor: pointer;
+  text-decoration: none;
+}
