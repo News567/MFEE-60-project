@@ -40,20 +40,25 @@
   gap: 30px;
 }
 
-.sidebar .sidebar-lists {
-  border: 1px solid var(--gray-100-color);
+.sidebar-category {
+  gap: -30px;
+  border-bottom: 1px solid var(--gray-50-color);
 }
+
+/* .sidebar .sidebar-lists {
+
+} */
 
 .sidebar .sidebar-lists .sidebar-lists-title {
   padding: 15px;
-  background-color: var(--gray-200-color);
+  /* background-color: var(--gray-200-color); */
 }
 
 .sidebar .sidebar-lists .sidebar-lists-title h6 {
   font-weight: 700;
 }
 
-.sidebar .sidebar-lists .sidebar-lists-title h6{
+.sidebar .sidebar-lists .sidebar-lists-title h6 {
   margin: 0;
   padding: 0;
 }
@@ -78,6 +83,7 @@
 
 /* 下拉選單中的每個項目 */
 .sidebar-dropdown-item {
+  position: relative;
   padding: 10px 16px;
   font-size: 14px;
   color: var(--black);
@@ -98,14 +104,20 @@
 
 /* 小分類下拉選單 */
 .small-category-dropdown {
+  display: none; /* 默认隐藏小分类 */
   position: absolute;
-  top: 0; /* 與大分類選單對齊 */
-  left: 100%; /* 出現在大分類選單的右側 */
+  top: 0;
+  left: 100%;
+  /* top: 100%;
+  left: 0; */
   background-color: var(--white);
   border: 1px solid var(--gray-50-color);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   min-width: 160px; /* 最小寬度 */
   z-index: 10; /* 確保小分類選單在最上層 */
+}
+.sidebar-dropdown-item:hover .small-category-dropdown {
+  display: block; /* hover 时显示小分类 */
 }
 
 /* 小分類下拉選單中的每個項目 */
@@ -491,6 +503,17 @@
 .main .main-img {
   height: 188px;
   object-fit: cover;
+}
+
+/* 清除大小分類的叉叉 */
+.clear-category-icon {
+  color: #888;
+  font-size: 14px;
+  margin-left: 5px;
+}
+
+.clear-category-icon:hover {
+  color: #333;
 }
 
 .main .main-select .show-per-page-btn,
