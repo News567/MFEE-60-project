@@ -316,6 +316,7 @@ export default function RentList() {
     setSelectedBigCategory(bigCategory.category_big_id);
     setSelectedSmallCategory(null); // 清空小分类选择
     setCurrentPage(1);
+    setSelectedCategoryText(`${bigCategory.category_big_name}`); 
     debouncedFetchProducts(
       1,
       sort,
@@ -402,10 +403,12 @@ export default function RentList() {
     (limit) => {
       setItemsPerPage(limit);
       setCurrentPage(1);
-      updateUrlParams(1, limit, sort);
+      updateUrlParams(1, limit, sort, selectedBigCategory, selectedSmallCategory);
+      debouncedFetchProducts(1, sort, limit, selectedBigCategory, selectedSmallCategory);
     },
-    [sort, updateUrlParams]
+    [sort, selectedBigCategory, selectedSmallCategory, updateUrlParams, debouncedFetchProducts]
   );
+  
 
   // 處理商品卡片點擊事件
   const handleProductClick = useCallback(
@@ -1043,7 +1046,7 @@ export default function RentList() {
                       <div className="card h-100 ">
                         <div className="d-flex justify-content-center align-items-center img-container">
                           <Image
-                            src={product.img_url || "/img/rent/no-img.png"}
+                            src={product.img_url || "/image/rent/no-img.png"}
                             className="card-img-top product-img"
                             alt={product.name}
                             layout="intrinsic"
