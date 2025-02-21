@@ -1,4 +1,8 @@
+import { useAuth } from "@/hooks/use-auth";
 import styles from "./account.module.css";
+// import { useEffect, useState } from "react";
+import Link from "next/link";
+// import { useRouter } from "next/navigation";
 
 export default function Account() {
   return (
@@ -11,15 +15,13 @@ export default function Account() {
             </div>
             <div className={styles.asideContent}>
               <div className={styles.ASpoint}>
-                <h6>我的帳戶</h6>
+                <Link href="/member/account" className={styles.ASpoint}><h6>我的帳戶</h6></Link>
                 <i className="bi bi-chevron-down" aria-label="Expand"></i>
               </div>
               <div className={styles.ASpointList}>
                 <h6>個人資料</h6>
               </div>
-              <div className={styles.ASother}>
-                <h6>我的訂單</h6>
-              </div>
+              <Link href="/member/order/orderRent" className={styles.ASother}><h6>我的訂單</h6></Link>
               <div className={styles.ASother}>
                 <h6>我的揪團</h6>
               </div>
