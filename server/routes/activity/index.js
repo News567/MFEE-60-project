@@ -40,12 +40,12 @@ router.get("/", async (req, res) => {
                 activity_image.imgUrl AS main_image
             FROM activity
             LEFT JOIN activity_city ON activity.activityCity_id = activity_city.id
-            LEFT JOIN activity_image ON activity.id = activity_image.activity_id AND activity_image.isMain = 1
-            LEFT JOIN activity_country ON activity_city.activityCountry_id = activity_country.id
+            LEFT JOIN activity_image ON activity.id = activity_image.activity_id AND activity_image.is_main = 1
+            LEFT JOIN activity_country ON activity_city.activity_country_id = activity_country.id
             WHERE activity.price BETWEEN ${minPrice} AND ${maxPrice} `
 
         if (location) {
-            sql += ` AND activity.activityCity_id = ${location} `
+            sql += ` AND activity.activity_city_id = ${location} `
         }
         if (language) {
             // 確保 language 是陣列，如果不是，就轉換成陣列
@@ -106,36 +106,6 @@ router.get("/", async (req, res) => {
                     .join(" OR ");
                 sql += ` AND (${durationCondition}) `;
             }
-            // let durationArray = [];
-            // if (duration == "less4") {
-            //     durationArray = [...durationArray, "1小時", "2小時", "3小時", "4小時"];
-            // }
-            // if (duration == "4toDay") {
-            //     durationArray = [...durationArray,
-            //         "5小時",
-            //         "6小時",
-            //         "7小時",
-            //         "8小時",
-            //         "9小時",
-            //         "10小時",
-            //         "11小時",
-            //         "12小時",
-            //         "13小時"]
-            // }
-            // if (duration == "oneToTwo") {
-            //     durationArray = [...durationArray,
-            //         "1日",
-            //         "1天",
-            //         "1.5日",
-            //         "1.5天",
-            //         "2日",
-            //         "2天"
-            //     ]
-            // }
-            // if (duration == "twoDaysUp") {
-            //     durationArray = [...durationArray, "3日", "4日", "5日", "6日", "7日"]
-            // }
-
         }
         sql += ` ORDER BY ${orderBy}
         LIMIT ? OFFSET ? `;
