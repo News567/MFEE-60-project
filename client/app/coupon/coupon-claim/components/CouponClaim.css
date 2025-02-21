@@ -1,0 +1,382 @@
+/* =========================
+   全局樣式
+   -------------------------
+   設定網站的全局樣式，包括字體、背景顏色等
+========================= */
+
+:root {
+  --primary-deep-color: #023047;
+  --primary-color: #219ebc;
+  --primary-light-color: #8ecae6;
+  --secondary-deep-color: #ffb703;
+  --secondary-color: #ffd500;
+  --secondary-light-color: #f1d691;
+  --white-color: #fff;
+  --light-gray-color: #D8D8D8;
+  --cornflower-blue-color: #508BE3;
+  --block-color: #000;
+}
+
+* {
+  font-family: "Noto Sans TC", serif;
+}
+
+/* ===================================================================
+   1. 輪播區域設定 (Carousel Section)
+   =================================================================== */
+
+/* 輪播圖片設定：高度為視窗 70%，並保持圖片比例填滿容器 */
+.carousel img {
+  height: 70vh;
+  /* 讓圖片滿版 */
+  object-fit: cover;
+  /* 圖片填滿不變形 */
+}
+
+/* 輪播指示器容器：絕對定位於底部 */
+.carousel-indicators {
+  position: absolute;
+  bottom: 10px;
+  /* 確保指示器顯示在正確位置 */
+}
+
+/* 輪播指示器按鈕：圓形、固定尺寸、半透明背景與間距 */
+.carousel-indicators button {
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50% !important;
+  background-color: rgba(255, 255, 255, 0.5) !important;
+  border: none !important;
+  opacity: 1 !important;
+  /* Bootstrap 可能有預設 opacity */
+  margin: 0 5px;
+  /* 設定間距 */
+  transition: background-color 0.3s ease;
+}
+
+/* 活躍狀態的指示器按鈕，背景顏色改為橘黃色 */
+.carousel-indicators .active {
+  background-color: #ffa500 !important;
+  /* 當前圖片變橘黃色 */
+}
+
+/* 自訂輪播控制按鈕設定：圓形、置中、半透明背景 */
+.custom-carousel-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  /* 半透明黑色背景 */
+  border-radius: 50%;
+  /* 變成圓形 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  transition: background-color 0.3s ease;
+}
+
+.custom-carousel-btn i{
+  font-size: 1.25rem;
+}
+
+/* 左右控制按鈕位置 */
+.carousel-control-prev {
+  left: 15px;
+}
+
+.carousel-control-next {
+  right: 15px;
+}
+
+/* 輪播按鈕 hover 效果：背景變為較深的橘黃色 */
+.custom-carousel-btn:hover {
+  background-color: var(--secondary-color)
+  /* 橘黃色 */
+}
+
+/* 輪播控制按鈕內圖示設定 */
+.custom-carousel-icon {
+  font-size: 24px;
+  color: white;
+}
+
+/* ===================================================================
+   2. 內容容器設定 (Container Section)
+   =================================================================== */
+
+/* 優惠券內容區：左右內邊距設定 */
+/* .coupon-content {
+  padding-left: 27px;
+  padding-right: 27px;
+} */
+
+.coupon-content h1 {
+  font-size: 28px;
+  font-weight: 400;
+}
+
+/* ===================================================================
+   3. 共用工具類 (Utility Classes / 從 HTML 中抽離的 inline style)
+   =================================================================== */
+
+
+/* (2) 優惠活動篩選列水平捲動設定 */
+/* 原本直接在 HTML 中設定相關屬性，現定義為 .horizontal-scroll */
+.horizontal-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+  -ms-overflow-style: none;
+  /* for Internet Explorer */
+  scrollbar-width: none;
+  /* for Firefox */
+}
+
+/* 優惠活動篩選按鈕設計 */
+.horizontal-scroll .btn {
+  background-color: var(--white-color);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  height: 2.5rem;
+  font-size: 14px;
+  text-align: center;
+}
+
+.horizontal-scroll .btn:active {
+  background-color: var(--primary-color);
+  color: var(--white-color);
+}
+
+.horizontal-scroll .active {
+  background-color: var(--primary-color);
+  color: var(--white-color);
+}
+
+/* (3) 向右捲動圖示容器設定 */
+/* 原本 HTML 中設定 margin-left、寬高、邊框、圓角與 cursor */
+
+.scroll-indicator {
+  height: 2rem;
+  margin-left: 8px;
+}
+
+.scroll-indicator i {
+  color: var(--primary-color);
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+/* ===================================================================
+   4. 優惠券類型篩選區塊設定 (Filter Group Section)
+   =================================================================== */
+
+/* 篩選容器：水平排列並置中 */
+.filter-group {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+/* 篩選標籤設定：字型大小、顏色與右側間距 */
+.filter-label {
+  font-size: 16px;
+  color: black;
+}
+
+/* 篩選按鈕基本樣式設定：無背景、無邊框、內邊距與字型大小 */
+.filter-group button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: black;
+  transition: color 0.2s ease-in-out;
+}
+
+/* 篩選按鈕 hover 效果：文字顏色變藍 */
+.filter-group button:hover {
+  color: var(--primary-color);
+}
+
+/* 篩選按鈕選中狀態：文字顏色維持藍色 */
+.filter-group button.active {
+  color: var(--primary-color);
+}
+
+/* ===================================================================
+   5. 優惠券卡片設定 (Coupon Card Section)
+   =================================================================== */
+
+/* 優惠券卡片：蝦皮風格虛線框、圓角、內邊距與背景白色 */
+.coupon-card {
+  border: 1px solid;
+  border-color: var(--light-gray-color);
+  border-radius: 3px;
+  height: 7.5rem;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+/* 優惠券圖片：固定寬高、圓角與圖片填充 */
+.coupon-image {
+  width: 7.5em;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 3px 0 0 3px;
+}
+
+/* 優惠券卡片內左側內容：自動填滿剩餘空間 */
+.coupon-left {
+  flex: 1;
+  padding-inline: 5px;
+}
+
+/* 優惠券面額／折扣值：大字型、粗體與紅色 */
+.coupon-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+/* 優惠券使用條件描述：較小字型與灰色 */
+.coupon-condition {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* 優惠券類型標籤：小字型、紅色邊框、圓角與內邊距 */
+.coupon-type {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--primary-color);
+  border: 1px solid;
+  border-color: var(--primary-color);
+  border-radius: 5px;
+  padding: 2px 8px;
+  margin-top: 5px;
+  font-weight: 400;
+}
+
+/* 優惠券有效期限：小字型與淺灰色 */
+.coupon-expiry {
+  font-size: 12px;
+  display: inline-block;
+}
+
+/* 優惠券使用條件連結：小字型、紅色文字與左側間距 */
+.coupon-terms {
+  font-size: 12px;
+  color: var(--cornflower-blue-color);
+  text-decoration: none;
+  margin-left: 10px;
+}
+
+/* 連結 hover 效果：文字變深並顯示下劃線 */
+.coupon-terms:hover {
+  text-decoration: underline;
+}
+
+/* 領取按鈕：紅底白字、圓角、內邊距與字型設定 */
+.btn-claim {
+  color: var(--primary-color);
+  border-radius: 5px;
+  border: 1px solid;
+  border-color: var(--primary-color);
+  padding: 8px 15px;
+  font-size: 14px;
+  font-weight: 400;
+  margin-right: 15px;
+}
+
+/* 領取按鈕 hover 效果：背景色改變 */
+.btn-claim:hover {
+  background: var(--primary-color);
+  color: var(--white-color);
+}
+
+.btn-claim:active {
+  background: var(--primary-color) !important;
+  color: var(--white-color) !important;
+}
+
+/* ===================================================================
+   6. 分頁控制設定 (Pagination Section)
+   =================================================================== */
+/* 下拉選單大小 */
+.custom-select-container {
+  width: 11.25rem;
+  height: 1.875rem;
+  margin: 5px;
+}
+
+/* 分頁容器：水平排列、左右對齊且垂直置中，並有上方間距 */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 分頁資訊：字型大小與顏色設定 */
+.pagination-info {
+  font-size: 1rem;
+  color: black;
+}
+
+/* 分頁按鈕區塊：水平排列且按鈕間有間隔 */
+.page-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.page-buttons button i {
+  font-size: 1rem;
+}
+
+/* 分頁按鈕：無背景、無邊框、內邊距與字型大小，並加入過渡效果 */
+.page-buttons button {
+  background: none;
+  border: none;
+  padding: 5px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  color: black;
+  /* 頁碼顏色保持黑色 */
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* 分頁按鈕 hover 效果：背景變為黃色 */
+.page-buttons button:hover {
+  background-color: var(--secondary-color);
+}
+
+/* 當前選中頁碼：背景為黃色，字體加粗 */
+.page-buttons button.active {
+  background-color: var(--secondary-color);
+}
+
+.coupon-search {
+  max-width: 18.75rem;
+  height: 1.5rem;
+}
+
+.coupon-search .form-control{
+margin-right: 5px;
+border-radius: 3px;
+}
+
+.coupon-search span {
+  background-color: var(--primary-color);
+  border-radius: 3px !important;
+  width: 2.8rem;
+}
+
+.coupon-search i {
+  color: var(--white-color);
+}
