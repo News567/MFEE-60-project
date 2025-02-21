@@ -1,10 +1,9 @@
 import express from "express";
 const router = express.Router();
-
-import { isDev } from "../lib/utils.js";
+import { isDev } from "../../lib/utils.js";
 
 // 設定回傳路由
-import { serverConfig } from "../config/server.config.js";
+import { serverConfig } from "../../config/server.config.js";
 const callbackUrl = isDev
   ? serverConfig.ship711.development.callbackUrl
   : serverConfig.ship711.production.callbackUrl;

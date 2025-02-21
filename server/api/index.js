@@ -28,7 +28,7 @@ import articleReplyRouter from "../routes/article/reply.js"; // 留言 & 回覆
 import articleLikeRouter from "../routes/article/like.js"; // 文章與留言按讚
 import couponRouter from "../routes/coupon/index.js";
 import memberRouter from "../routes/member/index.js";
-import shipmentRouter from "../routes/cart/shipment.js"; // 運送相關路由
+// import shipmentRouter from "../routes/ship/index.js"; // 運送相關路由
 // 建立 Express 應用程式
 const app = express();
 // 設定 CORS
@@ -63,7 +63,7 @@ apiRouter.use("/categories", categoriesRouter); // 負責 `/api/categories`
 apiRouter.use("/brands", brandRouter); // 負責 `/api/brands`
 
 // 運送相關路由
-apiRouter.use("/shipment", shipmentRouter); // 負責 `/api/shipment`
+// apiRouter.use("/shipment", shipmentRouter); // 負責 `/api/shipment`
 
 // 活動相關路由
 apiRouter.use("/activity", activityRouter);
@@ -92,8 +92,6 @@ apiRouter.use("/coupon", couponRouter); // 負責 `/api/coupon`
 
 // 會員相關路由
 apiRouter.use("/member", memberRouter);
-
-
 
 // 捕捉 404 錯誤
 app.use((req, res, next) => {
