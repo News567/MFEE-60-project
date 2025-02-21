@@ -21,7 +21,7 @@ export function CouponImage({ coupon }) {
   return (
     <Image
       // 若 coupon.imageUrl 不存在則採用預設圖片
-      src={coupon.imageUrl || "/img/coupon/coupon-photo.jpg"}
+      src={coupon.image_url || "/img/coupon/coupon-photo.jpg"}
       alt="優惠券圖片"
       fill // 使圖片自動填滿父容器
       style={{ objectFit: "cover" }} // 設定圖片覆蓋模式，保持比例
@@ -63,7 +63,7 @@ export default function CouponCard({ coupon }) {
           {coupon.minSpent ? `滿 ${coupon.minSpent} 可用` : "使用條件"}
         </div>
         {/* 顯示優惠券類型標籤，例如「折扣券」 */}
-        <div className="coupon-type">{coupon.couponType || "折扣券"}</div>
+        <div className="coupon-type">{coupon.campaign_name || "折扣券"}</div>
         {/* 顯示優惠券有效期限以及使用條件連結 */}
         <div>
           <span className="coupon-expiry">

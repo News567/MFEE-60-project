@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import CouponCard from "./CouponCard";
-import "./CouponList.css";
+import "./Coupon.css";
+import Link from "next/link";
 
 const API_BASE_URL = "http://localhost:3005/api";
 
-export default function CouponList() {
+export default function Coupon() {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -57,13 +58,13 @@ export default function CouponList() {
                 >
                   <h1>優惠券</h1>
                   <div className="link-list">
-                    <a href="#" className="me-3">
-                      領取優惠券 &gt;
-                    </a>{" "}
+                    <Link className="me-3" href="/coupon/coupon-claim">
+                      領取優惠券 &gt; 
+                    </Link> 
                     |
-                    <a href="#" className="ms-3">
+                    <Link className="ms-3" href="/coupon/coupon-history" >
                       查看歷史資料
-                    </a>
+                    </Link>
                   </div>
                 </div>
                 {/* 淺灰色區塊：包含「新增優惠券」標題與搜尋框 */}
@@ -134,11 +135,11 @@ export default function CouponList() {
                 {/* 優惠券列表：使用卡片方式顯示各張優惠券 */}
                 <div className="row row-cols-1 row-cols-md-2 g-3 mt-4">
                   {/* 優惠券卡片 1 */}
-                    {coupons.map((coupon) => (
-                      <div className="" key={coupon.id}>
-                        <CouponCard coupon={coupon} />
-                      </div>
-                    ))}
+                  {coupons.map((coupon) => (
+                    <div className="" key={coupon.id}>
+                      <CouponCard coupon={coupon} />
+                    </div>
+                  ))}
                 </div>
                 {/* 分頁控制區：顯示優惠券總數與分頁按鈕 */}
                 <div className="pagination my-4">

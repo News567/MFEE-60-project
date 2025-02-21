@@ -1,5 +1,5 @@
-import CouponList from "./components/CouponList.js";
+import Coupon from "./components/Coupon.js";
 
-export default function CouponListPage() {
-  return <CouponList />;
+export default function CouponPage() {
+  return <Coupon />;
 }
