@@ -83,6 +83,7 @@ export function buildProductQuery({
   const sql = `
     SELECT DISTINCT 
       p.*, 
+      pv.id AS variant_id,
       b.name AS brand_name,
       MIN(pv.price) AS price,
       (

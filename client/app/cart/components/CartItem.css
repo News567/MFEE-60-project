@@ -1,0 +1,162 @@
+.cart-item {
+  padding: 1.5rem 0;
+}
+
+/* 一般商品規格樣式 */
+.spec-display {
+  position: relative;
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 160px;
+}
+
+.spec-display:hover {
+  border-color: #0d6efd;
+  background-color: #f8f9fa;
+}
+
+.spec-content {
+  padding-right: 40px;
+}
+
+.spec-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.spec-row:last-child {
+  margin-bottom: 0;
+}
+
+.spec-label {
+  color: #6c757d;
+  min-width: 45px;
+}
+
+.spec-value {
+  color: #212529;
+}
+
+.edit-mark {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #0d6efd;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.spec-display:hover .edit-mark {
+  opacity: 1;
+}
+
+/* 活動和租賃資訊樣式 */
+.info-display {
+  background-color: #f8f9fa;
+  border-left: 3px solid #0d6efd;
+  padding: 12px 15px;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-label {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.info-value {
+  color: #212529;
+  font-size: 14px;
+}
+
+.info-value .time,
+.info-value .days {
+  color: #666;
+  margin-top: 2px;
+}
+
+/* 手機版樣式 */
+@media (max-width: 768px) {
+  .info-display {
+    padding: 10px 12px;
+  }
+
+  .info-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .info-value {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .info-value div {
+    margin: 0;
+  }
+}
+
+.product-image {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-name {
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quantity-control input {
+  width: 60px;
+  text-align: center;
+}
+
+.quantity-control button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 更新中的狀態樣式 */
+.quantity-control button:disabled,
+.quantity-control input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

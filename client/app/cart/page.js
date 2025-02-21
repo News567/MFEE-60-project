@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import CartFlow from "./cartFlow";
+import CartFlow from "./components/cartFlow";
 
 export default function CartPage() {
   const router = useRouter();

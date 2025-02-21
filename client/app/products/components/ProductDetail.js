@@ -13,6 +13,7 @@ import useFavorite from "@/hooks/useFavorite";
 import { useCart } from "@/hooks/cartContext";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode, Navigation, Thumbs } from "swiper/modules";
+import useToast from "@/hooks/useToast";
 //使用swiper
 import "swiper/css";
 import "swiper/css/free-mode";
@@ -22,6 +23,7 @@ import "swiper/css/thumbs";
 // API 基礎 URL
 const API_BASE_URL = "http://localhost:3005/api";
 export default function ProductDetail() {
+  const { showToast } = useToast();
   const params = useParams();
   const [product, setProduct] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
@@ -35,13 +37,34 @@ export default function ProductDetail() {
     isFavorite,
     toggleFavorite,
     loading: favoriteLoading,
-  } = useFavorite(params.id);
+  } = useFavorite(parseInt(params.id), "product");
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [currentStock, setCurrentStock] = useState(0);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [currentOriginalPrice, setCurrentOriginalPrice] = useState(0);
   const [allImages, setAllImages] = useState([]);
   const mainSwiperRef = useRef(null);
+  //防止坍塌
+  const [detailHeight, setDetailHeight] = useState("300px");
+  const detailRef = useRef(null);
+
+  //瀏覽紀錄
+  useEffect(() => {
+    if (!product) return;
+    const storedHistory =
+      JSON.parse(localStorage.getItem("browsingHistory")) || [];
+    const updatedHistory = [
+      {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: `/img/product/${product.main_image}`,
+      },
+      ...storedHistory.filter((item) => item.id !== product.id),
+    ].slice(0, 10); // 限制只保留最近 10 筆
+
+    localStorage.setItem("browsingHistory", JSON.stringify(updatedHistory));
+  }, [product]);
 
   // 當顏色或尺寸改變時，更新庫存
   useEffect(() => {
@@ -103,9 +126,14 @@ export default function ProductDetail() {
       const response = await axios.post(`${API_BASE_URL}/cart/add`, cartData);
 
       if (response.data.success) {
-        //讓購物車重新從後端獲取最新數據，而不是自己組裝 cartItem
-        fetchCart(1);
-        alert("成功加入購物車！");
+        // alert("成功加入購物車！");
+        // showToast("商品已加入購物車", {
+        //   style: {
+        //     backgroundColor: "red",
+        //     color: "white",
+        //   },
+        // });
+        showToast("商品已加入購物車");
       } else {
         alert(response.data.message || "加入購物車失敗");
       }
@@ -175,9 +203,40 @@ export default function ProductDetail() {
     }
   };
 
+  // 在組件掛載和產品數據更新時保存容器高度
+
+  // 當商品變更時，更新內容高度
+  useEffect(() => {
+    if (detailRef.current) {
+      console.log(detailRef.current);
+      setDetailHeight(`${detailRef.current.offsetHeight}px`);
+    }
+  }, [product, activeTab]);
+
+  // 監聽內容變化，防止高度塌陷
+  useEffect(() => {
+    if (!detailRef.current) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        setDetailHeight(`${entry.contentRect.height}px`);
+      }
+    });
+
+    observer.observe(detailRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
+        // 開始加載前保存當前高度
+        if (detailRef.current) {
+          setDetailHeight(`${detailRef.current.offsetHeight}px`);
+        }
         setLoading(true);
         const productId = Number(params.id);
         if (!productId) {
@@ -245,7 +304,9 @@ export default function ProductDetail() {
         console.error("獲取商品詳情失敗:", err);
         setError(err.response?.data?.message || "商品獲取失敗");
       } finally {
-        setLoading(false);
+        setTimeout(() => {
+          setLoading(false);
+        }, 300);
       }
     };
 
@@ -260,258 +321,276 @@ export default function ProductDetail() {
 
   return (
     <div className="container">
-      <div className="row">
-        {/* 左側產品圖片 */}
-        <div className="col-md-6">
-          <div className="product-img">
-            <Swiper
-              spaceBetween={10}
-              navigation={true}
-              thumbs={{ swiper: thumbsSwiper }}
-              modules={[FreeMode, Navigation, Thumbs]}
-              className="mySwiper2"
-              onSwiper={(swiper) => {
-                mainSwiperRef.current = swiper;
-              }}
-            >
-              {allImages.map((image, index) => (
-                <SwiperSlide key={index}>
-                  <div className="product-img-wrapper">
-                    <Image
-                      src={`/img/product/${image}`}
-                      alt={`${product?.name}-${index + 1}`}
-                      width={500}
-                      height={500}
-                      priority={index === 0}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "contain",
-                      }}
-                    />
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          </div>
-          <div className="mt-3">
-            <Swiper
-              onSwiper={setThumbsSwiper}
-              spaceBetween={10}
-              slidesPerView={4}
-              freeMode={true}
-              watchSlidesProgress={true}
-              modules={[FreeMode, Navigation, Thumbs]}
-              className="mySwiper"
-            >
-              {allImages.map((image, index) => (
-                <SwiperSlide key={index}>
-                  <div className="thumb-wrapper">
-                    <Image
-                      src={`/img/product/${image}`}
-                      alt={`${product?.name}-${index + 1}`}
-                      width={100}
-                      height={100}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+      <div
+        className="productDetailContainer"
+        ref={detailRef}
+        style={{ minHeight: detailHeight }}
+      >
+        <div className={`loadingOverlay ${loading ? "visible" : ""}`}>
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
           </div>
         </div>
 
-        {/* 右側產品訊息 */}
-        <div className="col-md-6">
-          <div className="d-flex flex-column">
-            <div className="d-flex justify-content-between align-items-center">
-              <h3 className="fw-bold text-secondary mb-0">
-                {product.brand_name}
-              </h3>
+        <div className="row">
+          {/* 左側產品圖片 */}
+          <div className="col-md-6">
+            <div className="product-img">
+              <Swiper
+                spaceBetween={10}
+                navigation={true}
+                thumbs={{ swiper: thumbsSwiper }}
+                modules={[FreeMode, Navigation, Thumbs]}
+                className="mySwiper2"
+                onSwiper={(swiper) => {
+                  mainSwiperRef.current = swiper;
+                }}
+              >
+                {allImages.map((image, index) => (
+                  <SwiperSlide key={index}>
+                    <div className="product-img-wrapper">
+                      <Image
+                        src={`/img/product/${image}`}
+                        alt={`${product?.name}-${index + 1}`}
+                        width={500}
+                        height={500}
+                        priority={index === 0}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                        }}
+                      />
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+            <div className="mt-3">
+              <Swiper
+                onSwiper={setThumbsSwiper}
+                spaceBetween={10}
+                slidesPerView={4}
+                freeMode={true}
+                watchSlidesProgress={true}
+                modules={[FreeMode, Navigation, Thumbs]}
+                className="mySwiper"
+              >
+                {allImages.map((image, index) => (
+                  <SwiperSlide key={index}>
+                    <div className="thumb-wrapper">
+                      <Image
+                        src={`/img/product/${image}`}
+                        alt={`${product?.name}-${index + 1}`}
+                        width={100}
+                        height={100}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+          </div>
+
+          {/* 右側產品訊息 */}
+          <div className="col-md-6">
+            <div className="d-flex flex-column">
+              <div className="d-flex justify-content-between align-items-center">
+                <h3 className="fw-bold text-secondary mb-0">
+                  {product.brand_name}
+                </h3>
+                <div className="d-flex gap-2">
+                  <button className="btn p-0">
+                    <i className="fa-solid fa-share-from-square fs-4"></i>
+                  </button>
+                  <button
+                    className="btn p-0"
+                    onClick={toggleFavorite}
+                    disabled={favoriteLoading}
+                  >
+                    {isFavorite ? (
+                      <AiFillHeart color="red" size={40} />
+                    ) : (
+                      <AiOutlineHeart size={40} />
+                    )}
+                  </button>
+                </div>
+              </div>
+              <h2>{product.name}</h2>
+              <hr />
+              <h2 className="salePrice">NT${currentPrice}</h2>
+              <h5 className="text-secondary text-decoration-line-through">
+                NT${currentOriginalPrice}
+              </h5>
+
+              <div className="mb-2">
+                {[...Array(5)].map((_, index) => (
+                  <i
+                    key={index}
+                    className={`fa-${
+                      index < Math.floor(product.rating) ? "solid" : "regular"
+                    } fa-star text-warning`}
+                  ></i>
+                ))}
+                <span className="ms-2 text-muted">
+                  {product.review_count} 則評價
+                </span>
+              </div>
+
+              <div>{product.description}</div>
+
+              {/* 尺寸選擇 */}
+              <div className="my-2">產品尺寸</div>
               <div className="d-flex gap-2">
-                <button className="btn p-0">
-                  <i className="fa-solid fa-share-from-square fs-4"></i>
-                </button>
+                {product?.sizes.map((size) => (
+                  <div
+                    key={size.id}
+                    className={`sizeBox ${
+                      selectedSize?.id === size.id ? "active" : ""
+                    }`}
+                    onClick={() => handleSizeSelect(size)}
+                  >
+                    {size.name}
+                  </div>
+                ))}
+              </div>
+
+              {/* 顏色選擇 */}
+              <div className="my-2">
+                產品顏色 :::{" "}
+                <span style={{ color: selectedColor?.code }}>
+                  {selectedColor?.name}
+                </span>
+              </div>
+              <div className="d-flex gap-2 flex-wrap">
+                {product?.colors.map((color) => (
+                  <div
+                    key={color.id}
+                    className={`circle ${
+                      selectedColor?.id === color.id ? "active" : ""
+                    }`}
+                    style={{
+                      backgroundColor: color.code,
+                      border: `2px solid ${
+                        selectedColor?.id === color.id ? "#007bff" : "#dee2e6"
+                      }`,
+                    }}
+                    onClick={() => handleColorSelect(color)}
+                    title={color.name}
+                  >
+                    {selectedColor?.id === color.id && (
+                      <div className="check-mark">✓</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* 數量選擇 */}
+              <div className="my-2">
+                產品數量
+                {currentStock > 0 && (
+                  <span className="text-muted ms-2">
+                    (庫存: {currentStock})
+                  </span>
+                )}
+              </div>
+              <div className="buttonCount">
                 <button
-                  className="btn p-0"
-                  onClick={toggleFavorite}
-                  disabled={favoriteLoading}
+                  className="button-left"
+                  onClick={() => handleQuantityChange(-1)}
+                  disabled={quantity <= 1}
                 >
-                  {isFavorite ? (
-                    <AiFillHeart color="red" size={40} />
-                  ) : (
-                    <AiOutlineHeart size={40} />
-                  )}
+                  <span>-</span>
+                </button>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={quantity}
+                  readOnly
+                />
+                <button
+                  className="button-right"
+                  onClick={() => handleQuantityChange(1)}
+                  disabled={!currentStock || quantity >= currentStock}
+                >
+                  <span>+</span>
                 </button>
               </div>
-            </div>
-            <h2>{product.name}</h2>
-            <hr />
-            <h2 className="text-primary">NT${currentPrice}</h2>
-            <h5 className="text-secondary text-decoration-line-through">
-              NT${currentOriginalPrice}
-            </h5>
 
-            <div className="mb-2">
-              {[...Array(5)].map((_, index) => (
-                <i
-                  key={index}
-                  className={`fa-${
-                    index < Math.floor(product.rating) ? "solid" : "regular"
-                  } fa-star text-warning`}
-                ></i>
-              ))}
-              <span className="ms-2 text-muted">
-                {product.review_count} 則評價
-              </span>
-            </div>
-
-            <div>{product.description}</div>
-
-            {/* 尺寸選擇 */}
-            <div className="my-2">產品尺寸</div>
-            <div className="d-flex gap-2">
-              {product?.sizes.map((size) => (
-                <div
-                  key={size.id}
-                  className={`sizeBox ${
-                    selectedSize?.id === size.id ? "active" : ""
-                  }`}
-                  onClick={() => handleSizeSelect(size)}
+              {/* 購買按鈕 */}
+              <div className="d-flex mt-4">
+                <button
+                  onClick={handleAddToCart}
+                  className="btn btn-info addCartButton flex-grow-1"
+                  disabled={!selectedColor || !selectedSize}
                 >
-                  {size.name}
-                </div>
-              ))}
-            </div>
-
-            {/* 顏色選擇 */}
-            <div className="my-2">
-              產品顏色 :::{" "}
-              <span style={{ color: selectedColor?.code }}>
-                {selectedColor?.name}
-              </span>
-            </div>
-            <div className="d-flex gap-2 flex-wrap">
-              {product?.colors.map((color) => (
-                <div
-                  key={color.id}
-                  className={`circle ${
-                    selectedColor?.id === color.id ? "active" : ""
-                  }`}
-                  style={{
-                    backgroundColor: color.code,
-                    border: `2px solid ${
-                      selectedColor?.id === color.id ? "#007bff" : "#dee2e6"
-                    }`,
-                  }}
-                  onClick={() => handleColorSelect(color)}
-                  title={color.name}
-                >
-                  {selectedColor?.id === color.id && (
-                    <div className="check-mark">✓</div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* 數量選擇 */}
-            <div className="my-2">
-              產品數量
-              {currentStock > 0 && (
-                <span className="text-muted ms-2">(庫存: {currentStock})</span>
-              )}
-            </div>
-            <div className="buttonCount">
-              <button
-                className="button-left"
-                onClick={() => handleQuantityChange(-1)}
-                disabled={quantity <= 1}
-              >
-                <span>-</span>
-              </button>
-              <input
-                type="text"
-                className="input-field"
-                value={quantity}
-                readOnly
-              />
-              <button
-                className="button-right"
-                onClick={() => handleQuantityChange(1)}
-                disabled={!currentStock || quantity >= currentStock}
-              >
-                <span>+</span>
-              </button>
-            </div>
-
-            {/* 購買按鈕 */}
-            <div className="d-flex mt-4">
-              <button
-                onClick={handleAddToCart}
-                className="btn btn-info addCartButton flex-grow-1"
-                disabled={!selectedColor || !selectedSize}
-              >
-                加入購物車
-              </button>
-              <button className="btn btn-warning buyButton flex-grow-1">
-                直接購買
-              </button>
+                  加入購物車
+                </button>
+                <button className="btn btn-warning buyButton flex-grow-1">
+                  直接購買
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* 產品詳情和評價標籤 */}
-      <div className="mt-5">
-        <ul className="nav nav-tabs">
-          <li className="nav-item">
-            <button
-              className={`nav-link ${
-                activeTab === "description" ? "active" : ""
-              }`}
-              onClick={() => setActiveTab("description")}
-            >
-              商品詳情
-            </button>
-          </li>
-          <li className="nav-item">
-            <button
-              className={`nav-link ${activeTab === "reviews" ? "active" : ""}`}
-              onClick={() => setActiveTab("reviews")}
-            >
-              商品評價
-            </button>
-          </li>
-        </ul>
+        {/* 產品詳情和評價標籤 */}
+        <div className="mt-5">
+          <ul className="nav nav-tabs">
+            <li className="nav-item">
+              <button
+                className={`nav-link ${
+                  activeTab === "description" ? "active" : ""
+                }`}
+                onClick={() => setActiveTab("description")}
+              >
+                商品詳情
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${
+                  activeTab === "reviews" ? "active" : ""
+                }`}
+                onClick={() => setActiveTab("reviews")}
+              >
+                商品評價
+              </button>
+            </li>
+          </ul>
 
-        <div className="tab-content">
-          {activeTab === "description" ? (
-            <div className="mt-3 descriptionField">
-              <div>
-                <h4>{product.name}</h4>
-                <p className="custom-border">{product.detailed_description}</p>
+          <div className="tab-content">
+            {activeTab === "description" ? (
+              <div className="mt-3 descriptionField">
+                <div>
+                  <h4>{product.name}</h4>
+                  <p className="custom-border">
+                    {product.detailed_description}
+                  </p>
+                </div>
               </div>
-            </div>
-          ) : (
-            <ProductReviews
-              rating={product.rating}
-              reviewCount={product.review_count}
-            />
-          )}
+            ) : (
+              <ProductReviews
+                rating={product.rating}
+                reviewCount={product.review_count}
+              />
+            )}
+          </div>
         </div>
+
+        {/* 瀏覽記錄 */}
+        <BrowsingHistory />
+
+        {/* 推薦商品 */}
+        <RecommendedProducts />
+        {/* 社交工具欄 */}
+        <SocialToolbar />
       </div>
-
-      {/* 瀏覽記錄 */}
-      {/* <BrowsingHistory /> */}
-
-      {/* 推薦商品 */}
-      {/* <RecommendedProducts /> */}
-      {/* 社交工具欄 */}
-      <SocialToolbar />
     </div>
   );
 }

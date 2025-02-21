@@ -1,21 +1,21 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
 import styles from "./products.module.css";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "./ProductCard";
-import debounce from "lodash/debounce";
 import { Slider, InputNumber, Space, Tag } from "antd";
+import SidebarProductList from "./SidebarProductList";
 
 // API 基礎 URL
 const API_BASE_URL = "http://localhost:3005/api";
 
-// 在文件顶部添加默认图片常量
-const DEFAULT_PRODUCT_IMAGE = "/images/default-product.jpg"; // 确保这个路径指向一个实际存在的默认图片
+// 在文件頂部添加預設圖片
+const DEFAULT_PRODUCT_IMAGE = "/images/default-product.jpg"; // 確保這個路徑指向一個實際存在的預設圖片
 
-// 將 API 相關常數提取出來
+// // 將 API 相關常數提取出來 (暫時)
 const SORT_OPTIONS = {
   COMPREHENSIVE: { value: 1, text: "綜合" },
   NEWEST: { value: 2, text: "最新上架" },
@@ -44,7 +44,7 @@ export default function ProductList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 修改初始化 currentQuery，从 URL 参数中恢复状态
+  // 修改初始化 currentQuery，從 URL 參數中恢復狀態
   const [currentQuery, setCurrentQuery] = useState(() => {
     const categoryId = searchParams.get("category_id");
     const bigCategoryId = searchParams.get("big_category_id");
@@ -94,7 +94,7 @@ export default function ProductList() {
     },
   });
 
-  // 从产品数据中提取颜色信息
+  // 從產品資料中提取顏色資訊
   useEffect(() => {
     if (products.length > 0) {
       const colorSet = new Set();
@@ -137,13 +137,13 @@ export default function ProductList() {
     }));
   }, [searchParams]);
 
-  // 在 ProductList 组件中添加价格范围的状态
+  // 在 ProductList 组件中添加價格範圍的狀態
   const [priceRange, setPriceRange] = useState({
     min: 0,
     max: 40000,
   });
 
-  // 修改价格筛选的处理函数
+  // 修改價格篩選的處理函數
   const handlePriceChange = (type, value) => {
     setTempFilters((prev) => ({
       ...prev,
@@ -154,7 +154,7 @@ export default function ProductList() {
     }));
   };
 
-  // 处理滑块变化
+  // range變化
   const handleSliderChange = (values) => {
     setTempFilters((prev) => ({
       ...prev,
@@ -370,9 +370,18 @@ export default function ProductList() {
 
   const [productsCache, setProductsCache] = useState({});
 
+  // 在現有的 state 聲明中添加
+  const [listHeight, setListHeight] = useState("auto");
+  const productListRef = useRef(null);
+
   // 修改统一的数据获取函数
   const fetchProducts = async (params = {}) => {
     try {
+      // 開始加載前保存當前高度
+      if (productListRef.current) {
+        setListHeight(`${productListRef.current.offsetHeight}px`);
+      }
+
       setLoading(true);
       let url = `${API_BASE_URL}/products`;
 
@@ -409,6 +418,7 @@ export default function ProductList() {
 
       if (response.data.status === "success") {
         setProducts(response.data.data);
+        console.log(" DEBUG", response.data.data);
         setTotalPages(response.data.pagination.totalPages);
         if (params.page) setPage(params.page);
       }
@@ -416,13 +426,35 @@ export default function ProductList() {
       console.error("Error fetching products:", error);
       setError("獲取產品數據時發生錯誤");
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 300);
     }
   };
 
-  // 修改每頁顯示按鈕
+  // 在 useEffect 中添加高度監聽
+  useEffect(() => {
+    if (productListRef.current && products.length > 0) {
+      setListHeight(`${productListRef.current.offsetHeight}px`);
+    }
+  }, [products]);
+
+  // 修改分類展開狀態的管理方式
+  const [expandedSection, setExpandedSection] = useState(null); // 'classification', 'brand', 或 null
+
+  // 處理分類展開/收起
+  const toggleSection = (section) => {
+    if (expandedSection === section) {
+      setExpandedSection(null);
+    } else {
+      setExpandedSection(section);
+    }
+  };
+
+  // 修改每頁顯示按鈕的處理函數
   const handleDisplayChange = async (newLimit, displayText) => {
     setSelectedDisplay(displayText);
+    setShowDisplayDropdown(false); // 自動收起下拉選單
 
     const params = new URLSearchParams(window.location.search);
     params.set("limit", newLimit.toString());
@@ -431,10 +463,10 @@ export default function ProductList() {
     router.replace(`/products?${params.toString()}`);
   };
 
-  // 處理排序
+  // 修改排序按鈕的處理函數
   const handleSort = async (text, value) => {
     setSelectedSort({ text, value });
-    setShowDropdown(false);
+    setShowDropdown(false); // 自動收起下拉選單
 
     const params = new URLSearchParams(window.location.search);
     params.set("sort", value.toString());
@@ -648,6 +680,36 @@ export default function ProductList() {
     return r * 0.299 + g * 0.587 + b * 0.114 > 186;
   };
 
+  const [newProducts, setNewProducts] = useState([]);
+  const [specialProducts, setSpecialProducts] = useState([]);
+
+  // 獲取新品和特惠商品數據
+  useEffect(() => {
+    const fetchSidebarProducts = async () => {
+      try {
+        // 獲取新品
+        const newProductsResponse = await axios.get(
+          `${API_BASE_URL}/products/new`
+        );
+        if (newProductsResponse.data.status === "success") {
+          setNewProducts(newProductsResponse.data.data);
+        }
+
+        // 獲取特惠商品
+        const specialProductsResponse = await axios.get(
+          `${API_BASE_URL}/products/special`
+        );
+        if (specialProductsResponse.data.status === "success") {
+          setSpecialProducts(specialProductsResponse.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching sidebar products:", error);
+      }
+    };
+
+    fetchSidebarProducts();
+  }, []);
+
   if (loading) return <div className="text-center py-4">...</div>;
   if (error) return <div className="text-center py-4 text-danger">{error}</div>;
 
@@ -659,16 +721,16 @@ export default function ProductList() {
           <div className="d-grid ">
             {/* 產品分類 */}
             <div
-              className={`${styles.productClassification} ${styles.sideCard} ${
-                showClassification ? styles.open : ""
+              className={`${styles.sideCard} ${styles.productClassification} ${
+                expandedSection === "classification" ? styles.open : ""
               }`}
             >
               <div
                 className={styles.cardTitle}
-                onClick={() => setShowClassification(!showClassification)}
+                onClick={() => toggleSection("classification")}
               >
                 <h5>產品分類</h5>
-                <i className="bi bi-chevron-down"></i>
+                <i className="fa-solid fa-chevron-down"></i>
               </div>
 
               <ul className={styles.classificationMenu}>
@@ -723,22 +785,18 @@ export default function ProductList() {
 
             {/* 品牌名稱 */}
             <div
-              className={`${styles.productClassification} ${styles.sideCard} ${
-                showBrandClassification ? styles.open : ""
+              className={`${styles.sideCard} ${styles.productClassification} ${
+                expandedSection === "brand" ? styles.open : ""
               }`}
             >
-              {/* 品牌分類標題（點擊展開/收合） */}
               <div
                 className={styles.cardTitle}
-                onClick={() =>
-                  setShowBrandClassification(!showBrandClassification)
-                }
+                onClick={() => toggleSection("brand")}
               >
                 <h5>品牌名稱</h5>
-                <i className="bi bi-chevron-down"></i>
+                <i className="fa-solid fa-chevron-down"></i>
               </div>
 
-              {/* 品牌分類列表 */}
               <ul className={styles.classificationMenu}>
                 {brandCategories.map((category) => (
                   <li
@@ -751,7 +809,6 @@ export default function ProductList() {
                       {category}
                     </a>
 
-                    {/* 只有當 hover 且該分類有品牌時才顯示 */}
                     {hoveredBrandCategory === category &&
                       groupedBrands[category]?.length > 0 && (
                         <ul className={styles.submenu}>
@@ -775,11 +832,10 @@ export default function ProductList() {
               </ul>
             </div>
 
-            {/* 在筛选按钮上方添加已选择的筛选条件标签 */}
+            {/* 已選擇的篩選條件 */}
             <div className={styles.selectedFilters}>
               {showFilters && getSelectedFiltersCount() > 0 && (
                 <div className={styles.filterTags}>
-                  {/* 颜色标签 */}
                   {tempFilters.colors.map((colorId) => {
                     const color = colors.find((c) => c.id === colorId);
                     if (!color) return null;
@@ -801,7 +857,6 @@ export default function ProductList() {
                     );
                   })}
 
-                  {/* 价格标签 */}
                   {(tempFilters.price.min || tempFilters.price.max) && (
                     <Tag closable onClose={clearPriceFilter} color="blue">
                       價格: {tempFilters.price.min || 0} -{" "}
@@ -809,7 +864,6 @@ export default function ProductList() {
                     </Tag>
                   )}
 
-                  {/* 清除所有筛选 */}
                   <Tag className={styles.clearAllTag} onClick={clearAllFilters}>
                     清除全部篩選
                   </Tag>
@@ -917,54 +971,10 @@ export default function ProductList() {
             </div>
 
             {/* 新品上市 */}
-            <div className={styles.sideCard}>
-              <div className={styles.cardTitle}>
-                <h5>新品上市</h5>
-              </div>
-              {[1, 2, 3].map((item) => (
-                <div key={`new-${item}`} className={styles.sidebarProduct}>
-                  <div className={styles.sidebarProductImg}>
-                    <Image
-                      src="/images/1.webp"
-                      alt="新品商品"
-                      fill
-                      sizes="80px"
-                      style={{ objectFit: "cover" }}
-                    />
-                  </div>
-                  <div className={styles.sidebarProductInfo}>
-                    <div className={styles.sidebarProductBrand}>品牌名稱</div>
-                    <div className={styles.sidebarProductTitle}>商品名稱</div>
-                    <div className={styles.sidebarProductPrice}>NT$0000</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <SidebarProductList title="新品上市" products={newProducts} />
 
             {/* 特惠商品 */}
-            <div className={styles.sideCard}>
-              <div className={styles.cardTitle}>
-                <h5>特惠商品</h5>
-              </div>
-              {[1, 2, 3].map((item) => (
-                <div key={`special-${item}`} className={styles.sidebarProduct}>
-                  <div className={styles.sidebarProductImg}>
-                    <Image
-                      src="/images/1.webp"
-                      alt="特惠商品"
-                      fill
-                      sizes="80px"
-                      style={{ objectFit: "cover" }}
-                    />
-                  </div>
-                  <div className={styles.sidebarProductInfo}>
-                    <div className={styles.sidebarProductBrand}>品牌名稱</div>
-                    <div className={styles.sidebarProductTitle}>商品名稱</div>
-                    <div className={styles.sidebarProductPrice}>NT$0000</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <SidebarProductList title="特惠商品" products={specialProducts} />
           </div>
         </div>
 
@@ -1089,10 +1099,31 @@ export default function ProductList() {
           </div>
 
           {/* 商品列表 */}
-          <div className="row g-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+          <div
+            className={styles.productListContainer}
+            ref={productListRef}
+            style={{ minHeight: listHeight }}
+          >
+            <div
+              className={`${styles.loadingOverlay} ${
+                loading ? styles.visible : ""
+              }`}
+            >
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+
+            <div className="row g-4">
+              {products.map((product) => (
+                <div
+                  key={product.id}
+                  className={`${styles.fadeIn} col-lg-3 col-md-4 col-sm-6`}
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* 分頁 */}

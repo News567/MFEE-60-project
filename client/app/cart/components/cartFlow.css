@@ -1,0 +1,121 @@
+/* 主要容器 */
+.cart-flow {
+  z-index: -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 900px;
+  margin: auto;
+  position: relative;
+  padding: 20px;
+}
+
+/* 單個步驟 */
+.step-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  z-index: 1;
+}
+
+/* 步驟標記 */
+.step-badge {
+  width: 60px;
+  height: 60px;
+  font-size: 22px;
+  font-weight: bold;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgb(22, 120, 205);
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+/* 🔹 水波擴散效果 */
+.step-badge .wave-effect {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: rgba(0, 123, 255, 0.3);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: rippleEffect 2s infinite ease-out;
+}
+
+/* 🔹 漣漪動畫 */
+@keyframes rippleEffect {
+  0% {
+    width: 0%;
+    height: 0%;
+    opacity: 0.8;
+  }
+  50% {
+    width: 150%;
+    height: 150%;
+    opacity: 0.5;
+  }
+  100% {
+    width: 200%;
+    height: 200%;
+    opacity: 0;
+  }
+}
+
+/* 連接線 */
+.step-connector {
+  position: absolute;
+  height: 5px;
+  background: #ccc;
+  left: 50%; /* 從當前步驟的中心開始 */
+  right: -50%; /* 延伸到下一個步驟的中心 */
+  top: 30px; /* 調整高度與步驟標記對齊 */
+  z-index: 1;
+}
+
+/* 讓連接線有水流動畫 */
+.step-connector.flowing {
+  background: linear-gradient(90deg, #007bff, #00aaff, #007bff);
+  background-size: 200% 100%;
+  animation: flowing-water 2s infinite linear;
+}
+
+/* 確保水流在動 */
+@keyframes flowing-water {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* 文字 */
+.step-text {
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+/* 文字底線 */
+.step-text::after {
+  content: "";
+  display: block;
+  width: 50px;
+  height: 2px;
+  background: #007bff;
+  margin: 4px auto 0;
+}

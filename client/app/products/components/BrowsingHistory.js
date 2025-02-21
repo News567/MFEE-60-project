@@ -1,7 +1,19 @@
-import React from "react";
+"use client";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
-export default function BrowsingHistory({ historyItems }) {
+export default function BrowsingHistory() {
+  const [historyItems, setHistoryItems] = useState([]);
+
+  useEffect(() => {
+    const storedHistory =
+      JSON.parse(localStorage.getItem("browsingHistory")) || [];
+    setHistoryItems(storedHistory);
+  }, []);
+
+  if (historyItems.length === 0) return null;
+
   return (
     <div className="mt-5">
       <h3 className="text-center mb-4">瀏覽記錄</h3>
@@ -16,23 +28,55 @@ export default function BrowsingHistory({ historyItems }) {
           <div className="products-track">
             {historyItems.map((item, index) => (
               <div key={index} className="product-slide">
-                <div className="product-img mb-2 position-relative">
-                  <Image
-                    src={item.image}
-                    alt={item.name}
-                    width={200}
-                    height={200}
-                    style={{
-                      width: "100%",
-                      height: "auto",
-                      objectFit: "cover",
-                    }}
-                  />
-                </div>
-                <div>
-                  <div className="text-truncate">{item.name}</div>
-                  <div className="text-danger">NT${item.price}</div>
-                </div>
+                <Link
+                  href={`/products/${item.id}`}
+                  className="text-decoration-none"
+                >
+                  <div
+                    className="product-img mb-2 position-relative"
+                    style={{ paddingTop: "100%" }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                      }}
+                    >
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        style={{
+                          objectFit: "cover",
+                        }}
+                      />
+                    </div>
+                    <div className="button-group">
+                      <button
+                        className="like-button"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        <i className="fa-heart fa-solid text-danger"></i>
+                      </button>
+                      <button
+                        className="cart-button"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        <i className="fa-solid fa-cart-shopping text-primary"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="fw-bold text-truncate text-dark">
+                      {item.name}
+                    </div>
+                    <div className="text-danger fw-bold">NT${item.price}</div>
+                  </div>
+                </Link>
               </div>
             ))}
           </div>

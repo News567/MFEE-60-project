@@ -8,13 +8,12 @@ const handleAddToCart = async () => {
   const currentRental = getCurrentRental();
   const currentActivity = getCurrentActivity();
 
-
   try {
     //---- 發送購物車請求----
     //租賃
     const rental = {
       userId: 1, //(寫死)
-      type: "rental",   //(寫死)
+      type: "rental", //(寫死)
       rentalId: 1, //(綁定資料來源 rental.id之類的)
       quantity: 5, //(綁定按鈕)
       startDate: "2025-02-20", //(綁定按鈕)
@@ -36,7 +35,6 @@ const handleAddToCart = async () => {
 
     if (response.data.success) {
       //讓購物車重新從後端獲取最新數據，而不是自己組裝 cartItem
-      fetchCart(1);
       alert("成功加入購物車！");
     } else {
       alert(response.data.message || "加入購物車失敗");
