@@ -43,15 +43,34 @@ export default function Breadcrumb() {
       create: "建立文章",
     },
   };
+  };
 
-  // 在商品詳情頁獲取商品名稱
+  // 租借用：在商品詳情頁獲取商品名稱
   useEffect(() => {
     if (isProductDetail) {
       const fetchProductName = async () => {
-        const response = await fetch(`/api/rent?id=${lastSegment}`); // 使用 id 作為查詢參數
-        const data = await response.json();
-        if (data.success && data.data) {
-          setProductName(data.data.name); // 設定商品名稱
+        try {
+          const API_BASE_URL =
+            process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
+
+          const response = await fetch(
+            `${API_BASE_URL}/api/rent/${encodeURIComponent(lastSegment)}`
+          );
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          const data = await response.json();
+          if (data.success && data.data) {
+            const brandName = data.data.brand_name || "未知品牌";
+            const productName = data.data.name || "暫無商品名稱";
+            const formattedName = `${brandName} - ${productName}`;
+            setProductName(formattedName); // 設定商品名稱
+          } else {
+            setProductName("未知品牌 - 暫無商品名稱"); // 如果 API 返回的數據不符合預期，顯示默認名稱
+          }
+        } catch (error) {
+          console.error("Failed to fetch product name:", error);
+          setProductName("未知品牌 - 暫無商品名稱"); // 如果請求失敗，顯示默認名稱
         }
       };
       fetchProductName();
@@ -81,7 +100,7 @@ export default function Breadcrumb() {
             if (isProductDetail && isLast) {
               return (
                 <li key={index} className="breadcrumb-item active">
-                  <span>{productName || `商品 ${lastSegment}`}</span>{" "}
+                  <span>{productName || `${lastSegment}`}</span>{" "}
                   {/* 顯示商品名稱 */}
                 </li>
               );

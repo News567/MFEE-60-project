@@ -7,6 +7,7 @@
   --secondary-light-color: #f1d691;
   --white: #ffffff;
   --black: #000000;
+  --gray-20-color: #f8f9fa;
   --gray-50-color: #e5e5e5;
   --gray-100-color: #dedede;
   --gray-200-color: #e5e5e5;
@@ -52,10 +53,78 @@
   font-weight: 700;
 }
 
-.sidebar .sidebar-lists .sidebar-lists-title h6,
+.sidebar .sidebar-lists .sidebar-lists-title h6{
+  margin: 0;
+  padding: 0;
+}
+
 .sidebar .sidebar-lists .sidebar-lists-title i {
   margin: 0;
   padding: 0;
+  transition: transform 0.3s ease;
+}
+
+/* 當下拉選單打開時，旋轉圖標 */
+.sidebar .sidebar-lists .sidebar-lists-title.open i {
+  transform: rotate(180deg);
+}
+
+/* 下拉選單 */
+.sidebar-dropdown {
+  position: relative;
+  background-color: var(--white);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 下拉選單中的每個項目 */
+.sidebar-dropdown-item {
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--black);
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.sidebar-dropdown-item:hover {
+  background-color: #f8f9fa;
+  color: var(--primary-color);
+}
+
+/* 當項目被選中時的樣式 */
+.sidebar-dropdown-item.selected {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+/* 小分類下拉選單 */
+.small-category-dropdown {
+  position: absolute;
+  top: 0; /* 與大分類選單對齊 */
+  left: 100%; /* 出現在大分類選單的右側 */
+  background-color: var(--white);
+  border: 1px solid var(--gray-50-color);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-width: 160px; /* 最小寬度 */
+  z-index: 10; /* 確保小分類選單在最上層 */
+}
+
+/* 小分類下拉選單中的每個項目 */
+.small-category-dropdown-item {
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--black);
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.small-category-dropdown-item:hover {
+  background-color: #f8f9fa;
+  color: var(--primary-color);
+}
+
+.small-category-dropdown-item.selected {
+  background-color: var(--primary-color);
+  color: var(--white);
 }
 
 .sidebar .sidebar-lists .product-category-content {
@@ -492,6 +561,7 @@
 .main .product-lists .card .card-body .product-brand {
   color: var(--gray-600-color);
   font-size: 13px;
+  font-weight: 400;
 }
 
 .main .product-lists .card .card-body .product-name {
@@ -500,7 +570,11 @@
   text-align: center;
   height: 40px; /* 固定高度 */
   line-height: 15px; /* 控制最多兩行 */
-  -webkit-line-clamp: 2; /* 限制最多2行 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 顯示最多兩行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden; /* 超出部分隱藏 */
+  text-overflow: ellipsis; /* 超出部分顯示省略號 */
   line-clamp: 2;
 }
 

@@ -6,6 +6,7 @@ import dynamic from "next/dynamic"; // 動態導入，動態加載 flatpickr，�
 import { useParams } from "next/navigation"; // 獲取 url 當中的 id，useParams修改為useSearchParams 更改
 import Head from "next/head";
 import Image from "next/image";
+import Link from "next/link";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import "./flatpickr.css"; // 我定義的小日曆css
@@ -19,7 +20,7 @@ export default function RentProductDetail() {
   const { id } = useParams(); // 取得動態路由參數
   // const searchParams = useSearchParams(); // 獲取查詢參數
   // const productId = searchParams.get("productId"); // 從查詢參數中獲取 productId
-  
+
   const [product, setProduct] = useState(null);
   const [mainImage, setMainImage] = useState(""); // 商品大張圖片（要做大圖切換
   const [loading, setLoading] = useState(true); // 加載狀態
@@ -62,6 +63,58 @@ export default function RentProductDetail() {
         setMainImage(mainImage);
 
         console.log("Product images:", images); // 調試訊息
+
+        // 獲取推薦商品
+        const fetchRecommendedProducts = async (brand, categoryId, id) => {
+          console.log("呼叫 fetchRecommendedProducts，參數:", {
+            brand,
+            categoryId,
+            id,
+          });
+
+          try {
+            console.log("收到的 id:", id, "類型:", typeof id);
+            const API_BASE_URL =
+              process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
+
+            const parsedId = Number(id);
+            if (!Number.isInteger(parsedId) || parsedId <= 0) {
+              console.error("無效的商品 ID:", id);
+              return;
+            }
+
+            // 確保 categoryId 存在且為有效數字
+            if (!Number.isInteger(categoryId) || categoryId <= 0) {
+              console.error("無效的分類 ID:", categoryId);
+              return;
+            }
+            console.log("data.rent_category_small_id:", categoryId);
+
+            const response = await fetch(
+              `${API_BASE_URL}/api/rent/${id}/recommended?brand=${encodeURIComponent(
+                brand
+              )}&category=${categoryId}`
+            );
+
+            if (!response.ok) {
+              throw new Error("無法獲取推薦商品");
+            }
+            const result = await response.json();
+
+            // console.log("📌 API 返回的完整資料:", result);
+
+            setRecommendedProducts(result.data || []);
+          } catch (err) {
+            console.error("獲取推薦商品失敗:", err);
+          }
+        };
+
+        // 獲取"你可能喜歡"區塊的推薦商品
+        fetchRecommendedProducts(
+          data.brand_name,
+          data.rent_category_small_id,
+          data.id
+        );
       } catch (err) {
         setError(err.message);
       } finally {
@@ -93,6 +146,29 @@ export default function RentProductDetail() {
     const price2 = document.querySelector(".product-price2");
 
     // 如果產品沒有特價，隱藏特價欄位並恢復原價樣式
+    if (!product?.price2) {
+      if (price2) {
+        price2.classList.add("hidden");
+        // price2.style.margin = "0";
+      } // 隱藏特價欄位
+      if (price) {
+        price.classList.remove("strikethrough"); // 移除劃線樣式
+      }
+    } else {
+      // 如果產品有特價，改變原價樣式
+      if (price) {
+        price.classList.add("strikethrough"); // 添加劃線樣式
+        price.style.fontSize = "16px";
+        price.style.fontWeight = "400";
+      }
+    }
+  }, [product]); // 當 product 更新時執行
+  // 根據是否有特價動態調整價格樣式
+  useEffect(() => {
+    const price = document.querySelector(".product-price");
+    const price2 = document.querySelector(".product-price2");
+
+    // 如果產品沒有特價，隱藏特價欄位並恢復原價樣式（你可能會喜歡)
     if (!product?.price2) {
       if (price2) {
         price2.classList.add("hidden");
@@ -575,53 +651,103 @@ export default function RentProductDetail() {
           <h3 className="you-may-like-title">你可能會喜歡</h3>
         </div>
         <div className="row you-may-like-products">
-          {[1, 2, 3, 4].map((item) => (
+          {recommendedProducts.map((product) => (
             <div
-              key={item}
+              key={product.id}
               className="col-12 col-sm-6 col-md-4 col-lg-3 you-may-like-product mb-4"
             >
-              <div className="card border-0 h-100">
-                <Image
-                  src="/img/rent/fit/1732690021_5668.jpg"
-                  className="card-img-top product-img w-100"
-                  alt="TRYGONS液態面鏡"
-                  width={148} // 設定圖片的寬度
-                  height={148} // 設定圖片的高度
-                  layout="responsive"
-                  priority
-                  unoptimized
-                />
-                <div className="py-2 px-0 d-flex flex-column justify-content-start align-items-center card-body">
-                  <p className="product-brand">TRYGONS</p>
-                  <p className="product-name">液態面鏡</p>
-                  <h6 className="product-price">NT $740</h6>
-                  <h6 className="product-price2">NT $350</h6>
-                  <div className="d-flex flex-row justify-content-center align-items-center product-color">
-                    <span
-                      className="color-box"
-                      style={{ backgroundColor: "#4d4244" }}
-                    ></span>
-                    <span
-                      className="color-box"
-                      style={{ backgroundColor: "#403f6f" }}
-                    ></span>
-                    <span
-                      className="color-box"
-                      style={{ backgroundColor: "white" }}
-                    ></span>
+              <Link
+                href={`/rent/${product.id}`}
+                passHref
+                style={{
+                  cursor: "pointer",
+                  textDecoration: "none",
+                  color: "none",
+                }}
+              >
+                <div className="card border-0 h-100">
+                  <div className="d-flex justify-content-center align-items-center img-container">
+                    <Image
+                      src={product.img_url || "/img/rent/no-img.png"}
+                      className="product-img"
+                      alt={product.name}
+                      layout="intrinsic"
+                      width={248}
+                      height={248}
+                      objectFit="contain"
+                      priority
+                      unoptimized
+                    />
                   </div>
+                  <div className="p-0 d-flex flex-column justify-content-start align-items-center card-body">
+                    <p className="product-brand">{product.brand}</p>
+                    <p className="product-name text-center">{product.name}</p>
 
-                  {/* 右上角hover */}
-                  <div className="icon-container d-flex flex-row">
-                    <div className="icon d-flex justify-content-center align-items-center">
-                      <i className="bi bi-heart"></i>
+                    <div
+                      className={`price-container d-flex gap-3 ${
+                        product.price2 ? "has-discount" : ""
+                      }`}
+                    >
+                      <h6 className="product-price">NT$ {product.price} 元</h6>
+                      {product.price2 && (
+                        <h6 className="product-price2">
+                          NT$ {product.price2} 元
+                        </h6>
+                      )}
                     </div>
-                    <div className="icon d-flex justify-content-center align-items-center">
-                      <i className="bi bi-cart"></i>
+                    <div className="d-flex flex-row justify-content-center align-items-center product-color">
+                      {product.color_rgb && product.color_rgb !== "無顏色" ? (
+                        // 先將顏色陣列分割出來
+                        product.color_rgb
+                          .split(",")
+                          .slice(0, 3)
+                          .map((color, index) => (
+                            <span
+                              key={index}
+                              className="color-box"
+                              style={{ backgroundColor: color.trim() }}
+                            ></span>
+                          ))
+                      ) : (
+                        <span
+                          className="color-box"
+                          style={{
+                            backgroundColor: "transparent",
+                            border: "none",
+                          }}
+                        ></span>
+                      )}
+
+                      {/* 若顏色數量超過3，顯示 '...' */}
+                      {product.color_rgb &&
+                        product.color_rgb !== "無顏色" &&
+                        product.color_rgb.split(",").length > 3 && (
+                          <span
+                            className="color-box"
+                            style={{
+                              backgroundColor: "transparent",
+                              border: "none",
+                              textAlign: "center",
+                              lineHeight: "7.5px",
+                            }}
+                          >
+                            ...
+                          </span>
+                        )}
+                    </div>
+
+                    {/* hover出現收藏 & 加入購物車 */}
+                    <div className="icon-container d-flex flex-row">
+                      <div className="icon d-flex justify-content-center align-items-center">
+                        <i className="bi bi-heart"></i>
+                      </div>
+                      <div className="icon d-flex justify-content-center align-items-center">
+                        <i className="bi bi-cart"></i>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
           ))}
         </div>

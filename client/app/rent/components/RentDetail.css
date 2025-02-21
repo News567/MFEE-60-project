@@ -396,6 +396,8 @@
 
 .you-may-like .you-may-like-title {
   margin: 0;
+  margin-top: 10px;
+  margin-bottom: 10px;
   color: var(--primary-color);
   text-align: center;
   font-size: 36px;
@@ -404,14 +406,27 @@
 }
 
 .you-may-like-products .you-may-like-product .card {
-  padding: 0px 15px 30px 15px;
+  /* padding: 0px 15px 30px 15px; */
+  border: none;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease-in-out;
+}
+.you-may-like-products .you-may-like-product .card:hover {
+  box-shadow: 2px 4px 15px rgba(0, 0, 0, 0.08);
+}
+.you-may-like-products .you-may-like-product .card .img-container {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* 確保所有圖片為正方形 */
+  position: relative;
+  overflow: hidden; /* 隱藏超出部分 */
 }
 
 .you-may-like-products .you-may-like-product .card .card-body .product-brand,
 .you-may-like-products .you-may-like-product .card .card-body .product-name,
 .you-may-like-products .you-may-like-product .card .card-body .product-price,
 .you-may-like-products .you-may-like-product .card .card-body .product-price2 {
-  margin: 0 0 5px 0;
+  margin: 0;
 }
 
 .you-may-like-products .you-may-like-product .card .card-body .product-brand {
@@ -421,7 +436,17 @@
 }
 
 .you-may-like-products .you-may-like-product .card .card-body .product-name {
+  padding: 10px;
   font-size: 14px;
+  text-align: center;
+  height: 40px; /* 固定高度 */
+  line-height: 15px; /* 控制最多兩行 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 顯示最多兩行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden; /* 超出部分隱藏 */
+  text-overflow: ellipsis; /* 超出部分顯示省略號 */
+  line-clamp: 2;
 }
 
 .you-may-like-products .you-may-like-product .card .card-body .product-price,
@@ -431,6 +456,8 @@
 
 .you-may-like-products .you-may-like-product .card .card-body .product-color {
   gap: 6px;
+  height: 20px;
+  margin-top: 10px;
 }
 
 .you-may-like-products
@@ -472,6 +499,27 @@
   color: var(--black);
 }
 
+.you-may-likes .you-may-like-products .card {
+  border: none;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease-in-out;
+}
+.you-may-likes .you-may-like-products .card .img-container {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* 確保所有圖片為正方形 */
+  position: relative;
+  overflow: hidden; /* 隱藏超出部分 */
+}
+.you-may-likes
+  .you-may-like-products
+  .card
+  .card-body
+  .price-container.has-discount
+  .product-price {
+  text-decoration: line-through;
+  color: var(--gray-600-color);
+}
 .you-may-likes .you-may-like-products .card .card-body .icon-container {
   position: absolute;
   bottom: 35%;

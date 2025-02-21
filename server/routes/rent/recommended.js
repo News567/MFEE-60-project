@@ -3,97 +3,126 @@ import { pool } from "../../config/mysql.js";
 
 const router = express.Router();
 
-// 根據當前商品 ID 推薦相似商品
-router.get("/:id/rentRecommendedRouter", async (req, res) => {
-  const { id } = req.params;
+// 根據當前商品資料推薦相似商品
+router.get("/:id/recommended", async (req, res) => {
+  console.log("請求到達 /recommended 路由"); // 確認請求是否到達
+  console.log("路由參數 ID:", req.params.id); // 打印路由參數
 
- // 1. 驗證 ID 是否為有效數字
- if (isNaN(id) || id <= 0) {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+
+  // 從路由參數中提取 id
+  const { id } = req.params;
+  const { brand, category } = req.query;
+
+  console.log("後端收到的 id:", id, "類型:", typeof id);
+
+  // 轉換為數字
+  const parsedId = parseInt(id, 10);
+
+  console.log("收到的查詢參數:", req.query); // 輸出所有的查詢參數
+  console.log("轉換後的 ID:", parsedId, "是否 NaN:", isNaN(parsedId));
+
+  const rent_category_small_id = parseInt(category, 10); // 將 category 轉換為數字
+
+  if (isNaN(parsedId) || parsedId <= 0) {
+    console.log("無效的商品 ID:", parsedId); // 輸出錯誤訊息
+    return res
+      .status(400)
+      .json({ success: false, message: "無效的商品 ID ！ 商品 ID 需為正數！" });
+  }
+  // 檢查參數是否有效
+  if (isNaN(rent_category_small_id) || !brand?.trim()) {
+    console.log("無效的分類 ID 或品牌:", rent_category_small_id, brand); // 輸出錯誤訊息
     return res.status(400).json({
       success: false,
-      message: "無效的商品 ID ！",
+      message: `無效的分類 ID: ${rent_category_small_id} 或品牌: ${brand}`,
     });
   }
 
+  console.log("收到的 brand:", brand);
+  console.log("收到的 category ID:", rent_category_small_id);
+  console.log("收到的 id:", parsedId);
+
   try {
-     // 2. 先獲取當前商品的類別和品牌
-     const [currentProduct] = await pool.query(
-        `
-        SELECT 
-          ri.rent_category_small_id, 
-          rb.id AS brand_id
-        FROM rent_item ri
-        LEFT JOIN rent_specification rs ON ri.id = rs.rent_item_id AND rs.is_deleted = FALSE
-        LEFT JOIN rent_brand rb ON rs.brand_id = rb.id
-        WHERE ri.id = ? AND ri.is_deleted = FALSE
-        `,
-        [id]
-      );
-  
-      // 3. 檢查商品是否存在
-      if (currentProduct.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "找不到該商品",
-        });
-      }
-  
-      const { rent_category_small_id, brand_id } = currentProduct[0];
-  
-      // 4. 查詢推薦商品（相同類別或相同品牌，最多 4 個）
-      const [recommendedProducts] = await pool.query(
-        `
-        SELECT 
-          ri.id, 
-          ri.name, 
-          ri.price, 
-          ri.price2, 
-          ri.stock,
-          rb.name AS brand_name,
-          GROUP_CONCAT(DISTINCT rc.name ORDER BY rc.id ASC) AS color_name,
-          GROUP_CONCAT(DISTINCT rc.rgb ORDER BY rc.id ASC) AS color_rgb
-        FROM rent_item ri
-        LEFT JOIN rent_specification rs ON ri.id = rs.rent_item_id AND rs.is_deleted = FALSE
-        LEFT JOIN rent_brand rb ON rs.brand_id = rb.id
-        LEFT JOIN rent_color rc ON rs.color_id = rc.id
-        WHERE 
-          (ri.rent_category_small_id = ? OR rb.id = ?)  -- 相同類別或品牌
-          AND ri.id != ?  -- 排除當前商品
-          AND ri.is_deleted = FALSE
-        GROUP BY ri.id
-        ORDER BY RAND()  -- 隨機排序
-        LIMIT 4          -- 限制 4 筆
-        `,
-        [rent_category_small_id, brand_id, id]
-      );
-  
-      // 5. 為每個推薦商品查詢圖片
-      for (let product of recommendedProducts) {
-        const [images] = await pool.query(
-          `
-          SELECT img_url, is_main
-          FROM rent_image
-          WHERE rent_item_id = ?
-          ORDER BY is_main DESC
-          `,
-          [product.id]
-        );
-        product.images = images;
-      }
-  
-      // 6. 返回推薦商品
-      res.status(200).json({
-        success: true,
-        data: recommendedProducts,
-      });
-    } catch (err) {
-      console.error("Error fetching recommended products:", err);
-      res.status(500).json({
-        success: false,
-        message: "伺服器錯誤，無法取得推薦商品！",
-        error: err.message || err,
-      });
-    }
-  });
-  
-  export default router;
+    const [rows] = await pool.query(
+      `
+SELECT 
+    ri.id, 
+    ri.name, 
+    ri.price, 
+    ri.price2, 
+    ri.description, 
+    ri.description2,
+    ri.stock, 
+    ri.created_at, 
+    ri.update_at, 
+    ri.deposit, 
+    ri.is_like,
+    rcs.id AS rent_category_small_id,  
+    rcs.name AS rent_category_small_name, 
+    rcb.name AS category_big, 
+    ri_img.img_url AS img_url,
+    rb.id AS brand_id, 
+    rb.name AS brand_name,
+   NULLIF(GROUP_CONCAT(DISTINCT rc.name ORDER BY rc.id ASC SEPARATOR ', '), '') AS color_name, 
+    NULLIF(GROUP_CONCAT(DISTINCT rc.rgb ORDER BY rc.id ASC SEPARATOR ', '), '') AS color_rgb
+FROM 
+    rent_item ri
+JOIN 
+    rent_category_small rcs ON ri.rent_category_small_id = rcs.id
+JOIN 
+    rent_category_big rcb ON rcs.rent_category_big_id = rcb.id
+LEFT JOIN 
+    rent_image ri_img ON ri.id = ri_img.rent_item_id AND ri_img.is_main = 1
+LEFT JOIN 
+    rent_specification rs ON ri.id = rs.rent_item_id AND rs.is_deleted = FALSE
+LEFT JOIN 
+    rent_brand rb ON rs.brand_id = rb.id
+LEFT JOIN 
+    rent_color rc ON rs.color_id = rc.id
+WHERE 
+    ri.is_deleted = FALSE
+    AND ri.id != ?  -- 排除當前商品
+    AND (rb.name = ? OR ri.rent_category_small_id = ?)  -- 品牌或分類匹配
+GROUP BY 
+    ri.id
+ORDER BY 
+    CASE 
+        WHEN rb.name = ? THEN 1  -- 品牌匹配優先
+        WHEN ri.rent_category_small_id = ? THEN 2  -- 分類匹配次之
+        ELSE 3
+    END,
+    RAND()  -- 隨機排序
+LIMIT 4;  -- 限制推薦數量
+      `,
+      [parsedId, brand, rent_category_small_id, brand, rent_category_small_id]
+    );
+
+    console.log("SQL 查詢結果:", rows); // 這裡確認資料庫回傳的資料
+
+    // 將資料轉換為前端預期的格式
+    const formattedData = rows.map((product) => ({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      price2: product.price2,
+      rent_category_small_id: product.rent_category_small_id,
+      rent_category_small_name: product.rent_category_small_name,
+      category_big: product.category_big,
+      brand: product.brand_name,
+      img_url: product.img_url || null,
+      color_rgb: product.color_rgb,
+    }));
+
+    console.log("格式化後的資料:", formattedData); // 確認格式化後的資料是否包含 rent_category_small_id
+
+    res.json({ success: true, data: formattedData });
+  } catch (error) {
+    console.error("獲取推薦商品失敗:", error);
+    res.status(500).json({ success: false, message: "伺服器錯誤" });
+  }
+});
+
+export default router;

@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react"; // useState 儲存從後端獲取的資料，並使用 useEffect 在組件加載時發送請求
+import { useCallback, useEffect, useState, useMemo } from "react"; // useState 儲存從後端獲取的資料，並使用 useEffect 在組件加載時發送請求
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 // import Link from "next/link";
 import "./RentList.css";
 import "../../../public/globals.css";
+import { debounce } from "lodash"; // 新增 debounce 解決刷新有參數的介面資料閃動問題
 
 export default function RentList() {
   const [products, setProducts] = useState([]); // 儲存後端獲取的商品資料
@@ -18,19 +19,76 @@ export default function RentList() {
   const [showClearSort, setShowClearSort] = useState(false); // 是否顯示清除排序的「×」符號
   const [itemsPerPage, setItemsPerPage] = useState(16); // 預設每頁顯示16個
 
-  const router = useRouter();
-  // 動態更新網址參數（根據每頁顯示資料數、分頁、排序條件）
+  // sidebar 相關
+  const [categories, setCategories] = useState([]); // 大分類
+  const [smallCategories, setSmallCategories] = useState([]); // 小分類
+  const [selectedCategory, setSelectedCategory] = useState(null); // 當前選擇的大分類
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false); // 控制大分類下拉顯示
+  const [showSmallCategoryDropdown, setShowSmallCategoryDropdown] =
+    useState(false); // 控制小分類下拉顯示
+  const [selectedSmallCategory, setSelectedSmallCategory] = useState(null); // 當前選中的小分類 ID
+
+  const router = useRouter(); // 動態更新網址參數（根據每頁顯示資料數、分頁、排序條件）
   const searchParams = useSearchParams();
+
+  // 從後端獲取商品資料
+  const fetchProducts = useCallback(
+    async (
+      page = 1,
+      sort = "",
+      limit = itemsPerPage,
+      categoryBig = null,
+      categorySmall = null
+    ) => {
+      try {
+        const API_BASE_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
+        const url = new URL(`${API_BASE_URL}/api/rent`);
+        url.searchParams.set("page", page);
+        url.searchParams.set("limit", limit);
+        if (sort) url.searchParams.set("sort", sort);
+        if (categoryBig) url.searchParams.set("category_big_id", categoryBig);
+        if (categorySmall)
+          url.searchParams.set("category_small_id", categorySmall);
+
+        const response = await fetch(url);
+        const result = await response.json();
+        if (result && result.data) {
+          setProducts(result.data);
+          setCurrentPage(result.page);
+          setTotalPages(result.totalPages);
+          setTotalProducts(result.total);
+        } else {
+          console.error("API 返回的資料格式不正確:", result);
+        }
+      } catch (error) {
+        console.error("租借商品資料獲取失敗:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [itemsPerPage]
+  );
+
+  // 使用 debounce 減少頻繁請求，解決頁面刷新閃動問題
+  const debouncedFetchProducts = useMemo(
+    () => debounce(fetchProducts, 300),
+    [fetchProducts]
+  );
 
   // 從 URL 初始化狀態
   useEffect(() => {
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 16;
     const sort = searchParams.get("sort") || "";
+    const category = searchParams.get("category") || null;
+    const smallCategory = searchParams.get("smallCategory") || null;
 
     setCurrentPage(page);
     setItemsPerPage(limit);
     setSort(sort);
+    setSelectedCategory(category);
+    setSelectedSmallCategory(smallCategory);
 
     // 根據 URL 參數設置排序條件顯示文字
     switch (sort) {
@@ -49,125 +107,250 @@ export default function RentList() {
       default:
         setSelectedSort("下拉選取排序條件");
     }
-  }, [searchParams]);
+    // 根據 URL 參數初始化商品列表
+    debouncedFetchProducts(page, sort, limit, category, smallCategory);
+  }, [searchParams, debouncedFetchProducts]);
 
-  // // 從後端獲取商品資料
-  // useEffect(() => {
-  //   const fetchProducts = async () => {
-  //     try {
-  //       const response = await fetch("http://localhost:3005/api/rent"); // 調用後端 API
-  //       const data = await response.json();
-  //       console.log("獲取的數據：", data); // 打印檢查數據格式
-  //       setProducts(data); // 更新商品資料
-  //     } catch (error) {
-  //       console.error("租借商品資料獲取失敗:", error);
-  //     } finally {
-  //       setLoading(false); // 結束加載狀態
-  //     }
-  //   };
-
-  //   fetchProducts();
-  // }, []);
   // 從後端獲取商品資料
-  const fetchProducts = useCallback(
-    async (page = 1, sort = "", limit = itemsPerPage) => {
+  // 從後端獲取大分類和小分類
+  useEffect(() => {
+    const fetchCategories = async () => {
       try {
-        // 連到後端 API
-        const API_BASE_URL =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
-
         const response = await fetch(
-          `${API_BASE_URL}/api/rent?page=${page}&limit=${limit}&sort=${sort}`
+          "http://localhost:3005/api/rent/categories"
         );
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
+        const data = await response.json();
 
-        const result = await response.json(); // 先將結果存到變數中
-        console.log("API 返回的完整資料:", result); // 檢查 API 返回的完整資料
+        // 對 categories 進行排序，根據 category_big_id 由小到大
+        const sortedCategories = data.categories.sort(
+          (a, b) => a.category_big_id - b.category_big_id
+        );
+        setCategories(sortedCategories); // 設置排序後的大分類和小分類
+      } catch (error) {
+        console.error("分類資料獲取失敗:", error);
+      }
+    };
 
-        if (result && result.data) {
-          setProducts(result.data); // 更新商品資料
-          setCurrentPage(result.page); // 更新當前頁數
-          setTotalPages(result.totalPages); // 更新總頁數
-          setTotalProducts(result.total); // 更新總商品數量
-        } else {
-          console.error("API 返回的資料格式不正確:", result);
+    fetchCategories();
+  }, []);
+
+  // 從 localStorage 讀取快取資料
+  useEffect(() => {
+    const cachedData = localStorage.getItem(
+      `products_${currentPage}_${itemsPerPage}_${sort}`
+    );
+    if (cachedData) {
+      try {
+        const parsedData = JSON.parse(cachedData);
+        if (parsedData.data && parsedData.totalPages && parsedData.total) {
+          setProducts(parsedData.data);
+          setTotalPages(parsedData.totalPages);
+          setTotalProducts(parsedData.total);
+          setLoading(false);
         }
       } catch (error) {
-        console.error("租借商品資料獲取失敗:", error);
-      } finally {
-        setLoading(false); // 結束加載狀態
+        console.error("解析 localStorage 資料失敗:", error);
       }
+    } else {
+      setLoading(true);
+      debouncedFetchProducts(
+        currentPage,
+        sort,
+        itemsPerPage,
+        selectedCategory,
+        smallCategories
+      );
+    }
+  }, [
+    currentPage,
+    itemsPerPage,
+    sort,
+    debouncedFetchProducts,
+    selectedCategory,
+    smallCategories,
+  ]);
+
+  // 初始加載
+  useEffect(() => {
+    debouncedFetchProducts(
+      currentPage,
+      sort,
+      itemsPerPage,
+      selectedCategory,
+      smallCategories
+    );
+  }, [
+    currentPage,
+    sort,
+    itemsPerPage,
+    selectedCategory,
+    smallCategories,
+    debouncedFetchProducts,
+  ]);
+
+  // 顯示大分類下拉菜單
+  const toggleCategoryDropdown = () => {
+    setShowCategoryDropdown(!showCategoryDropdown);
+    setShowSmallCategoryDropdown(false); // 關閉小分類下拉
+  };
+
+  // 顯示小分類下拉菜單
+  const toggleSmallCategoryDropdown = () => {
+    setShowSmallCategoryDropdown(!showSmallCategoryDropdown);
+  };
+
+  // 更新選擇的大分類
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category.category_big_id); // 設置當前選擇的大分類
+    setSelectedSmallCategory(null); // 重置小分類選中狀態
+    setCurrentPage(1); // 重置分頁
+    debouncedFetchProducts(
+      1,
+      sort,
+      itemsPerPage,
+      category.category_big_id,
+      null
+    ); // 篩選大分類商品
+    updateUrlParams(1, itemsPerPage, sort, category.category_big_id, null); // 更新 URL 參數
+  };
+
+  // 更新選擇的小分類
+  const handleSmallCategorySelect = (smallCategory) => {
+    setSelectedSmallCategory(smallCategory.id); // 設置當前選中的小分類 ID
+    setCurrentPage(1); // 重置分頁
+    debouncedFetchProducts(
+      1,
+      sort,
+      itemsPerPage,
+      selectedCategory,
+      smallCategory.id
+    ); // 篩選小分類商品
+    updateUrlParams(1, itemsPerPage, sort, selectedCategory, smallCategory.id); // 更新 URL 參數
+  };
+
+  // 更新 URL 查詢參數
+  const updateUrlParams = useCallback(
+    (page, limit, sort, category, smallCategory) => {
+      const params = new URLSearchParams();
+      params.set("page", page);
+      params.set("limit", limit);
+      if (sort) params.set("sort", sort);
+      if (category) params.set("category", category);
+      if (smallCategory) params.set("smallCategory", smallCategory);
+      router.push(`/rent?${params.toString()}`, undefined, { shallow: true });
     },
-    [itemsPerPage] // 如果 itemsPerPage 改變，fetchProducts 函數才會重新創建
+    [router]
   );
 
-  useEffect(() => {
-    fetchProducts(currentPage, sort, itemsPerPage);
-  }, [currentPage, sort, itemsPerPage, fetchProducts]);
-
-  // 更新網址 URL 查詢參數
-  const updateUrlParams = (page, limit, sort) => {
-    const params = new URLSearchParams();
-    params.set("page", page);
-    params.set("limit", limit);
-    if (sort) params.set("sort", sort);
-    router.push(`/rent?${params.toString()}`);
-  };
-
   // 每頁顯示資料數量
-  const handleItemsPerPageChange = (limit) => {
-    setItemsPerPage(limit);
-    setCurrentPage(1); // 重置為第一頁
-    updateUrlParams(1, limit, sort);
-  };
+  const handleItemsPerPageChange = useCallback(
+    (limit) => {
+      setItemsPerPage(limit);
+      setCurrentPage(1);
+      updateUrlParams(1, limit, sort);
+    },
+    [sort, updateUrlParams]
+  );
 
   // 處理商品卡片點擊事件
-  const handleProductClick = (productId) => {
-    router.push(`/rent/${productId}`); // 使用 router.push 跳轉到商品詳細頁面
-  };
+  const handleProductClick = useCallback(
+    (productId) => {
+      router.push(`/rent/${productId}`);
+    },
+    [router]
+  );
 
   // 處理排序
-  const handleSort = (sortType) => {
-    let sortText = "下拉選取排序條件"; // 設定我的預設文字
-    switch (sortType) {
-      case "price_desc":
-        sortText = "價格：由高到低";
-        break;
-      case "price_asc":
-        sortText = "價格：由低到高";
-        break;
-      case "newest":
-        sortText = "上架時間：由新到舊";
-        break;
-      case "oldest":
-        sortText = "上架時間：由舊到新";
-        break;
-      default:
-        sortText = "下拉選取排序條件";
-    }
-    setSelectedSort(sortText); // 更新當前選擇的排序條件
-    setSort(sortType); // 更新排序方式
-    setCurrentPage(1); // 重置為第一頁
-    setShowClearSort(true); // 顯示「×」符號
-    updateUrlParams(1, itemsPerPage, sortType);
-  };
+  const handleSort = useCallback(
+    (sortType) => {
+      let sortText = "下拉選取排序條件";
+      switch (sortType) {
+        case "price_desc":
+          sortText = "價格：由高到低";
+          break;
+        case "price_asc":
+          sortText = "價格：由低到高";
+          break;
+        case "newest":
+          sortText = "上架時間：由新到舊";
+          break;
+        case "oldest":
+          sortText = "上架時間：由舊到新";
+          break;
+        default:
+          sortText = "下拉選取排序條件";
+      }
+      setSelectedSort(sortText);
+      setSort(sortType);
+      setCurrentPage(1);
+      setShowClearSort(true);
+      debouncedFetchProducts(
+        1,
+        sortType,
+        itemsPerPage,
+        selectedCategory,
+        selectedSmallCategory
+      );
+      updateUrlParams(
+        1,
+        itemsPerPage,
+        sortType,
+        selectedCategory,
+        selectedSmallCategory
+      );
+    },
+    [itemsPerPage, selectedCategory, selectedSmallCategory, updateUrlParams]
+  );
 
   // 清除排序條件
-  const handleClearSort = () => {
-    setSelectedSort("下拉選取排序條件"); // 重置排序條件文字
-    setSort(""); // 清除排序方式
-    setCurrentPage(1); // 重置為第一頁
-    setShowClearSort(false); // 隱藏「×」符號
-    updateUrlParams(1, itemsPerPage, "");
-  };
+  const handleClearSort = useCallback(() => {
+    setSelectedSort("下拉選取排序條件");
+    setSort("");
+    setCurrentPage(1);
+    setShowClearSort(false);
+    debouncedFetchProducts(
+      1,
+      "",
+      itemsPerPage,
+      selectedCategory,
+      selectedSmallCategory
+    );
+    updateUrlParams(
+      1,
+      itemsPerPage,
+      "",
+      selectedCategory,
+      selectedSmallCategory
+    );
+  }, [itemsPerPage, selectedCategory, selectedSmallCategory, updateUrlParams]);
 
   // 處理分頁
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    updateUrlParams(page, itemsPerPage, sort);
-  };
+  const handlePageChange = useCallback(
+    (page) => {
+      setCurrentPage(page);
+      debouncedFetchProducts(
+        page,
+        sort,
+        itemsPerPage,
+        selectedCategory,
+        selectedSmallCategory
+      );
+      updateUrlParams(
+        page,
+        itemsPerPage,
+        sort,
+        selectedCategory,
+        selectedSmallCategory
+      );
+    },
+    [
+      itemsPerPage,
+      sort,
+      selectedCategory,
+      selectedSmallCategory,
+      updateUrlParams,
+    ]
+  );
 
   // 處理租借商品顏色 & 處理是否原價特價
   useEffect(() => {
@@ -219,27 +402,60 @@ export default function RentList() {
       <div className="container py-4 mx-auto">
         <div className="row">
           {/* 麵包屑 ：外掛公版*/}
-
           <div className="row">
             {/* Sidebar */}
             <div className="col-12 col-lg-3 col-md-4 order-2 order-md-1 d-flex flex-column sidebar">
               {/* 1. 產品分類區塊 */}
               <div className="d-flex flex-column sidebar-lists product-category">
-                <div className="d-flex justify-content-between align-items-center sidebar-lists-title">
+                <div
+                  className={`d-flex justify-content-between align-items-center sidebar-lists-title ${
+                    showCategoryDropdown ? "open" : ""
+                  }`}
+                  onClick={toggleCategoryDropdown}
+                  style={{ cursor: "pointer" }}
+                >
                   <h6>產品分類</h6>
                   <i className="bi bi-chevron-down"></i>
                 </div>
-                <div className="product-category-content">
-                  <ul className="list-unstyled d-flex justify-content-between align-items-center">
-                    面鏡/呼吸管<i className="bi bi-chevron-down"></i>
-                  </ul>
-                  <ul className="list-unstyled d-flex justify-content-between align-items-center">
-                    蛙鞋<i className="bi bi-chevron-down"></i>
-                  </ul>
-                  <ul className="list-unstyled d-flex justify-content-between align-items-center">
-                    潛水配件<i className="bi bi-chevron-down"></i>
-                  </ul>
-                </div>
+
+                {showCategoryDropdown && (
+                  <div className="sidebar-dropdown">
+                    {categories.map((category) => (
+                      <div
+                        key={category.category_big_id}
+                        className={`sidebar-dropdown-item ${
+                          selectedCategory === category.category_big_id
+                            ? "selected"
+                            : ""
+                        }`}
+                        onClick={() => handleCategorySelect(category)}
+                      >
+                        {category.category_big_name}
+                        {/* 小分類選單 */}
+                        {selectedCategory === category.category_big_id && (
+                          <div className="small-category-dropdown">
+                            {category.category_small.map((small) => (
+                              <div
+                                key={small.id}
+                                className={`small-category-dropdown-item ${
+                                  selectedSmallCategory === small.id
+                                    ? "selected"
+                                    : ""
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // 阻止事件冒泡
+                                  handleSmallCategorySelect(small);
+                                }}
+                              >
+                                {small.name}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* 篩選按鈕 */}
@@ -325,55 +541,6 @@ export default function RentList() {
                     <div className="color-circle bg-success"></div>
                     <div className="color-circle bg-primary"></div>
                     <div className="color-circle bg-warning"></div>
-                  </div>
-                </div>
-
-                {/* 防寒衣厚度 */}
-                <div className="product-filter-wetsuit">
-                  <p className="filter-subtitle filter-subtitle2">
-                    <i className="bi bi-chevron-down"></i>防寒衣厚度
-                  </p>
-                  <div className="thickness-select d-flex flex-row align-items-center">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      value=""
-                      id="thickness1"
-                    />
-                    <label
-                      className="form-check-label thickness"
-                      htmlFor="thickness1"
-                    >
-                      1.2mm (4)
-                    </label>
-                  </div>
-                  <div className="thickness-select d-flex flex-row align-items-center">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      value=""
-                      id="thickness2"
-                    />
-                    <label
-                      className="form-check-label thickness"
-                      htmlFor="thickness2"
-                    >
-                      1.5mm (14)
-                    </label>
-                  </div>
-                  <div className="thickness-select d-flex flex-row align-items-center">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      value=""
-                      id="thickness3"
-                    />
-                    <label
-                      className="form-check-label thickness"
-                      htmlFor="thickness3"
-                    >
-                      2mm (39)
-                    </label>
                   </div>
                 </div>
               </div>
@@ -690,9 +857,11 @@ export default function RentList() {
                             <h6 className="product-price">
                               NT$ {product.price} 元
                             </h6>
-                            <h6 className="product-price2">
-                              {product.price2 || ""}
-                            </h6>
+                            {product.price2 && (
+                              <h6 className="product-price2">
+                                NT$ {product.price2} 元
+                              </h6>
+                            )}
                           </div>
                           <div className="d-flex flex-row justify-content-center align-items-center product-color">
                             {product.color_rgb ? (

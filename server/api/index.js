@@ -17,6 +17,8 @@ import groupRouter from "../routes/group/index.js";
 import groupListRouter from "../routes/group/list.js";
 import groupDetailRouter from "../routes/group/detail.js";
 import rentRouter from "../routes/rent/index.js";
+import rentCategoryRouter from "../routes/rent/categories.js";
+import rentFilterRouter from "../routes/rent/filter.js";
 import rentDetailRouter from "../routes/rent/detail.js";
 import rentRecommendedRouter from "../routes/rent/recommended.js";
 import articleRouter from "../routes/article/index.js"; // 文章列表 & 動態文章頁
@@ -67,8 +69,10 @@ apiRouter.use("/group", groupDetailRouter)
 
 // 租借相關路由
 apiRouter.use("/rent", rentRouter); // 負責 `/api/rent`
+apiRouter.use("/rent", rentCategoryRouter); // 負責 `/api/rent/categories`
+apiRouter.use("/rent", rentFilterRouter); // 負責 `/api/rent/filter`
 apiRouter.use("/rent", rentDetailRouter); // 負責 `/api/rent/:id`
-apiRouter.use("/rent", rentRecommendedRouter); // 負責 `/api/rent/`
+apiRouter.use("/rent", rentRecommendedRouter); // 負責 `/api/rent/:id/recommended`
 // 文章相關路由
 apiRouter.use("/article", articleRouter); // `/api/article` 文章列表 & 文章內容
 apiRouter.use("/article", articleCreateRouter); // `/api/article/create` 新增文章、取得新建文章所需數據
