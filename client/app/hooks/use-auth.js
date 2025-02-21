@@ -15,18 +15,12 @@ export function AuthProvider({ children }) {
   const protectedRoutes = ["/admin"];
   const loginRoute = "/";
 
-  const login = async (accountOrEmail, password) => {
+  const login = async (email, password) => {
     const API = "http://localhost:3005/api/member/users/login";
 
     try {
-      const bodyData = {accountOrEmail, password};
-      // if (accountOrEmail.includes("@")) {
-      //   bodyData.email = accountOrEmail;
-      // } else {
-      //   bodyData.account = accountOrEmail;
-      // }
-      // bodyData.password = password;
-
+      const bodyData = {email, password};
+    
       console.log("Request Body:", bodyData);
 
       const res = await fetch(API, {
@@ -37,7 +31,7 @@ export function AuthProvider({ children }) {
 
       if (!res.ok) {
         const errorDetails = await res.json();
-        console.error("Error Details:", errorDetails); // Log error details
+        console.error("Error Details:", errorDetails); 
         throw new Error(errorDetails.message || "Unknown error");
       }
 
@@ -77,14 +71,14 @@ export function AuthProvider({ children }) {
       alert(err.message);
     }
   };
-  const register = async (account, email, password) => {
+  const register = async (email, password) => {
     const API = "http://localhost:3005/api/member/users/register";
 
     try {
       const res = await fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ account, email, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const result = await res.json();

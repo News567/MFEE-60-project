@@ -3,6 +3,7 @@ import multer from "multer";
 import moment from "moment";
 import cors from "cors";
 import { checkToken } from "../../middleware/auth.js";
+import jwt from "jsonwebtoken"; 
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
@@ -206,27 +207,30 @@ router.delete("/users/:id", (req, res) => {
 });
 
 router.post("/users/login", upload.none(), async (req, res) => {
-  const { accountOrEmail, password } = req.body;
+  const { email, password } = req.body;
 
-  if ((!accountOrEmail) || !password) {
-    return res.status(400).json({ message: "請提供帳號/Email 和密碼" });
+  if ((!email) || !password) {
+    return res.status(400).json({ message: "請提供Email 和密碼" });
   }
 
   try {
-    const sql = "SELECT * FROM `users` WHERE account = ? OR email = ?";
-    const [rows] = await pool.execute(sql, [accountOrEmail, accountOrEmail]);
-    
-    if (rows.length == 0) throw new Error("帳號或 Email 不存在");
+    const sql = "SELECT * FROM `users` WHERE email = ?";
+    const [rows] = await pool.execute(sql, [email]);
+
+    if (rows.length == 0) throw new Error("Email 不存在");
 
     const user = rows[0];
 
     const isMatch = await bcrypt.compare(password, user.password);
+    // console.log(password, user.password);
+    console.log("輸入密碼:", password);
+     console.log("資料庫密碼:", user.password);
+    // console.log("比對結果:", isMatch);
     if (!isMatch) throw new Error("帳號或密碼錯誤");
 
     const token = jwt.sign(
       {
         id: user.id,
-        account: user.account,
         email: user.email,
       },
       process.env.JWT_SECRET,
@@ -265,22 +269,23 @@ router.post("/users/logout", checkToken, (req, res) => {
 });
 
 router.post("/users/register", async (req, res) => {
-  const { account, email, password } = req.body;
+  const { email, password } = req.body;
+  const createAt = new Date();
 
-  if ((!account && !email) || !password) {
-    return res.status(400).json({ message: "請提供帳號、Email 或密碼" });
+  if (!email || !password) {
+    return res.status(400).json({ message: "請提供Email或密碼" });
   }
   try {
-    const checkSql = "SELECT * FROM `users` WHERE account = ? OR email = ?";
-    const [existingUser] = await pool.execute(checkSql, [account, email]);
+    const checkSql = "SELECT * FROM `users` WHERE email = ?";
+    const [existingUser] = await pool.execute(checkSql, [email]);
 
     if (existingUser.length > 0) {
       return res.status(409).json({ status: "exists", message: "帳號或 Email 已存在" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql =
-      "INSERT INTO `users` (`account`, `email`, `password`) VALUES (?, ?, ?)";
-    const [result] = await pool.execute(sql, [account, email, hashedPassword]);
+      "INSERT INTO `users` (`email`, `password`, `created_at`) VALUES (?, ?, ?)";
+    const [result] = await pool.execute(sql, [email, hashedPassword, createAt]);
     res.status(201).json({
       message: "註冊成功",
       userId: result.insertId,

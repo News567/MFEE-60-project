@@ -6,14 +6,15 @@ import Link from "next/link";
 
 export default function Login() {
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [accountOrEmail, setAccountEmail] = useState("");
+  // const [accountOrEmail, setAccountEmail] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { user, login } = useAuth() || {};
 
   const handleLogin = () => {
-    console.log(accountOrEmail, password);
+    console.log(email, password);
     if (typeof login === 'function') {
-      login(accountOrEmail, password);
+      login(email, password);
     } else {
       console.error('login is not a function');
     }
@@ -35,14 +36,14 @@ export default function Login() {
         <div className={styles.sectionLogin}>
           <h3>登入</h3>
           <input
-            type="text"
-            name="account"
+            type="email"
+            name="email"
             className={styles.wordbox}
-            value={accountOrEmail}
+            value={email}
             onChange={(e) => {
-              setAccountEmail(e.target.value);
+              setEmail(e.target.value);
             }}
-            placeholder="電話號碼 / 使用者帳號 / Email"
+            placeholder="Email"
           />
           <input
             type="password"

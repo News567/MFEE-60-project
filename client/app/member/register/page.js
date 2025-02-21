@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 
 export default function Register() {
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [account, setAccount] = useState("");
+  // const [account, setAccount] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { user, register } = useAuth() || {};
@@ -17,8 +17,8 @@ export default function Register() {
   const handleRegister = async () => {
     if (loading) return;
 
-    if (!account.trim()) {
-      alert("請輸入使用者帳號");
+    if (!email.trim()) {
+      alert("請輸入使用者email");
       return;
     }
     if (!password.trim()) {
@@ -29,7 +29,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await register(account, email, password);
+      await register(email, password);
       router.push("/member/login");
     } catch (error) {
       console.error("註冊錯誤:", error);
@@ -56,24 +56,14 @@ export default function Register() {
         <div className={styles.sectionLogin}>
           <h3>註冊</h3>
           <input
-            type="text"
-            name="account"
-            className={styles.wordbox}
-            value={account}
-            onChange={(e) => {
-              setAccount(e.target.value);
-            }}
-            placeholder="使用者帳號"
-          />
-          <input
             type="email"
             name="email"
             className={styles.wordbox}
             value={email}
             onChange={(e) => {
-              setEmail(e.target.value)
+              setEmail(e.target.value);
             }}
-            placeholder="Email (選填)"
+            placeholder="Email"
           />
           <input
             type="password"
