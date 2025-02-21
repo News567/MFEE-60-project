@@ -275,17 +275,6 @@ export default function Home() {
                         className={`w-100 mb-2 ${styles.galleryContainer} d-none d-sm-block`}>
                         <MyGallery />
                     </div>
-                    {/* <div className={`w-100 bg-secondary text-center my-2`}>
-                        <div>使用react做燈箱</div>
-                        <div>使用react做燈箱</div>
-                        <div>使用react做燈箱</div>
-                        <div>使用react做燈箱</div>
-                        <div>使用react做燈箱</div>
-                        <div>使用react做燈箱</div>
-                        <div>使用react做燈箱</div>
-                        <div>使用react做燈箱</div>
-                        <div>使用react做燈箱</div>
-                    </div> */}
                     <div className={`row w-100 m-0`}>
                         <div className={`col-12 col-sm-8`}>
                             <div className={`row`}>

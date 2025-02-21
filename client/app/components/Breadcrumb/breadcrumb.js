@@ -57,9 +57,9 @@ export default function Breadcrumb() {
             <nav aria-label="breadcrumb">
                 <ol className="m-0 breadcrumb breadcrumb-list">
                     <li className="breadcrumb-item">
-                        <a className="a" href="#">
+                        <Link className="a" href="/">
                             首頁
-                        </a>
+                        </Link>
                     </li>
                     {pathSegments.map((segment, index) => {
                         fullPath += `/${segment}`; // 累積完整路徑
