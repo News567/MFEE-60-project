@@ -18,11 +18,12 @@ export default function RentList() {
   const [selectedSort, setSelectedSort] = useState("下拉選取排序條件"); // 當前選擇的排序條件
   const [showClearSort, setShowClearSort] = useState(false); // 是否顯示清除排序的「×」符號
   const [itemsPerPage, setItemsPerPage] = useState(16); // 預設每頁顯示16個
+  const [selectedCategoryText, setSelectedCategoryText] = useState("");
 
   // sidebar 相關
-  const [categories, setCategories] = useState([]); // 大分類
+  const [bigCategories, setBigCategories] = useState([]); // 大分類
   const [smallCategories, setSmallCategories] = useState([]); // 小分類
-  const [selectedCategory, setSelectedCategory] = useState(null); // 當前選擇的大分類
+  const [selectedBigCategory, setSelectedBigCategory] = useState(null); // 當前選擇的大分類
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false); // 控制大分類下拉顯示
   const [showSmallCategoryDropdown, setShowSmallCategoryDropdown] =
     useState(false); // 控制小分類下拉顯示
@@ -31,15 +32,36 @@ export default function RentList() {
   const router = useRouter(); // 動態更新網址參數（根據每頁顯示資料數、分頁、排序條件）
   const searchParams = useSearchParams();
 
+  // 更新 URL 查詢參數
+  const updateUrlParams = useCallback(
+    (page, limit, sort, bigCategory, smallCategory) => {
+      const params = new URLSearchParams();
+      params.set("page", page);
+      params.set("limit", limit);
+      if (sort) params.set("sort", sort);
+      if (bigCategory) params.set("category_big_id", bigCategory);
+      if (smallCategory) params.set("category_small_id", smallCategory);
+      router.push(`/rent?${params.toString()}`, undefined, { shallow: true });
+    },
+    [router]
+  );
+
   // 從後端獲取商品資料
   const fetchProducts = useCallback(
     async (
       page = 1,
       sort = "",
       limit = itemsPerPage,
-      categoryBig = null,
-      categorySmall = null
+      category_big_id = null,
+      category_small_id = null
     ) => {
+      console.log("請求參數:", {
+        page,
+        sort,
+        limit,
+        category_big_id,
+        category_small_id,
+      });
       try {
         const API_BASE_URL =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
@@ -47,12 +69,14 @@ export default function RentList() {
         url.searchParams.set("page", page);
         url.searchParams.set("limit", limit);
         if (sort) url.searchParams.set("sort", sort);
-        if (categoryBig) url.searchParams.set("category_big_id", categoryBig);
-        if (categorySmall)
-          url.searchParams.set("category_small_id", categorySmall);
+        if (category_big_id)
+          url.searchParams.set("category_big_id", category_big_id);
+        if (category_small_id)
+          url.searchParams.set("category_small_id", category_small_id);
 
         const response = await fetch(url);
         const result = await response.json();
+
         if (result && result.data) {
           setProducts(result.data);
           setCurrentPage(result.page);
@@ -81,14 +105,33 @@ export default function RentList() {
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 16;
     const sort = searchParams.get("sort") || "";
-    const category = searchParams.get("category") || null;
-    const smallCategory = searchParams.get("smallCategory") || null;
+    const bigCategory = parseInt(searchParams.get("category_big_id")) || null;
+    const smallCategory =
+      parseInt(searchParams.get("category_small_id")) || null;
 
     setCurrentPage(page);
     setItemsPerPage(limit);
     setSort(sort);
-    setSelectedCategory(category);
+    setSelectedBigCategory(bigCategory);
     setSelectedSmallCategory(smallCategory);
+
+    // 先檢查 localStorage 是否有快取
+    const cacheKey = `products_${page}_${limit}_${sort}_${bigCategory}_${smallCategory}`;
+    const cachedData = localStorage.getItem(cacheKey);
+    if (cachedData) {
+      try {
+        const parsedData = JSON.parse(cachedData);
+        if (parsedData.data && parsedData.totalPages && parsedData.total) {
+          setProducts(parsedData.data);
+          setTotalPages(parsedData.totalPages);
+          setTotalProducts(parsedData.total);
+          setLoading(false);
+          return; // 有快取則不發請求
+        }
+      } catch (error) {
+        console.error("解析 localStorage 失敗:", error);
+      }
+    }
 
     // 根據 URL 參數設置排序條件顯示文字
     switch (sort) {
@@ -108,7 +151,7 @@ export default function RentList() {
         setSelectedSort("下拉選取排序條件");
     }
     // 根據 URL 參數初始化商品列表
-    debouncedFetchProducts(page, sort, limit, category, smallCategory);
+    debouncedFetchProducts(page, sort, limit, bigCategory, smallCategory);
   }, [searchParams, debouncedFetchProducts]);
 
   // 從後端獲取商品資料
@@ -121,54 +164,67 @@ export default function RentList() {
         );
         const data = await response.json();
 
-        // 對 categories 進行排序，根據 category_big_id 由小到大
-        const sortedCategories = data.categories.sort(
+        const sortedBigCategories = data.categories.sort(
           (a, b) => a.category_big_id - b.category_big_id
         );
-        setCategories(sortedCategories); // 設置排序後的大分類和小分類
+        setBigCategories(sortedBigCategories); // 設置排序後的大分類
+
+        // 根據選擇的大分類，設置對應的小分類
+        if (selectedBigCategory) {
+          const selectedBigCategoryData = sortedBigCategories.find(
+            (cat) => cat.category_big_id === selectedBigCategory
+          );
+          // 對小分類進行排序
+          const sortedSmallCategories =
+            selectedBigCategoryData?.category_small.sort(
+              (a, b) => a.id - b.id // 按 id 排序
+            );
+
+          setSmallCategories(sortedSmallCategories || []); // 設置排序後的小分類
+        }
       } catch (error) {
         console.error("分類資料獲取失敗:", error);
       }
     };
 
     fetchCategories();
-  }, []);
+  }, [selectedBigCategory]);
 
   // 從 localStorage 讀取快取資料
-  useEffect(() => {
-    const cachedData = localStorage.getItem(
-      `products_${currentPage}_${itemsPerPage}_${sort}`
-    );
-    if (cachedData) {
-      try {
-        const parsedData = JSON.parse(cachedData);
-        if (parsedData.data && parsedData.totalPages && parsedData.total) {
-          setProducts(parsedData.data);
-          setTotalPages(parsedData.totalPages);
-          setTotalProducts(parsedData.total);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("解析 localStorage 資料失敗:", error);
-      }
-    } else {
-      setLoading(true);
-      debouncedFetchProducts(
-        currentPage,
-        sort,
-        itemsPerPage,
-        selectedCategory,
-        smallCategories
-      );
-    }
-  }, [
-    currentPage,
-    itemsPerPage,
-    sort,
-    debouncedFetchProducts,
-    selectedCategory,
-    smallCategories,
-  ]);
+  // useEffect(() => {
+  //   const cachedData = localStorage.getItem(
+  //     `products_${currentPage}_${itemsPerPage}_${sort}`
+  //   );
+  //   if (cachedData) {
+  //     try {
+  //       const parsedData = JSON.parse(cachedData);
+  //       if (parsedData.data && parsedData.totalPages && parsedData.total) {
+  //         setProducts(parsedData.data);
+  //         setTotalPages(parsedData.totalPages);
+  //         setTotalProducts(parsedData.total);
+  //         setLoading(false);
+  //       }
+  //     } catch (error) {
+  //       console.error("解析 localStorage 資料失敗:", error);
+  //     }
+  //   } else {
+  //     setLoading(true);
+  //     debouncedFetchProducts(
+  //       currentPage,
+  //       sort,
+  //       itemsPerPage,
+  //       selectedBigCategory,
+  //       selectedSmallCategory
+  //     );
+  //   }
+  // }, [
+  //   currentPage,
+  //   sort,
+  //   itemsPerPage,
+  //   selectedBigCategory,
+  //   selectedSmallCategory,
+  //   debouncedFetchProducts,
+  // ]);
 
   // 初始加載
   useEffect(() => {
@@ -176,17 +232,39 @@ export default function RentList() {
       currentPage,
       sort,
       itemsPerPage,
-      selectedCategory,
-      smallCategories
+      selectedBigCategory,
+      selectedSmallCategory
     );
   }, [
     currentPage,
     sort,
     itemsPerPage,
-    selectedCategory,
-    smallCategories,
+    selectedBigCategory,
+    selectedSmallCategory,
     debouncedFetchProducts,
   ]);
+  //   // 檢查 URL 中是否有 category_big_id 和 category_small_id 參數
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   const categoryBigId = urlParams.get("category_big_id");
+  //   const categorySmallId = urlParams.get("category_small_id");
+  //   // 如果有，則設置為狀態；如果沒有，則重設分類狀態
+  //   if (!categoryBigId && !categorySmallId) {
+  //     setSelectedBigCategory(null);
+  //     setSelectedSmallCategory(null);
+  //     debouncedFetchProducts(1, sort, itemsPerPage, null, null); // 重置商品列表
+  //   } else {
+  //     // 若有選擇的分類，則根據 URL 參數設定狀態
+  //     setSelectedBigCategory(categoryBigId);
+  //     setSelectedSmallCategory(categorySmallId);
+  //     debouncedFetchProducts(
+  //       1,
+  //       sort,
+  //       itemsPerPage,
+  //       categoryBigId,
+  //       categorySmallId
+  //     ); // 根據選擇的分類載入商品
+  //   }
+  // }, [debouncedFetchProducts, sort, itemsPerPage]);
 
   // 顯示大分類下拉菜單
   const toggleCategoryDropdown = () => {
@@ -200,47 +278,101 @@ export default function RentList() {
   };
 
   // 更新選擇的大分類
-  const handleCategorySelect = (category) => {
-    setSelectedCategory(category.category_big_id); // 設置當前選擇的大分類
-    setSelectedSmallCategory(null); // 重置小分類選中狀態
-    setCurrentPage(1); // 重置分頁
-    debouncedFetchProducts(
-      1,
-      sort,
-      itemsPerPage,
-      category.category_big_id,
-      null
-    ); // 篩選大分類商品
-    updateUrlParams(1, itemsPerPage, sort, category.category_big_id, null); // 更新 URL 參數
-  };
+  const handleCategorySelect = useCallback(
+    (bigCategory) => {
+      setSelectedBigCategory(bigCategory.category_big_id); // 設置當前選擇的大分類
+      setSelectedSmallCategory(null); // 重置小分類選中狀態
+      setCurrentPage(1); // 重置分頁
+      setSelectedCategoryText(`${bigCategory.category_big_name}`); // 更新選擇的大分類文字
+      debouncedFetchProducts(
+        1,
+        sort,
+        itemsPerPage,
+        bigCategory.category_big_id,
+        null
+      ); // 篩選大分類商品
+      updateUrlParams(1, itemsPerPage, sort, bigCategory.category_big_id, null); // 更新 URL 參數
+
+      // 根據大分類設定小分類選項
+      const smallCategoriesForSelectedCategory =
+        bigCategories.find(
+          (cat) => cat.category_big_id === bigCategory.category_big_id
+        )?.category_small || [];
+      setSmallCategories(smallCategoriesForSelectedCategory); // 更新小分類選項
+    },
+    [debouncedFetchProducts, updateUrlParams, bigCategories, sort, itemsPerPage]
+  );
 
   // 更新選擇的小分類
-  const handleSmallCategorySelect = (smallCategory) => {
-    setSelectedSmallCategory(smallCategory.id); // 設置當前選中的小分類 ID
-    setCurrentPage(1); // 重置分頁
-    debouncedFetchProducts(
-      1,
+  const handleSmallCategorySelect = useCallback(
+    (smallCategory) => {
+      setSelectedSmallCategory(smallCategory.id); // 設置選中的小分類
+      setShowCategoryDropdown(false); // 收起大分類選單
+      setShowSmallCategoryDropdown(false); // 收起小分類選單
+      setCurrentPage(1); // 重置分頁
+
+      // 從 bigCategories 中獲取大分類名稱
+      const selectedBigCategoryData = bigCategories.find(
+        (cat) => cat.category_big_id === selectedBigCategory
+      );
+      const selectedBigCategoryName = selectedBigCategoryData
+        ? selectedBigCategoryData.category_big_name
+        : "未選擇大分類";
+
+      // 更新選擇的分類文字
+      setSelectedCategoryText(
+        `${selectedBigCategoryName} > ${smallCategory.name}`
+      );
+
+      debouncedFetchProducts(
+        1,
+        sort,
+        itemsPerPage,
+        selectedBigCategory,
+        smallCategory.id
+      );
+
+      // 篩選小分類商品
+      updateUrlParams(
+        1,
+        itemsPerPage,
+        sort,
+        selectedBigCategory,
+        smallCategory.id
+      ); // 更新 URL 參數
+    },
+    [
+      debouncedFetchProducts,
+      updateUrlParams,
+      selectedBigCategory,
       sort,
       itemsPerPage,
-      selectedCategory,
-      smallCategory.id
-    ); // 篩選小分類商品
-    updateUrlParams(1, itemsPerPage, sort, selectedCategory, smallCategory.id); // 更新 URL 參數
-  };
-
-  // 更新 URL 查詢參數
-  const updateUrlParams = useCallback(
-    (page, limit, sort, category, smallCategory) => {
-      const params = new URLSearchParams();
-      params.set("page", page);
-      params.set("limit", limit);
-      if (sort) params.set("sort", sort);
-      if (category) params.set("category", category);
-      if (smallCategory) params.set("smallCategory", smallCategory);
-      router.push(`/rent?${params.toString()}`, undefined, { shallow: true });
-    },
-    [router]
+    ]
   );
+
+  // 在渲染小分類列表時，根據 selectedBigCategory 過濾出對應的小分類
+  {
+    selectedBigCategory && (
+      <div className="small-category-dropdown">
+        {bigCategories
+          .find((cat) => cat.category_big_id === selectedBigCategory)
+          ?.category_small.map((small) => (
+            <div
+              key={small.id}
+              className={`small-category-dropdown-item ${
+                selectedSmallCategory === small.id ? "selected" : ""
+              }`}
+              onClick={(e) => {
+                e.stopPropagation(); // 阻止事件冒泡
+                handleSmallCategorySelect(small);
+              }}
+            >
+              {small.name}
+            </div>
+          ))}
+      </div>
+    );
+  }
 
   // 每頁顯示資料數量
   const handleItemsPerPageChange = useCallback(
@@ -288,18 +420,18 @@ export default function RentList() {
         1,
         sortType,
         itemsPerPage,
-        selectedCategory,
+        selectedBigCategory,
         selectedSmallCategory
       );
       updateUrlParams(
         1,
         itemsPerPage,
         sortType,
-        selectedCategory,
+        selectedBigCategory,
         selectedSmallCategory
       );
     },
-    [itemsPerPage, selectedCategory, selectedSmallCategory, updateUrlParams]
+    [itemsPerPage, selectedBigCategory, selectedSmallCategory, updateUrlParams]
   );
 
   // 清除排序條件
@@ -312,17 +444,22 @@ export default function RentList() {
       1,
       "",
       itemsPerPage,
-      selectedCategory,
+      selectedBigCategory,
       selectedSmallCategory
     );
     updateUrlParams(
       1,
       itemsPerPage,
       "",
-      selectedCategory,
+      selectedBigCategory,
       selectedSmallCategory
     );
-  }, [itemsPerPage, selectedCategory, selectedSmallCategory, updateUrlParams]);
+  }, [
+    itemsPerPage,
+    selectedBigCategory,
+    selectedSmallCategory,
+    updateUrlParams,
+  ]);
 
   // 處理分頁
   const handlePageChange = useCallback(
@@ -332,21 +469,21 @@ export default function RentList() {
         page,
         sort,
         itemsPerPage,
-        selectedCategory,
+        selectedBigCategory,
         selectedSmallCategory
       );
       updateUrlParams(
         page,
         itemsPerPage,
         sort,
-        selectedCategory,
+        selectedBigCategory,
         selectedSmallCategory
       );
     },
     [
       itemsPerPage,
       sort,
-      selectedCategory,
+      selectedBigCategory,
       selectedSmallCategory,
       updateUrlParams,
     ]
@@ -420,21 +557,22 @@ export default function RentList() {
 
                 {showCategoryDropdown && (
                   <div className="sidebar-dropdown">
-                    {categories.map((category) => (
+                    {bigCategories.map((bigCategory) => (
                       <div
-                        key={category.category_big_id}
+                        key={bigCategory.category_big_id}
                         className={`sidebar-dropdown-item ${
-                          selectedCategory === category.category_big_id
+                          selectedBigCategory === bigCategory.category_big_id
                             ? "selected"
                             : ""
                         }`}
-                        onClick={() => handleCategorySelect(category)}
+                        onClick={() => handleCategorySelect(bigCategory)}
                       >
-                        {category.category_big_name}
+                        {bigCategory.category_big_name}
                         {/* 小分類選單 */}
-                        {selectedCategory === category.category_big_id && (
+                        {selectedBigCategory ===
+                          bigCategory.category_big_id && (
                           <div className="small-category-dropdown">
-                            {category.category_small.map((small) => (
+                            {bigCategory.category_small.map((small) => (
                               <div
                                 key={small.id}
                                 className={`small-category-dropdown-item ${
@@ -661,40 +799,132 @@ export default function RentList() {
               </div>
 
               {/* Main Select */}
-              <div className="py-3 d-flex flex-row justify-content-between   align-items-center main-select">
-                {/* <div className="px-3 select-page d-none d-md-block">
-                  顯示 第1頁/共10頁 商品
-                </div> */}
-                <div className="d-flex flex-row justify-content-between align-items-center select-order">
-                  {/* <span className="d-none d-md-block">排序</span> */}
-                  <div className="dropdown">
+              <div className="d-flex flex-row justify-content-between align-items-center">
+                <div className="selected-category-text">
+                  目前顯示：{selectedCategoryText || "所有租借商品"}
+                </div>
+                <div className="py-3 d-flex flex-row justify-content-end gap-2 align-items-center main-select">
+                  {/* 排序選項 */}
+                  <div className="d-flex flex-row justify-content-between align-items-center select-order">
+                    <div className="dropdown">
+                      <button
+                        className="px-3 btn select-order-btn"
+                        type="button"
+                        id="selectOrderBtn"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <span className="selectOrderText pe-2">
+                          <i className="bi bi-sort-down pe-2"></i>
+                          {selectedSort} {/* 顯示當前選擇的排序條件 */}
+                          <i className="bi bi-caret-down-fill ps-2"></i>
+                        </span>
+                      </button>
+                      <ul
+                        className="dropdown-menu w-100"
+                        aria-labelledby="selectOrderBtn"
+                      >
+                        <li>
+                          <a
+                            className="dropdown-item"
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault(); // 阻止預設行為
+                              handleSort("newest"); // 上架時間：由新到舊
+                            }}
+                          >
+                            上架時間：由新到舊
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            className="dropdown-item"
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault(); // 阻止預設行為
+                              handleSort("oldest"); // 上架時間：由舊到新
+                            }}
+                          >
+                            上架時間：由舊到新
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            className="dropdown-item"
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault(); // 阻止預設行為
+                              handleSort("price_desc"); // 價格：由高到低
+                            }}
+                          >
+                            價格：由高到低
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            className="dropdown-item"
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault(); // 阻止預設行為
+                              handleSort("price_asc"); // 價格：由低到高
+                            }}
+                          >
+                            價格：由低到高
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            className="dropdown-item"
+                            href="#"
+                            onClick={() => handleSort("sales_desc")}
+                          >
+                            銷量：由高到低
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                    {showClearSort && ( // 如果顯示「×」符號
+                      <span
+                        className="ms-2 clear-sort-icon"
+                        onClick={(e) => {
+                          e.stopPropagation(); // 阻止事件冒泡
+                          handleClearSort(); // 清除排序條件
+                        }}
+                        style={{ cursor: "pointer" }} // 設置滑鼠指針樣式
+                      >
+                        <i className="bi bi-x"></i>
+                      </span>
+                    )}
+                  </div>
+                  {/* 分頁選項 */}
+                  <div className="show-per-page dropdown">
                     <button
-                      className="px-3 btn select-order-btn"
+                      className="px-3 btn show-per-page-btn"
                       type="button"
-                      id="selectOrderBtn"
+                      id="showPerPageBtn"
                       data-bs-toggle="dropdown"
                       aria-expanded="false"
                     >
-                      <span className="selectOrderText pe-2">
-                        <i className="bi bi-sort-down pe-2"></i>
-                        {selectedSort} {/* 顯示當前選擇的排序條件 */}
+                      <span className="showPerPageText pe-2">
+                        <i className="bi bi-view-list pe-2"></i>
+                        每頁顯示{itemsPerPage}個
                         <i className="bi bi-caret-down-fill ps-2"></i>
                       </span>
                     </button>
                     <ul
                       className="dropdown-menu w-100"
-                      aria-labelledby="selectOrderBtn"
+                      aria-labelledby="showPerPageBtn"
                     >
                       <li>
                         <a
                           className="dropdown-item"
                           href="#"
                           onClick={(e) => {
-                            e.preventDefault(); // 阻止預設行為
-                            handleSort("newest"); // 上架時間：由新到舊
+                            e.preventDefault();
+                            handleItemsPerPageChange(16);
                           }}
                         >
-                          上架時間：由新到舊
+                          每頁顯示16個
                         </a>
                       </li>
                       <li>
@@ -702,11 +932,11 @@ export default function RentList() {
                           className="dropdown-item"
                           href="#"
                           onClick={(e) => {
-                            e.preventDefault(); // 阻止預設行為
-                            handleSort("oldest"); // 上架時間：由舊到新
+                            e.preventDefault();
+                            handleItemsPerPageChange(24);
                           }}
                         >
-                          上架時間：由舊到新
+                          每頁顯示24個
                         </a>
                       </li>
                       <li>
@@ -714,104 +944,15 @@ export default function RentList() {
                           className="dropdown-item"
                           href="#"
                           onClick={(e) => {
-                            e.preventDefault(); // 阻止預設行為
-                            handleSort("price_desc"); // 價格：由高到低
+                            e.preventDefault();
+                            handleItemsPerPageChange(32);
                           }}
                         >
-                          價格：由高到低
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          className="dropdown-item"
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault(); // 阻止預設行為
-                            handleSort("price_asc"); // 價格：由低到高
-                          }}
-                        >
-                          價格：由低到高
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          className="dropdown-item"
-                          href="#"
-                          onClick={() => handleSort("sales_desc")}
-                        >
-                          銷量：由高到低
+                          每頁顯示32個
                         </a>
                       </li>
                     </ul>
                   </div>
-                  {showClearSort && ( // 如果顯示「×」符號
-                    <span
-                      className="ms-2 clear-sort-icon"
-                      onClick={(e) => {
-                        e.stopPropagation(); // 阻止事件冒泡
-                        handleClearSort(); // 清除排序條件
-                      }}
-                      style={{ cursor: "pointer" }} // 設置滑鼠指針樣式
-                    >
-                      <i className="bi bi-x"></i>
-                    </span>
-                  )}
-                </div>
-                <div className="show-per-page dropdown">
-                  <button
-                    className="px-3 btn show-per-page-btn"
-                    type="button"
-                    id="showPerPageBtn"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    <span className="showPerPageText pe-2">
-                      <i className="bi bi-view-list pe-2"></i>
-                      每頁顯示{itemsPerPage}個
-                      <i className="bi bi-caret-down-fill ps-2"></i>
-                    </span>
-                  </button>
-                  <ul
-                    className="dropdown-menu w-100"
-                    aria-labelledby="showPerPageBtn"
-                  >
-                    <li>
-                      <a
-                        className="dropdown-item"
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleItemsPerPageChange(16);
-                        }}
-                      >
-                        每頁顯示16個
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        className="dropdown-item"
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleItemsPerPageChange(24);
-                        }}
-                      >
-                        每頁顯示24個
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        className="dropdown-item"
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleItemsPerPageChange(32);
-                        }}
-                      >
-                        每頁顯示32個
-                      </a>
-                    </li>
-                  </ul>
                 </div>
               </div>
 
