@@ -1,116 +1,136 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation"; // Next.js 的路由
 import "./articleAside.css";
 
 const Sidebar = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentCategory = searchParams.get("category"); // 取得當前 URL 的 category 參數
+
+  const [sidebarData, setSidebarData] = useState({ sidebar: {} });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchSidebarData = async () => {
+      try {
+        const res = await fetch("http://localhost:3005/api/article/sidebar");
+        if (!res.ok) {
+          throw new Error(`HTTP 错误！状态码: ${res.status}`);
+        }
+        const data = await res.json();
+        setSidebarData(data);
+      } catch (error) {
+        console.error("❌ 获取 Sidebar 数据失败:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSidebarData();
+  }, []);
+
+  if (loading || !sidebarData.sidebar) return <div>加载中...</div>;
+  if (error) return <div>发生错误: {error}</div>;
+
+  const {
+    categoryBig = [],
+    categorySmall = [],
+    latest_articles = [],
+    random_tags = [],
+  } = sidebarData.sidebar || {};
+
+  // 🔹 點擊分類篩選
+  const handleCategoryClick = (categorySmallName) => {
+    router.push(`/article?category=${encodeURIComponent(categorySmallName)}`);
+  };
+
+  // 🔹 點擊標籤篩選
+  const handleTagClick = (tagName) => {
+    router.push(`/article?tag=${encodeURIComponent(tagName)}`);
+  };
+
+  // 🔹 點擊最近文章跳轉
+  const handleArticleClick = (articleId) => {
+    router.push(`/article/${articleId}`);
+  };
+
   return (
     <aside className="col-3">
-      {/* aside-category1 */}
-      <div className="aside-category1 p-2 mb-2">
-        <div className="aside-title">官方資訊</div>
-        <div className="aside-category-list">
-          <div className="aside-category-item d-flex justify-content-between">
-            <div className="aside-category1-title1">活動與促銷</div>
-            <div className="aside-category-amount aside-category1-amount1">
-              (<span>10</span>)
-            </div>
-          </div>
-          <div className="aside-category-item d-flex justify-content-between">
-            <div className="aside-category1-title2">潛水教育</div>
-            <div className="aside-category-amount aside-category1-amount2">
-              (<span>20</span>)
-            </div>
-          </div>
-          <div className="aside-category-item d-flex justify-content-between">
-            <div className="aside-category1-title3">安全與規範</div>
-            <div className="aside-category-amount aside-category1-amount3">
-              (<span>5</span>)
-            </div>
+      {/* 分类区域 */}
+      {categoryBig.map((bigCategory) => (
+        <div key={bigCategory.id} className="aside-category">
+          <div className="aside-title">{bigCategory.name}</div>
+          <div className="aside-category-list">
+            {categorySmall
+              .filter((small) => small.category_big_id === bigCategory.id)
+              .map((smallCategory) => {
+                const isActive =
+                  currentCategory === smallCategory.category_small_name;
+
+                return (
+                  <div
+                    className="aside-category-item d-flex justify-content-between"
+                    key={smallCategory.id}
+                  >
+                    <div
+                      className={`aside-category-title ${isActive ? "active" : ""}`}
+                      onClick={() =>
+                        handleCategoryClick(smallCategory.category_small_name)
+                      }
+                      style={{ cursor: "pointer" }}
+                    >
+                      {smallCategory.category_small_name}
+                    </div>
+                    <div className="aside-category-amount">
+                      (<span>{smallCategory.article_count}</span>)
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         </div>
-      </div>
+      ))}
 
-      {/* aside-category2 */}
-      <div className="aside-category2 p-2 mb-2">
-        <div className="aside-title">課程與體驗</div>
-        <div className="aside-category-list">
-          <div className="aside-category-item d-flex justify-content-between">
-            <div className="aside-category2-title1">體驗潛水</div>
-            <div className="aside-category-amount aside-category2-amount1">
-              (<span>10</span>)
-            </div>
-          </div>
-          <div className="aside-category-item d-flex justify-content-between">
-            <div className="aside-category2-title2">潛水課程</div>
-            <div className="aside-category-amount aside-category2-amount2">
-              (<span>20</span>)
-            </div>
-          </div>
-          <div className="aside-category-item d-flex justify-content-between">
-            <div className="aside-category2-title3">旅遊潛水</div>
-            <div className="aside-category-amount aside-category2-amount3">
-              (<span>5</span>)
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* aside-category3 */}
-      <div className="aside-category3 p-2 mb-2">
-        <div className="aside-title">交流</div>
-        <div className="aside-category-list">
-          <div className="aside-category-item d-flex justify-content-between">
-            <div className="aside-category3-title1">相片分享</div>
-            <div className="aside-category-amount aside-category3-amount1">
-              (<span>10</span>)
-            </div>
-          </div>
-          <div className="aside-category-item d-flex justify-content-between">
-            <div className="aside-category3-title2">設備討論</div>
-            <div className="aside-category-amount aside-category3-amount2">
-              (<span>20</span>)
-            </div>
-          </div>
-          <div className="aside-category-item d-flex justify-content-between">
-            <div className="aside-category3-title3">規劃行程</div>
-            <div className="aside-category-amount aside-category-amount3">
-              (<span>5</span>)
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Articles aside-recent */}
-      <div className="aside-recent p-2 mb-2">
+      {/* 最近文章 */}
+      <div className="aside-recent">
         <div className="aside-recent-article-list">
           <div className="aside-title">最近文章</div>
-          {[1, 2, 3].map((index) => (
-            <div className="aside-recent-article" key={index}>
-              <div
-                className={`aside-recent-article-title aside-recent-article-title${index}`}
-              >
-                體驗潛水體驗潛水體驗潛水體驗潛水體驗潛水體驗潛水體驗潛水
-              </div>
-              <div
-                className={`aside-recent-article-publish-time aside-recent-article-publish-time${index}`}
-              >
-                2024-09-10
+          {latest_articles.map((article) => (
+            <div
+              className="aside-recent-article"
+              key={article.id}
+              onClick={() => handleArticleClick(article.id)}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="aside-recent-article-title">{article.title}</div>
+              <div className="aside-recent-article-publish-time">
+                {article.publish_at}
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Tag Section aside-tag */}
-      <div className="aside-tag p-2 mb-2">
+      {/* 标签区域 */}
+      <div className="aside-tag">
         <div className="aside-title">標籤區域</div>
         <div className="aside-tag-area">
-          <span className="aside-popular-tag aside-tag1">#旅遊</span>
-          <span className="aside-popular-tag aside-tag2">#體驗潛水</span>
-          <span className="aside-popular-tag aside-tag3">#初學者潛水</span>
+          {random_tags.map((tag) => (
+            <span
+              key={tag.id}
+              className="aside-popular-tag"
+              onClick={() => handleTagClick(tag.tag_name)}
+              style={{ cursor: "pointer" }}
+            >
+              #{tag.tag_name}
+            </span>
+          ))}
         </div>
       </div>
     </aside>
   );
-}
+};
 
 export default Sidebar;
