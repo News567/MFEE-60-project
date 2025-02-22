@@ -28,12 +28,13 @@ import articleReplyRouter from "../routes/article/reply.js"; // 留言 & 回覆
 import articleLikeRouter from "../routes/article/like.js"; // 文章與留言按讚
 import couponRouter from "../routes/coupon/index.js";
 import memberRouter from "../routes/member/index.js";
+// import shipmentRouter from "../routes/ship/index.js"; // 運送相關路由
 // 建立 Express 應用程式
 const app = express();
 // 設定 CORS
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'], // 只允許前端的域名
+    origin: ["http://localhost:3000", "http://localhost:3001"], // 只允許前端的域名
     credentials: true,
   })
 );
@@ -45,7 +46,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(process.cwd(), "../public")));
 // 測試 API
 app.get("/", (req, res) => {
-    res.json({ message: "Express server is running" });
+  res.json({ message: "Express server is running" });
 });
 // API 路由
 const apiRouter = express.Router();
@@ -60,14 +61,18 @@ apiRouter.use("/cart", cartRouter); // 負責 `/api/cart`
 apiRouter.use("/categories", categoriesRouter); // 負責 `/api/categories`
 // 品牌相關路由
 apiRouter.use("/brands", brandRouter); // 負責 `/api/brands`
+
+// 運送相關路由
+// apiRouter.use("/shipment", shipmentRouter); // 負責 `/api/shipment`
+
 // 活動相關路由
 apiRouter.use("/activity", activityRouter);
 apiRouter.use("/activity", activityDetailRouter);
 
 // 揪團相關路由
-apiRouter.use("/group", groupRouter)
-apiRouter.use("/group", groupListRouter)
-apiRouter.use("/group", groupDetailRouter)
+apiRouter.use("/group", groupRouter);
+apiRouter.use("/group", groupListRouter);
+apiRouter.use("/group", groupDetailRouter);
 
 // 租借相關路由
 apiRouter.use("/rent", rentRouter); // 負責 `/api/rent`
@@ -88,22 +93,20 @@ apiRouter.use("/coupon", couponRouter); // 負責 `/api/coupon`
 // 會員相關路由
 apiRouter.use("/member", memberRouter);
 
-
-
 // 捕捉 404 錯誤
 app.use((req, res, next) => {
-    next(createError(404));
+  next(createError(404));
 });
 // 錯誤處理
 app.use((err, req, res, next) => {
-    res.status(err.status || 500).json({
-        status: "error",
-        message: err.message,
-    });
+  res.status(err.status || 500).json({
+    status: "error",
+    message: err.message,
+  });
 });
 // 啟動伺服器
 const port = process.env.PORT || 3005;
 app.listen(port, () => {
-    console.log(`後端伺服器運行在 http://localhost:${port}`);
+  console.log(`後端伺服器運行在 http://localhost:${port}`);
 });
 export default app;

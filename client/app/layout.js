@@ -69,8 +69,8 @@ export default function RootLayout({ children }) {
           <CartProvider>
             {/* <Breadcrumb /> */}
             {children}
+            <ToastContainer />
           </CartProvider>
-          <ToastContainer />
         </AuthProvider>
         <Footer />
       </body>

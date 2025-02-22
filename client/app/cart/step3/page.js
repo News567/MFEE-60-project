@@ -1,12 +1,127 @@
 "use client";
-import React from "react";
-import "./cart3.css";
+import React, { useState } from "react";
+import "./step3.css";
 import CartFlow from "../components/cartFlow";
 import { useRouter } from "next/navigation";
+import CreditCard from "./components/creditCard";
+
+
 const Cart2 = () => {
   const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const [shippingMethod, setShippingMethod] = useState("homeDelivery");
+
+  const shippingChange = (e) => {
+    setShippingMethod(e.target.value);
+  };
+  // console.log(shippingMethod);
+
+  // 宅配表單
+  const HomeDeliveryForm = () => (
+    <div className="mt-3">
+      <div className="form-check mb-3">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id="sameAsCustomer"
+          defaultChecked
+        />
+        <label className="form-check-label" htmlFor="sameAsCustomer">
+          收件人資料與會員資料相同
+        </label>
+      </div>
+      <div className="row g-3">
+        <div className="col-6">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="收件人姓名"
+          />
+        </div>
+        <div className="col-6">
+          <input type="tel" className="form-control" placeholder="手機號碼" />
+        </div>
+        <div className="col-12">
+          <select className="form-select mb-2">
+            <option>選擇縣市</option>
+            {/* 縣市選項 */}
+            {/* 找套件來使用 */}
+          </select>
+        </div>
+        <div className="col-12">
+          <input type="text" className="form-control" placeholder="詳細地址" />
+        </div>
+      </div>
+    </div>
+  );
+
+  // 超商取貨表單
+  const StorePickupForm = () => (
+    <div className="mt-3">
+      <div className="form-check mb-3">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id="sameAsCustomer2"
+          defaultChecked
+        />
+        <label className="form-check-label" htmlFor="sameAsCustomer2">
+          收件人資料與會員資料相同
+        </label>
+      </div>
+      <div className="row g-3">
+        <div className="col-6">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="收件人姓名"
+          />
+        </div>
+        <div className="col-6">
+          <input type="tel" className="form-control" placeholder="手機號碼" />
+        </div>
+        <div className="col-12">
+          <button
+            className="btn btn-outline-primary w-100"
+            onClick={() => {
+              // 這裡添加選擇超商的邏輯
+              console.log("選擇超商");
+            }}
+          >
+            選擇超商
+          </button>
+        </div>
+        <div className="col-12">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="超商名稱"
+            readOnly
+          />
+        </div>
+        <div className="col-12">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="超商地址"
+            readOnly
+          />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div>
+    <>
       <div className="cartCss2">
         <div className="container py-5">
           <CartFlow />
@@ -20,7 +135,7 @@ const Cart2 = () => {
                 aria-expanded="false"
                 aria-controls="cartPreview"
               >
-                商品明細(3件) <i className="bi bi-chevron-down" />
+                購物車(3件) <i className="bi bi-chevron-down" />
               </button>
             </div>
             {/* 購物車預覽區域 */}
@@ -95,7 +210,9 @@ const Cart2 = () => {
                           type="radio"
                           name="shippingMethod"
                           id="homeDelivery"
-                          defaultChecked
+                          value="homeDelivery"
+                          checked={shippingMethod === "homeDelivery"}
+                          onChange={shippingChange}
                         />
                         <label
                           className="form-check-label"
@@ -114,6 +231,9 @@ const Cart2 = () => {
                           type="radio"
                           name="shippingMethod"
                           id="storePickup"
+                          value="storePickup"
+                          checked={shippingMethod === "storePickup"}
+                          onChange={shippingChange}
                         />
                         <label
                           className="form-check-label"
@@ -127,159 +247,12 @@ const Cart2 = () => {
                         </label>
                       </div>
                     </div>
-                    {/* 收件資訊 */}
-                    <div className="mt-3">
-                      <div className="form-check mb-3">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id="sameAsCustomer"
-                          defaultChecked
-                        />
-                        <label
-                          className="form-check-label"
-                          htmlFor="sameAsCustomer"
-                        >
-                          收件人資料與會員資料相同
-                        </label>
-                      </div>
-                      <div className="row g-3">
-                        <div className="col-6">
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="收件人姓名"
-                          />
-                        </div>
-                        <div className="col-6">
-                          <input
-                            type="tel"
-                            className="form-control"
-                            placeholder="手機號碼"
-                          />
-                        </div>
-                        <div className="col-12">
-                          <select className="form-select mb-2">
-                            <option>選擇縣市</option>
-                            {/* 縣市選項 */}
-                          </select>
-                        </div>
-                        <div className="col-12">
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="詳細地址"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* 付款方式 */}
-              <div className="card mb-4">
-                <div className="card-header ">
-                  <h5 className="mb-0">選擇付款方式</h5>
-                </div>
-                <div className="card-body">
-                  <div className="vstack gap-3">
-                    <div className="d-flex gap-4">
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          name="paymentMethod"
-                          id="creditCard"
-                          defaultChecked
-                        />
-                        <label
-                          className="form-check-label"
-                          htmlFor="creditCard"
-                        >
-                          <div className="fw-bold">信用卡付款</div>
-                          <small className="text-muted">
-                            支援VISA, Master, JCB
-                          </small>
-                        </label>
-                      </div>
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          name="paymentMethod"
-                          id="linePay"
-                        />
-                        <label className="form-check-label" htmlFor="linePay">
-                          <div className="fw-bold">LINE Pay</div>
-                          <small className="text-muted">使用LINE Pay付款</small>
-                        </label>
-                      </div>
-                    </div>
-                    {/* 信用卡表單（預設顯示） */}
-                    <div id="creditCardForm" className="mt-3">
-                      {/* 信用卡預覽 */}
-                      <div className="card-container mb-4">
-                        <div className="credit-card">
-                          <div className="card-front">
-                            <div className="card-logo">
-                              <i className="bi bi-credit-card" />
-                            </div>
-                            <div className="card-number">
-                              •••• •••• •••• ••••
-                            </div>
-                            <div className="d-flex justify-content-between align-items-center">
-                              <div className="card-holder">持卡人姓名</div>
-                              <div className="card-expiry">MM/YY</div>
-                            </div>
-                          </div>
-                          <div className="card-back">
-                            <div className="card-strip" />
-                            <div className="card-signature">
-                              <div className="signature-line" />
-                              <div className="cvc">•••</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      {/* 信用卡輸入表單 */}
-                      <div className="row g-3">
-                        <div className="col-12">
-                          <input
-                            type="text"
-                            className="form-control"
-                            id="cardNumber"
-                            placeholder="卡號"
-                            maxLength={19}
-                          />
-                        </div>
-                        <div className="col-12">
-                          <input
-                            type="text"
-                            className="form-control"
-                            id="cardHolder"
-                            placeholder="持卡人姓名"
-                          />
-                        </div>
-                        <div className="col-8">
-                          <input
-                            type="text"
-                            className="form-control"
-                            id="expiry"
-                            placeholder="有效期限 MM/YY"
-                            maxLength={5}
-                          />
-                        </div>
-                        <div className="col-4">
-                          <input
-                            type="password"
-                            className="form-control"
-                            id="cvc"
-                            placeholder="CVV"
-                            maxLength={3}
-                          />
-                        </div>
-                      </div>
-                    </div>
+                    {/* 根據選擇的配送方式顯示對應的表單 */}
+                    {shippingMethod === "homeDelivery" ? (
+                      <HomeDeliveryForm />
+                    ) : (
+                      <StorePickupForm />
+                    )}
                   </div>
                 </div>
               </div>
@@ -392,7 +365,7 @@ const Cart2 = () => {
                             <i className="bi bi-info-circle me-1" />
                             還差 NT$190 享免運優惠
                             <a
-                              href="index.html"
+                              href="http://localhost:3000/products"
                               className="text-danger text-decoration-none ms-1"
                             >
                               <small>去湊單</small>
@@ -412,13 +385,22 @@ const Cart2 = () => {
                       <span className="text-danger fs-5">NT$ 1,770</span>
                     </div>
                     <button className="btn btn-primary w-100 mt-3 p-3 fw-bold shadow-lg">
-                      確認結帳
+                      綠界支付
                     </button>
-                    <div className="text-center mt-2">
+                    <button className="btn btn-success w-100 mt-3 p-3 fw-bold shadow-lg">
+                      Line Pay
+                    </button>
+                    <button
+                      className="btn btn-warning w-100 mt-3 p-3 fw-bold shadow-lg"
+                      onClick={handleOpenModal}
+                    >
+                      信用卡支付
+                    </button>
+                    {/* <div className="text-center mt-2">
                       <small className="text-muted">
                         完成訂單可獲得 18 點購物金
                       </small>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
@@ -467,7 +449,10 @@ const Cart2 = () => {
           </div>
         </div>
       </div>
-    </div>
+
+      {/* 正確傳遞 props 給 CreditCard 組件 */}
+      <CreditCard isOpen={isModalOpen} onClose={handleCloseModal} />
+    </>
   );
 };
 

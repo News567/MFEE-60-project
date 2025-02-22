@@ -400,14 +400,14 @@ router.get("/:userId", async (req, res) => {
         cai.time,
         ap.id AS project_id,
         ap.price,
-        ap.originalPrice AS original_price,
+        ap.original_price AS original_price,
         a.name AS activity_name,
         a.id AS activity_id,
-        ai.imgUrl AS image_url
+        ai.img_url AS image_url
       FROM cart_activity_items cai
       JOIN activity_project ap ON cai.activity_project_id = ap.id
       JOIN activity a ON ap.activity_id = a.id
-      LEFT JOIN activity_image ai ON a.id = ai.activity_id AND ai.isMain = 1
+      LEFT JOIN activity_image ai ON a.id = ai.activity_id AND ai.is_main = 1
       WHERE cai.cart_id = ?`,
       [cartId]
     );
@@ -633,7 +633,7 @@ router.put("/update", async (req, res) => {
       case "activity": {
         // 檢查活動是否存在於該用戶的購物車
         const [existingItem] = await pool.execute(
-          `SELECT cai.*, ap.earliestDate, ap.date as projectDate, a.name
+          `SELECT cai.*, ap.earliest_date, ap.date as projectDate, a.name
            FROM cart_activity_items cai
            JOIN activity_project ap ON cai.activity_project_id = ap.id
            JOIN activity a ON ap.activity_id = a.id
