@@ -1,6 +1,10 @@
 import express from "express";
 import { pool } from "../../config/mysql.js";
 
+// import rentBrandCategoryRouter from "./brandcategories.js";
+
+// router.use("/brandcategories", rentBrandCategoryRouter);
+
 const router = express.Router();
 
 router.get("/", async (req, res) => {
@@ -9,6 +13,7 @@ router.get("/", async (req, res) => {
   const sort = req.query.sort; // 排序方式
   const category_big_id = req.query.category_big_id || null;
   const category_small_id = req.query.category_small_id || null;
+  const brand_id = req.query.brand_id || null;
 
   const offset = (page - 1) * limit; // 計算偏移量
 
@@ -24,7 +29,12 @@ router.get("/", async (req, res) => {
   }
 
   try {
-    console.log("查詢條件:", { category_big_id, category_small_id, limit, offset });
+    console.log("查詢條件:", {
+      category_big_id,
+      category_small_id,
+      limit,
+      offset,
+    });
 
     const query = `
       SELECT
@@ -49,6 +59,7 @@ router.get("/", async (req, res) => {
       WHERE ri.is_deleted = FALSE
       ${category_big_id ? "AND rcb.id = ?" : ""}
       ${category_small_id ? "AND rcs.id = ?" : ""}
+      ${brand_id ? "AND rb.id = ?" : ""}
       GROUP BY ri.id
       ${orderBy}
       LIMIT ${limit} OFFSET ${offset};
@@ -57,11 +68,13 @@ router.get("/", async (req, res) => {
     const params = [];
     if (category_big_id) params.push(category_big_id);
     if (category_small_id) params.push(category_small_id);
+    if (brand_id) params.push(brand_id);
 
     const [rows] = await pool.query(query, params);
 
     // 獲取總商品數量
-    const [totalRows] = await pool.query(`
+    const [totalRows] = await pool.query(
+      `
       SELECT COUNT(DISTINCT ri.id) AS total
       FROM rent_item ri
       JOIN rent_category_small rcs ON ri.rent_category_small_id = rcs.id
@@ -69,9 +82,26 @@ router.get("/", async (req, res) => {
       WHERE ri.is_deleted = FALSE
       ${category_big_id ? "AND rcb.id = ?" : ""}
       ${category_small_id ? "AND rcs.id = ?" : ""}
-    `, params);
+      ${brand_id ? "AND rb.id = ?" : ""}
+    `,
+      params
+    );
 
     const total = totalRows[0]?.total || 0;
+
+    // **品牌大分類（字母列表）**
+    const [brandLetters] = await pool.query(`
+      SELECT DISTINCT SUBSTRING(rb.name, 1, 1) AS letter
+      FROM rent_brand rb
+      ORDER BY letter ASC;
+    `);
+
+    // **品牌小分類（對應品牌名稱）**
+    const [brands] = await pool.query(`
+      SELECT rb.id AS brand_id, rb.name AS brand_name, SUBSTRING(rb.name, 1, 1) AS letter
+      FROM rent_brand rb
+      ORDER BY rb.name ASC;
+    `);
 
     res.json({
       data: rows,
@@ -79,6 +109,8 @@ router.get("/", async (req, res) => {
       limit,
       total,
       totalPages: Math.ceil(total / limit),
+      brand_letters: brandLetters.map((b) => b.letter), // 品牌字母大分類
+      brands, // 品牌單個小分類
     });
   } catch (err) {
     console.error("SQL 錯誤:", err);

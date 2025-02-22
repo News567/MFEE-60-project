@@ -6,11 +6,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 // import Link from "next/link";
 import "./RentList.css";
 import "../../../public/globals.css";
-import RentBrand from "./RentBrand";
-import { debounce } from "lodash"; // 新增 debounce 解決刷新有參數的介面資料閃動問題
+import RentBrand from "./RentBrand"; // 匯入，處理品牌專區
+import { debounce } from "lodash"; // 引入 debounce 解決刷新有參數的介面資料閃動問題
 
 export default function RentList() {
-  const [products, setProducts] = useState([]); // 儲存後端獲取的商品資料
+  const [products, setProducts] = useState([]); // 儲存從後端獲取的商品資料
   const [loading, setLoading] = useState(true); // 加載狀態
   const [currentPage, setCurrentPage] = useState(1); // 當前頁數
   const [totalPages, setTotalPages] = useState(1); // 總頁數
@@ -20,8 +20,11 @@ export default function RentList() {
   const [showClearSort, setShowClearSort] = useState(false); // 是否顯示清除排序的「×」符號
   const [itemsPerPage, setItemsPerPage] = useState(16); // 預設每頁顯示16個
   const [selectedCategoryText, setSelectedCategoryText] = useState("");
+  const [selectedBrandCategoryText, setSelectedBrandCategoryText] =
+    useState("");
 
   // sidebar 相關
+  // sidebar 分類專區
   const [bigCategories, setBigCategories] = useState([]); // 大分類
   const [smallCategories, setSmallCategories] = useState([]); // 小分類
   const [selectedBigCategory, setSelectedBigCategory] = useState(null); // 當前選擇的大分類
@@ -30,34 +33,43 @@ export default function RentList() {
     useState(false); // 控制小分類下拉顯示
   const [selectedSmallCategory, setSelectedSmallCategory] = useState(null); // 當前選中的小分類 ID
 
-  // sidebar 品牌
-  const [brands, setBrands] = useState([]);
+  // sidebar 品牌專區
+  const [selectedLetter, setSelectedLetter] = useState(null); // 當前選擇的字母大分類
+  const [selectedBrand, setSelectedBrand] = useState(null); // 當前選擇的品牌小分類
+  const [selectedBrandId, setSelectedBrandId] = useState(null); // 存放選中的品牌 ID
+  const [brands, setBrands] = useState([]); // 品牌資料
 
   const router = useRouter(); // 動態更新網址參數（根據每頁顯示資料數、分頁、排序條件）
   const searchParams = useSearchParams();
 
-  // 更新 URL 查詢參數
+
+
+  // 更新 URL 查詢參數，回傳後端
   const updateUrlParams = useCallback(
-    (page, limit, sort, bigCategory, smallCategory) => {
+    (page, limit, sort, bigCategory, smallCategory, letter, brand_id) => {
       const params = new URLSearchParams();
       params.set("page", page);
       params.set("limit", limit);
       if (sort) params.set("sort", sort);
       if (bigCategory) params.set("category_big_id", bigCategory);
       if (smallCategory) params.set("category_small_id", smallCategory);
+      if (letter) params.set("letter", letter);
+      if (brand_id) params.set("brand_id", brand_id);
       router.push(`/rent?${params.toString()}`, undefined, { shallow: true });
     },
     [router]
   );
 
-  // 從後端獲取商品資料
+  // 從後端獲取商品資料回前端
   const fetchProducts = useCallback(
     async (
       page = 1,
       sort = "",
       limit = itemsPerPage,
       category_big_id = null,
-      category_small_id = null
+      category_small_id = null,
+      letter = null,
+      brand_id = null
     ) => {
       console.log("請求參數:", {
         page,
@@ -65,6 +77,8 @@ export default function RentList() {
         limit,
         category_big_id,
         category_small_id,
+        letter,
+        brand_id,
       });
       try {
         const API_BASE_URL =
@@ -77,6 +91,8 @@ export default function RentList() {
           url.searchParams.set("category_big_id", category_big_id);
         if (category_small_id)
           url.searchParams.set("category_small_id", category_small_id);
+        if (letter) url.searchParams.set("letter", letter);
+        if (brand_id) url.searchParams.set("brand_id", brand_id); // 確保 brand_id 被設置
 
         const response = await fetch(url);
         const result = await response.json();
@@ -98,23 +114,7 @@ export default function RentList() {
     [itemsPerPage]
   );
 
-  // 從後端獲取品牌資料
-  const fetchBrands = useCallback(async () => {
-    try {
-      const API_BASE_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
-      const response = await fetch(`${API_BASE_URL}/api/rent/brandcategories`);
-      const result = await response.json();
-
-      if (result && result.success) {
-        setBrands(result.data);
-      } else {
-        console.error("API 返回的資料格式不正確:", result);
-      }
-    } catch (error) {
-      console.error("品牌資料獲取失敗:", error);
-    }
-  }, []);
+  console.log("Brands in RentList:", brands); // 檢查 brands 資料是否成功傳遞
 
   // 使用 debounce 減少頻繁請求，解決頁面刷新閃動問題
   const debouncedFetchProducts = useMemo(
@@ -130,15 +130,19 @@ export default function RentList() {
     const bigCategory = parseInt(searchParams.get("category_big_id")) || null;
     const smallCategory =
       parseInt(searchParams.get("category_small_id")) || null;
+    const letter = searchParams.get("letter") || null;
+    const brandId = parseInt(searchParams.get("brand_id")) || null;
 
     setCurrentPage(page);
     setItemsPerPage(limit);
     setSort(sort);
     setSelectedBigCategory(bigCategory);
     setSelectedSmallCategory(smallCategory);
+    setSelectedLetter(letter);
+    setSelectedBrand(brandId);
 
     // 先檢查 localStorage 是否有快取
-    const cacheKey = `products_${page}_${limit}_${sort}_${bigCategory}_${smallCategory}`;
+    const cacheKey = `products_${page}_${limit}_${sort}_${bigCategory}_${smallCategory}_${letter}_${brandId}`;
     const cachedData = localStorage.getItem(cacheKey);
     if (cachedData) {
       try {
@@ -173,8 +177,39 @@ export default function RentList() {
         setSelectedSort("下拉選取排序條件");
     }
     // 根據 URL 參數初始化商品列表
-    debouncedFetchProducts(page, sort, limit, bigCategory, smallCategory);
+    debouncedFetchProducts(
+      page,
+      sort,
+      limit,
+      bigCategory,
+      smallCategory,
+      brandId,
+      letter
+    );
   }, [searchParams, debouncedFetchProducts]);
+
+   // 處理品牌選擇
+   const handleBrandSelect = useCallback(
+    (brandId, brandName) => {
+      setSelectedBrandId(brandId);
+      setSelectedBrandCategoryText(`品牌：${brandName}`); // 更新品牌文字
+      setCurrentPage(1); // 重置頁數
+      debouncedFetchProducts(1, sort, itemsPerPage, selectedBigCategory, selectedSmallCategory, selectedLetter, brandId); // 傳遞 brandId
+      updateUrlParams(1, itemsPerPage, sort, selectedBigCategory, selectedSmallCategory, selectedLetter, brandId); // 更新 URL 參數
+    },
+    [debouncedFetchProducts, updateUrlParams, sort, itemsPerPage, selectedBigCategory, selectedSmallCategory, selectedLetter]
+  );
+
+  // 處理字母分類選擇
+  const handleLetterSelect = useCallback(
+    (letter) => {
+      setSelectedLetter(letter);
+      setCurrentPage(1); // 重置頁數
+      debouncedFetchProducts(1, sort, itemsPerPage, selectedBigCategory, selectedSmallCategory, letter, selectedBrandId);
+      updateUrlParams(1, itemsPerPage, sort, selectedBigCategory, selectedSmallCategory, letter, selectedBrandId);
+    },
+    [debouncedFetchProducts, updateUrlParams, sort, itemsPerPage, selectedBigCategory, selectedSmallCategory, selectedBrandId]
+  );
 
   // 從後端獲取商品資料
   // 從後端獲取大分類和小分類
@@ -211,6 +246,73 @@ export default function RentList() {
 
     fetchCategories();
   }, [selectedBigCategory]);
+
+  // 從後端獲取品牌資料
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:3005/api/rent/brandcategories"
+        );
+        const data = await response.json();
+        console.log("API 回傳資料:", data); // 調試信息
+
+        if (data.success && Array.isArray(data.data)) {
+          setBrands(data.data); // 確保這裡是 data.data
+          console.log("品牌資料更新成功:", data.data); // 調試信息
+        } else {
+          console.error("API 回傳的資料格式不正確:", data);
+        }
+      } catch (error) {
+        console.error("品牌資料獲取失敗:", error);
+      }
+    };
+
+    fetchBrands();
+  }, []);
+
+  // 處理品牌選擇
+  // const handleBrandSelect = (brand_id) => {
+  //   setSelectedBrand(brand_id);
+  //   setCurrentPage(1); // 重置頁數
+  //   debouncedFetchProducts(
+  //     1,
+  //     sort,
+  //     itemsPerPage,
+  //     selectedBigCategory,
+  //     selectedSmallCategory,
+  //     brand_id
+  //   );
+  //   updateUrlParams(
+  //     1,
+  //     itemsPerPage,
+  //     sort,
+  //     selectedBigCategory,
+  //     selectedSmallCategory,
+  //     brand_id
+  //   );
+  // };
+
+  const handleCategoryClick = (category) => {
+    setSelectedCategory(category); // 更新選中的字母大分類
+    setCurrentPage(1); // 重置頁數
+    updateUrlParams({
+      page: 1,
+      limit: itemsPerPage,
+      sort,
+      category_big_id: selectedBigCategory,
+      category_small_id: selectedSmallCategory,
+      brand_id: selectedBrand,
+    });
+    debouncedFetchProducts({
+      page: 1,
+      sort,
+      limit: itemsPerPage,
+      category_big_id: selectedBigCategory,
+      category_small_id: selectedSmallCategory,
+      brand_id: selectedBrand,
+    });
+  };
 
   // 從 localStorage 讀取快取資料
   // useEffect(() => {
@@ -265,28 +367,6 @@ export default function RentList() {
     selectedSmallCategory,
     debouncedFetchProducts,
   ]);
-  //   // 檢查 URL 中是否有 category_big_id 和 category_small_id 參數
-  //   const urlParams = new URLSearchParams(window.location.search);
-  //   const categoryBigId = urlParams.get("category_big_id");
-  //   const categorySmallId = urlParams.get("category_small_id");
-  //   // 如果有，則設置為狀態；如果沒有，則重設分類狀態
-  //   if (!categoryBigId && !categorySmallId) {
-  //     setSelectedBigCategory(null);
-  //     setSelectedSmallCategory(null);
-  //     debouncedFetchProducts(1, sort, itemsPerPage, null, null); // 重置商品列表
-  //   } else {
-  //     // 若有選擇的分類，則根據 URL 參數設定狀態
-  //     setSelectedBigCategory(categoryBigId);
-  //     setSelectedSmallCategory(categorySmallId);
-  //     debouncedFetchProducts(
-  //       1,
-  //       sort,
-  //       itemsPerPage,
-  //       categoryBigId,
-  //       categorySmallId
-  //     ); // 根據選擇的分類載入商品
-  //   }
-  // }, [debouncedFetchProducts, sort, itemsPerPage]);
 
   // 顯示大分類下拉菜單
   const toggleCategoryDropdown = () => {
@@ -299,45 +379,53 @@ export default function RentList() {
     setShowSmallCategoryDropdown(!showSmallCategoryDropdown);
   };
 
-  // 清除大小分類條件
+  // 清除分類條件
   const handleClearCategory = useCallback(() => {
     setSelectedBigCategory(null); // 清除大分類
     setSelectedSmallCategory(null); // 清除小分類
-    setSelectedCategoryText(""); // 清除分類文字
+    setSelectedBrand(null); // 清除品牌
+    setSelectedCategoryText(""); // 清除商品分類文字
+    setSelectedBrandCategoryText(""); // 清除品牌專區文字
     setCurrentPage(1); // 重置分頁
     debouncedFetchProducts(1, sort, itemsPerPage, null, null); // 重新獲取商品列表
     updateUrlParams(1, itemsPerPage, sort, null, null); // 更新 URL 參數
   }, [debouncedFetchProducts, updateUrlParams, sort, itemsPerPage]);
 
-  // 更新選擇的大分類
-  // const handleCategorySelect = useCallback(
-  //   (bigCategory) => {
-  //     setSelectedBigCategory(bigCategory.category_big_id); // 設置當前選擇的大分類
-  //     setSelectedSmallCategory(null); // 重置小分類選中狀態
-  //     setCurrentPage(1); // 重置分頁
-  //     setSelectedCategoryText(`${bigCategory.category_big_name}`); // 更新選擇的大分類文字
-  //     debouncedFetchProducts(
-  //       1,
-  //       sort,
-  //       itemsPerPage,
-  //       bigCategory.category_big_id,
-  //       null
-  //     ); // 篩選大分類商品
-  //     updateUrlParams(1, itemsPerPage, sort, bigCategory.category_big_id, null); // 更新 URL 參數
+  // 更新選擇的分類文字（商品分類）
+  useEffect(() => {
+    let text = "";
+    if (selectedBigCategory && selectedSmallCategory) {
+      // 如果有大分類和小分類
+      const bigCategoryName = bigCategories.find(
+        (cat) => cat.category_big_id === selectedBigCategory
+      )?.category_big_name;
+      const smallCategoryName = smallCategories.find(
+        (cat) => cat.id === selectedSmallCategory
+      )?.name;
+      text = `${bigCategoryName} > ${smallCategoryName}`;
+    } else if (selectedBigCategory) {
+      // 如果只有大分類
+      const bigCategoryName = bigCategories.find(
+        (cat) => cat.category_big_id === selectedBigCategory
+      )?.category_big_name;
+      text = `${bigCategoryName}`;
+    }
+    setSelectedCategoryText(text);
+  }, [selectedBigCategory, selectedSmallCategory]);
 
-  //     // 根據大分類設定小分類選項
-  //     const smallCategoriesForSelectedCategory =
-  //       bigCategories.find(
-  //         (cat) => cat.category_big_id === bigCategory.category_big_id
-  //       )?.category_small || [];
-  //     setSmallCategories(smallCategoriesForSelectedCategory); // 更新小分類選項
-  //   },
-  //   [debouncedFetchProducts, updateUrlParams, bigCategories, sort, itemsPerPage]
-  // );
+  // 更新選擇的分類文字（品牌專區）
+  useEffect(() => {
+    if (selectedBrand) {
+      setSelectedBrandCategoryText(`品牌：${selectedBrand.brand_name}`);
+    } else {
+      setSelectedBrandCategoryText("");
+    }
+  }, [selectedBrand]);
+
   const handleCategorySelect = (bigCategory) => {
     setSelectedBigCategory(bigCategory.category_big_id);
-    setSelectedSmallCategory(null); // 清空小分类选择
-    setCurrentPage(1);
+    setSelectedSmallCategory(null); // 重置小分類
+    setCurrentPage(1); // 重置頁數
     setSelectedCategoryText(`${bigCategory.category_big_name}`);
     debouncedFetchProducts(
       1,
@@ -679,18 +767,16 @@ export default function RentList() {
                     </div>
                   )}
                 </div>
+
                 {/* 2. 品牌專區區塊 */}
                 <div className="d-flex flex-column sidebar-lists brand-category">
-                  {/* <div className="d-flex justify-content-between align-items-center sidebar-lists-title">
-                    <h6>品牌專區</h6>
-                    <i className="bi bi-chevron-down"></i>
-                  </div>
-                  <ul>
-                    <li>aaa</li>
-                    <li>aaa</li>
-                    <li>aaa</li>
-                  </ul> */}
-                  <RentBrand brands={brands} />
+                <RentBrand
+        setSelectedBrand={handleBrandSelect} // 傳遞品牌選擇事件
+        setSelectedBrandCategoryText={setSelectedBrandCategoryText} // 傳遞品牌文字更新事件
+        setSelectedLetter={handleLetterSelect} // 傳遞字母分類選擇事件
+        selectedLetter={selectedLetter} // 當前選擇的字母
+        selectedBrandId={selectedBrandId} // 當前選擇的品牌 ID
+      />
                 </div>
               </div>
 
@@ -900,8 +986,12 @@ export default function RentList() {
               <div className="d-flex flex-row justify-content-between align-items-center">
                 {/* 大小分類的篩選顯示 & 清除 */}
                 <div className="selected-category-text">
-                  {selectedCategoryText ? selectedCategoryText : "全館租借商品"}
-                  {(selectedBigCategory || selectedSmallCategory) && (
+                  {selectedCategoryText ||
+                    selectedBrandCategoryText ||
+                    "全館租借商品"}
+                  {(selectedBigCategory ||
+                    selectedSmallCategory ||
+                    selectedBrand) && (
                     <span
                       className="ms-2 clear-category-icon"
                       onClick={(e) => {

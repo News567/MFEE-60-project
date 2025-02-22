@@ -54,6 +54,11 @@
   /* background-color: var(--gray-200-color); */
 }
 
+.sidebar .sidebar-lists .sidebar-lists-title.open {
+  background: var(--gray-20-color);
+}
+
+
 .sidebar .sidebar-lists .sidebar-lists-title h6 {
   font-weight: 700;
 }

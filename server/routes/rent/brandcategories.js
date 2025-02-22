@@ -1,7 +1,9 @@
 import express from "express";
 import { pool } from "../../config/mysql.js";
 
+
 const router = express.Router();
+
 
 // 獲取所有品牌資料及其商品
 router.get("/brandcategories", async (req, res) => {
