@@ -150,7 +150,7 @@ export default function Home() {
 
             if (response.data.success) {
                 //讓購物車重新從後端獲取最新數據，而不是自己組裝 cartItem
-                fetchCart(1);
+                // fetchCart(1);
                 alert("成功加入購物車！");
             } else {
                 alert(response.data.message || "加入購物車失敗");
