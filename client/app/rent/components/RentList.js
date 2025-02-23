@@ -502,8 +502,8 @@ export default function RentList() {
   }, []);
 
   // 處理顏色選擇
-  const handleColorSelect = (color) => {
-    setSelectedColorId(color.id); // 更新選中的 color_id
+  const handleColorSelect = (colorId) => {
+    setSelectedColorId(colorId); // 更新選中的 color_id
     setCurrentPage(1); // 重置頁數
 
     // 更新 URL 參數並發起 API 請求
@@ -517,7 +517,7 @@ export default function RentList() {
       selectedBrandId, // brand_id
       isPriceFilterActive ? priceRange[0] : null, // minPrice
       isPriceFilterActive ? priceRange[1] : null, // maxPrice
-      color.id // color_id
+      colorId // color_id
     );
 
     // 發送 API 請求
@@ -531,7 +531,7 @@ export default function RentList() {
       selectedBrandId, // brand_id
       isPriceFilterActive ? priceRange[0] : null, // minPrice
       isPriceFilterActive ? priceRange[1] : null, // maxPrice
-      color.id // color_id
+      colorId // color_id
     );
   };
 

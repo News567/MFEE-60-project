@@ -171,7 +171,7 @@ router.get("/", async (req, res) => {
 
     // 返回結果
     res.json({
-      data: rows,
+      data: formattedRows, // rows
       page,
       limit,
       total,
