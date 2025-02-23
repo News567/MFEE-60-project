@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState, useMemo } from "react"; // useState 儲存從後端獲取的資料，並使用 useEffect 在組件加載時發送請求
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-// import Link from "next/link";
+import Slider from "rc-slider";
 import "./RentList.css";
 import "../../../public/globals.css";
+import "rc-slider/assets/index.css";
 import RentBrand from "./RentBrand"; // 匯入，處理品牌專區
 import { debounce } from "lodash"; // 引入 debounce 解決刷新有參數的介面資料閃動問題
 
@@ -40,20 +41,40 @@ export default function RentList() {
   const [allBrands, setAllBrands] = useState([]); // 存儲原始品牌列表
   const [brands, setBrands] = useState([]); // 存儲過濾後的品牌列表
 
-  const router = useRouter(); // 動態更新網址參數（根據每頁顯示資料數、分頁、排序條件）
+  // 價格專區
+  const [priceRange, setPriceRange] = useState([0, 50000]); // 滑塊的價格區間
+  const [isPriceFilterActive, setIsPriceFilterActive] = useState(false);
+  const [minPrice, setMinPrice] = useState(0); // 最低價格輸入框的值
+  const [maxPrice, setMaxPrice] = useState(50000); // 最高價格輸入框的值
+  const [tempPriceRange, setTempPriceRange] = useState([0, 50000]); // 臨時價格區間
+
+  // 動態更新網址參數（根據每頁顯示資料數、分頁、排序條件）
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   // 更新 URL 查詢參數，回傳後端
   const updateUrlParams = useCallback(
-    (page, limit, sort, bigCategory, smallCategory, letter, brand_id) => {
+    (
+      page,
+      limit,
+      sort,
+      bigCategory,
+      smallCategory,
+      letter,
+      brand_id,
+      minPrice = null,
+      maxPrice = null
+    ) => {
       const params = new URLSearchParams();
-      params.set("page", page);
-      params.set("limit", limit);
-      if (sort) params.set("sort", sort);
+      params.set("page", page || 1);
+      params.set("limit", limit || 16);
+      params.set("sort", sort || "newest");
       if (bigCategory) params.set("category_big_id", bigCategory);
       if (smallCategory) params.set("category_small_id", smallCategory);
       if (letter) params.set("letter", letter);
       if (brand_id) params.set("brand_id", brand_id);
+      if (minPrice !== null) params.set("minPrice", minPrice); // 只有當 minPrice 不為 null 時傳遞
+      if (maxPrice !== null) params.set("maxPrice", maxPrice); // 只有當 maxPrice 不為 null 時傳遞
       router.push(`/rent?${params.toString()}`, undefined, { shallow: true });
     },
     [router]
@@ -63,12 +84,14 @@ export default function RentList() {
   const fetchProducts = useCallback(
     async (
       page = 1,
-      sort = "",
-      limit = itemsPerPage,
+      sort = "newest",
+      limit = 16,
       category_big_id = null,
       category_small_id = null,
       letter = null,
-      brand_id = null
+      brand_id = null,
+      minPrice = null,
+      maxPrice = null
     ) => {
       console.log("請求參數:", {
         page,
@@ -78,21 +101,25 @@ export default function RentList() {
         category_small_id,
         letter,
         brand_id,
+        minPrice,
+        maxPrice,
       });
       try {
         const API_BASE_URL =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
         const url = new URL(`${API_BASE_URL}/api/rent`);
         // 設置查詢參數
-        url.searchParams.set("page", page);
-        url.searchParams.set("limit", limit);
-        if (sort) url.searchParams.set("sort", sort);
+        url.searchParams.set("page", page || 1);
+        url.searchParams.set("limit", limit || 16);
+        if (sort) url.searchParams.set("sort", sort || "newest");
         if (category_big_id)
           url.searchParams.set("category_big_id", category_big_id);
         if (category_small_id)
           url.searchParams.set("category_small_id", category_small_id);
         if (letter) url.searchParams.set("letter", letter);
         if (brand_id) url.searchParams.set("brand_id", brand_id);
+        if (minPrice !== null) url.searchParams.set("minPrice", minPrice); // 只有當 minPrice 不為 null 時傳遞
+        if (maxPrice !== null) url.searchParams.set("maxPrice", maxPrice); // 只有當 maxPrice 不為 null 時傳遞
 
         console.log("API 請求 URL:", url.toString()); // 調試信息
 
@@ -130,7 +157,7 @@ export default function RentList() {
         setLoading(false);
       }
     },
-    [itemsPerPage]
+    []
   );
 
   // console.log("Brands in RentList:", brands); // 檢查 brands 資料是否成功傳遞
@@ -145,20 +172,24 @@ export default function RentList() {
   useEffect(() => {
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 16;
-    const sort = searchParams.get("sort") || "";
+    const sort = searchParams.get("sort") || "newest"; // 或者之後改""，再看看
     const bigCategory = parseInt(searchParams.get("category_big_id")) || null;
     const smallCategory =
       parseInt(searchParams.get("category_small_id")) || null;
-      const letter = searchParams.get("letter") || null;
-      const brand_id = parseInt(searchParams.get("brand_id")) || null;
+    const letter = searchParams.get("letter") || null;
+    const brand_id = parseInt(searchParams.get("brand_id")) || null;
+    const minPrice = parseInt(searchParams.get("minPrice")) || 0;
+    const maxPrice = parseInt(searchParams.get("maxPrice")) || 50000;
 
     setCurrentPage(page);
     setItemsPerPage(limit);
     setSort(sort);
-    setSelectedBigCategory(category_big_id);
-    setSelectedSmallCategory(category_small_id);
+    setSelectedBigCategory(bigCategory);
+    setSelectedSmallCategory(smallCategory);
     setSelectedLetter(letter);
-    setSelectedBrandId(brand_id);
+    setSelectedBrand(brand_id);
+    setPriceRange([minPrice, maxPrice]);
+    setIsPriceFilterActive(minPrice > 0 || maxPrice < 50000);
 
     // 先檢查 localStorage 是否有快取
     const cacheKey = `products_${page}_${limit}_${sort}_${bigCategory}_${smallCategory}_${letter}_${brand_id}`;
@@ -195,17 +226,19 @@ export default function RentList() {
       default:
         setSelectedSort("下拉選取排序條件");
     }
-  // 根據 URL 參數初始化商品列表
-  debouncedFetchProducts(
-    page,
-    sort,
-    limit,
-    category_big_id,
-    category_small_id,
-    letter,
-    brand_id
-  );
-}, [searchParams, debouncedFetchProducts]);
+    // 根據 URL 參數初始化商品列表
+    debouncedFetchProducts(
+      page,
+      sort,
+      limit,
+      bigCategory,
+      smallCategory,
+      letter,
+      brand_id,
+      minPrice,
+      maxPrice
+    );
+  }, [searchParams, debouncedFetchProducts]);
 
   useEffect(() => {
     // 根據 selectedLetter 過濾品牌列表
@@ -225,7 +258,7 @@ export default function RentList() {
     } else {
       setSelectedBrandCategoryText("");
     }
-  }, [selectedLetter, allBrands]); // 移除 brands 的依賴
+  }, [selectedLetter, brands, selectedBrandId]);
 
   useEffect(() => {
     let text = "";
@@ -258,12 +291,6 @@ export default function RentList() {
       setSelectedBrandId(null); // 重置品牌 ID
       setSelectedBrandCategoryText(`字母分類：${letter}`); // 更新品牌文字
       setCurrentPage(1); // 重置頁數
-
-      //  // 更新品牌列表（根據 letter 過濾）
-      //  const filteredBrands = brands.filter(
-      //   (brand) => brand.letter === letter
-      // );
-      // setBrands(filteredBrands);
 
       debouncedFetchProducts(
         1, // page
@@ -426,7 +453,22 @@ export default function RentList() {
       sort,
       itemsPerPage,
       selectedBigCategory,
-      selectedSmallCategory
+      selectedSmallCategory,
+      selectedLetter,
+      selectedBrandId,
+      isPriceFilterActive ? priceRange[0] : null, // 只有當 isPriceFilterActive 為 true 時傳遞 minPrice
+      isPriceFilterActive ? priceRange[1] : null // 只有當 isPriceFilterActive 為 true 時傳遞 maxPrice
+    );
+    updateUrlParams(
+      currentPage,
+      itemsPerPage,
+      sort,
+      selectedBigCategory,
+      selectedSmallCategory,
+      selectedLetter,
+      selectedBrandId,
+      isPriceFilterActive ? priceRange[0] : null, // 只有當 isPriceFilterActive 為 true 時傳遞 minPrice
+      isPriceFilterActive ? priceRange[1] : null // 只有當 isPriceFilterActive 為 true 時傳遞 maxPrice
     );
   }, [
     currentPage,
@@ -434,7 +476,12 @@ export default function RentList() {
     itemsPerPage,
     selectedBigCategory,
     selectedSmallCategory,
+    selectedLetter,
+    selectedBrandId,
+    priceRange,
+    isPriceFilterActive, // 新增
     debouncedFetchProducts,
+    updateUrlParams,
   ]);
 
   // 顯示大分類下拉菜單
@@ -506,7 +553,12 @@ export default function RentList() {
       text = `${bigCategoryName}`;
     }
     setSelectedCategoryText(text);
-  }, [selectedBigCategory, selectedSmallCategory]);
+  }, [
+    selectedBigCategory,
+    selectedSmallCategory,
+    bigCategories,
+    smallCategories,
+  ]);
 
   // 更新選擇的分類文字（品牌專區）
   useEffect(() => {
@@ -576,6 +628,7 @@ export default function RentList() {
       selectedBigCategory,
       sort,
       itemsPerPage,
+      bigCategories,
     ]
   );
 
@@ -669,26 +722,30 @@ export default function RentList() {
           sortText = "下拉選取排序條件";
       }
       setSelectedSort(sortText);
-      setSort(sortType);
+      setSort(sortType || "newest");
       setCurrentPage(1);
       setShowClearSort(true);
       debouncedFetchProducts(
-        1,
-        sortType,
-        itemsPerPage,
-        selectedBigCategory,
-        selectedSmallCategory,
-        selectedLetter, // 傳遞 selectedLetter
-        selectedBrandId // 傳遞 selectedBrandId
+        1, // page
+        sortType || "newest", // sort
+        itemsPerPage, // limit
+        selectedBigCategory, // category_big_id
+        selectedSmallCategory, // category_small_id
+        selectedLetter, // letter
+        selectedBrandId, // brand_id
+        isPriceFilterActive ? priceRange[0] : null, // minPrice
+        isPriceFilterActive ? priceRange[1] : null // maxPrice
       );
       updateUrlParams(
-        1,
-        itemsPerPage,
-        sortType,
-        selectedBigCategory,
-        selectedSmallCategory,
-        selectedLetter, // 傳遞 selectedLetter
-        selectedBrandId // 傳遞 selectedBrandId
+        1, // page
+        itemsPerPage, // limit
+        sortType || "newest", // sort
+        selectedBigCategory, // category_big_id
+        selectedSmallCategory, // category_small_id
+        selectedLetter, // letter
+        selectedBrandId, // brand_id
+        isPriceFilterActive ? priceRange[0] : null, // minPrice
+        isPriceFilterActive ? priceRange[1] : null // maxPrice
       );
     },
     [
@@ -697,6 +754,8 @@ export default function RentList() {
       selectedSmallCategory,
       selectedLetter,
       selectedBrandId,
+      priceRange,
+      isPriceFilterActive,
       updateUrlParams,
       debouncedFetchProducts,
     ]
@@ -705,12 +764,12 @@ export default function RentList() {
   // 清除排序條件
   const handleClearSort = useCallback(() => {
     setSelectedSort("下拉選取排序條件");
-    setSort("");
+    setSort("newest");
     setCurrentPage(1);
     setShowClearSort(false);
     debouncedFetchProducts(
       1,
-      "",
+      "newest",
       itemsPerPage,
       selectedBigCategory,
       selectedSmallCategory
@@ -718,7 +777,7 @@ export default function RentList() {
     updateUrlParams(
       1,
       itemsPerPage,
-      "",
+      "newest",
       selectedBigCategory,
       selectedSmallCategory
     );
@@ -905,20 +964,93 @@ export default function RentList() {
               </div>
 
               {/* 篩選按鈕 */}
-              <button type="button" className="w-100 btn sidebar-selectBtn">
-                <i className="bi bi-funnel-fill"></i> 套用篩選（0/20）
-              </button>
 
               {/* 2. 篩選條件區塊 */}
               <div className="d-flex flex-column sidebar-lists product-filter">
                 <div className="d-flex justify-content-between align-items-center sidebar-lists-title">
                   <h6>篩選條件</h6>
+                  <button
+                    type="button"
+                    className={`btn sidebar-selectBtn d-flex flex-row ${
+                      isPriceFilterActive ? "active" : ""
+                    }`} // 根據 isPriceFilterActive 狀態來決定是否加上 active 類別
+                    disabled={isPriceFilterActive} // 啟用價格篩選時禁用按鈕
+                    onClick={() => {
+                      setIsPriceFilterActive((prevState) => !prevState); // 切換篩選條件的啟用狀態
+                      setPriceRange(tempPriceRange); // 將臨時價格區間設置為正式價格區間
+                      updateUrlParams(
+                        currentPage,
+                        itemsPerPage,
+                        sort,
+                        selectedBigCategory,
+                        selectedSmallCategory,
+                        selectedLetter,
+                        selectedBrandId,
+                        tempPriceRange[0], // 傳遞 minPrice
+                        tempPriceRange[1] // 傳遞 maxPrice
+                      );
+                      // 觸發 API 請求
+                      debouncedFetchProducts(
+                        currentPage,
+                        sort,
+                        itemsPerPage,
+                        selectedBigCategory,
+                        selectedSmallCategory,
+                        selectedLetter,
+                        selectedBrandId,
+                        tempPriceRange[0], // 傳遞 minPrice
+                        tempPriceRange[1] // 傳遞 maxPrice
+                      );
+                    }}
+                  >
+                    <i className="bi bi-funnel-fill"></i>
+                    <i className="bi bi-list"></i>
+                  </button>
                 </div>
 
                 {/* 價格區間 */}
                 <div className="product-filter-price">
-                  <p className="filter-subtitle">價格區間</p>
-                  <div className="price-input d-flex flex-row">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <p className="filter-subtitle">價格區間</p>
+                    {(priceRange[0] > 0 || priceRange[1] < 50000) && ( // 如果有設定價格範圍
+                      <i
+                        className="bi bi-x clear-filter"
+                        onClick={() => {
+                          setPriceRange([0, 50000]); // 重置價格範圍
+                          setTempPriceRange([0, 50000]); // 重置臨時價格區間
+                          setIsPriceFilterActive(false); // 停用價格篩選
+
+                          // 觸發商品列表更新
+                          debouncedFetchProducts(
+                            currentPage,
+                            sort,
+                            itemsPerPage,
+                            selectedBigCategory,
+                            selectedSmallCategory,
+                            selectedLetter,
+                            selectedBrandId,
+                            0, // 重置最小價格
+                            50000 // 重置最大價格
+                          );
+
+                          // 更新 URL 參數（移除價格條件）
+                          updateUrlParams(
+                            currentPage,
+                            itemsPerPage,
+                            sort,
+                            selectedBigCategory,
+                            selectedSmallCategory,
+                            selectedLetter,
+                            selectedBrandId,
+                            0, // 重置最小價格
+                            50000 // 重置最大價格
+                          );
+                        }}
+                      ></i>
+                    )}
+                  </div>
+                  <div className="price-input d-flex flex-row align-items-center">
+                    {/* <div> 從 </div> */}
                     <div className="d-flex align-items-center price-box">
                       <span className="currency-symbol">$</span>
                       <input
@@ -926,8 +1058,26 @@ export default function RentList() {
                         className="min-price"
                         placeholder="從"
                         aria-label="最低價格"
+                        value={tempPriceRange[0]}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          setTempPriceRange([value, tempPriceRange[1]]);
+                          setPriceRange([value, tempPriceRange[1]]);
+                          debouncedFetchProducts(
+                            currentPage,
+                            sort,
+                            itemsPerPage,
+                            selectedBigCategory,
+                            selectedSmallCategory,
+                            selectedLetter,
+                            selectedBrandId,
+                            value, // 傳遞 minPrice
+                            tempPriceRange[1] // 傳遞 maxPrice
+                          );
+                        }}
                       />
                     </div>
+                    <div> ~ </div>
                     <div className="d-flex align-items-center price-box">
                       <span className="currency-symbol">$</span>
                       <input
@@ -935,13 +1085,53 @@ export default function RentList() {
                         className="max-price"
                         placeholder="至"
                         aria-label="最高價格"
+                        value={tempPriceRange[1]}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          setTempPriceRange([tempPriceRange[0], value]);
+                          setPriceRange([tempPriceRange[0], value]);
+                          debouncedFetchProducts(
+                            currentPage,
+                            sort,
+                            itemsPerPage,
+                            selectedBigCategory,
+                            selectedSmallCategory,
+                            selectedLetter,
+                            selectedBrandId,
+                            tempPriceRange[0], // 傳遞 minPrice
+                            value // 傳遞 maxPrice
+                          );
+                        }}
                       />
                     </div>
                   </div>
+                  <Slider
+                    className="custom-slider"
+                    range
+                    min={0}
+                    max={50000}
+                    value={tempPriceRange}
+                    onChange={(value) => {
+                      setTempPriceRange(value);
+                      setIsPriceFilterActive(true); // 啟用價格篩選
+                      setPriceRange(value);
+                      debouncedFetchProducts(
+                        currentPage,
+                        sort,
+                        itemsPerPage,
+                        selectedBigCategory,
+                        selectedSmallCategory,
+                        selectedLetter,
+                        selectedBrandId,
+                        value[0], // 傳遞 minPrice
+                        value[1] // 傳遞 maxPrice
+                      );
+                    }}
+                  />
                 </div>
 
                 {/* 品牌類別 */}
-                <div className="product-filter-brand">
+                {/* <div className="product-filter-brand">
                   <p className="filter-subtitle filter-subtitle2">
                     <i className="bi bi-chevron-down"></i>品牌類別
                   </p>
@@ -967,7 +1157,7 @@ export default function RentList() {
                       OMER (15)
                     </label>
                   </div>
-                </div>
+                </div> */}
 
                 {/* 顏色類別 */}
                 <div className="product-filter-color">

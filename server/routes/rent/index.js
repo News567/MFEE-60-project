@@ -12,6 +12,8 @@ router.get("/", async (req, res) => {
   const category_small_id = req.query.category_small_id || null;
   const letter = req.query.letter || null; // 字母分類
   const brand_id = req.query.brand_id || null;
+  const minPrice = parseFloat(req.query.minPrice); // 最低價格
+  const maxPrice = parseFloat(req.query.maxPrice); // 最高價格
 
   const offset = (page - 1) * limit; // 計算偏移量
 
@@ -33,6 +35,8 @@ router.get("/", async (req, res) => {
       category_small_id,
       brand_id,
       letter,
+      minPrice,
+      maxPrice,
       limit,
       offset,
     });
@@ -42,10 +46,22 @@ router.get("/", async (req, res) => {
     if (letter) {
       const letters = letter.split("、"); // 將 "B、C、D" 拆分為 ["B", "C", "D"]
       if (letters.length > 1) {
-        letterCondition = `AND SUBSTRING(rb.name, 1, 1) IN (${letters.map((l) => `'${l}'`).join(", ")})`;
+        letterCondition = `AND SUBSTRING(rb.name, 1, 1) IN (${letters
+          .map((l) => `'${l}'`)
+          .join(", ")})`;
       } else {
         letterCondition = `AND SUBSTRING(rb.name, 1, 1) = '${letters[0]}'`;
       }
+    }
+
+    // 處理價格區間
+    let priceCondition = "";
+    if (!isNaN(minPrice) && !isNaN(maxPrice)) {
+      priceCondition = `AND COALESCE(ri.price2, ri.price) BETWEEN ${minPrice} AND ${maxPrice}`;
+    } else if (!isNaN(minPrice)) {
+      priceCondition = `AND COALESCE(ri.price2, ri.price) >= ${minPrice}`;
+    } else if (!isNaN(maxPrice)) {
+      priceCondition = `AND COALESCE(ri.price2, ri.price) <= ${maxPrice}`;
     }
 
     // 獲取商品資料
@@ -74,10 +90,14 @@ router.get("/", async (req, res) => {
       ${category_small_id ? "AND rcs.id = ?" : ""}
       ${letterCondition} /* 使用 letterCondition 過濾字母分類 */
       ${brand_id ? "AND rb.id = ?" : ""} /* 使用 brand_id 過濾品牌 */
+      ${priceCondition} /* 使用 priceCondition 過濾價格區間 */
       GROUP BY ri.id
       ${orderBy} /* 確保 orderBy 不為空 */
       LIMIT ${limit} OFFSET ${offset};
     `;
+
+    // 打印完整的 SQL 查詢
+    console.log("完整 SQL 查詢:", query);
 
     const params = [];
     if (category_big_id) params.push(category_big_id);
@@ -100,6 +120,7 @@ router.get("/", async (req, res) => {
       ${category_small_id ? "AND rcs.id = ?" : ""}
       ${letterCondition} /* 使用 letterCondition 過濾字母分類 */
       ${brand_id ? "AND rb.id = ?" : ""} /* 使用 brand_id 過濾品牌 */
+      ${priceCondition} /* 使用 priceCondition 過濾價格區間 */
       `,
       params
     );
