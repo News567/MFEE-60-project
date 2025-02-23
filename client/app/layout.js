@@ -64,15 +64,15 @@ export default function RootLayout({ children }) {
         ></Script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Header />
         <AuthProvider>
+          <Header />
           <CartProvider>
             {/* <Breadcrumb /> */}
             {children}
             <ToastContainer />
           </CartProvider>
+          <Footer />
         </AuthProvider>
-        <Footer />
       </body>
     </html>
   );

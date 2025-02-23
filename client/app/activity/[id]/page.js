@@ -6,6 +6,7 @@ import styles from "./detail.module.css";
 import "./Calendar.css";
 import { useCart } from "@/hooks/cartContext";
 import { useRouter } from "next/router";
+import { useAuth } from "@/hooks/use-auth";
 
 // import icons
 import {
@@ -38,6 +39,7 @@ import RecommendCard from "./_components/RecommendCard";
 export default function Home() {
     const api = "http://localhost:3005/api";
     const { id } = useParams();
+    const { user } = useAuth();
 
     // 設定活動資料
     const [name, setName] = useState("");
@@ -115,7 +117,7 @@ export default function Home() {
     // 加入購物車
     const [selectedDate, setSelectedDate] = useState("")
     const doSelectedDate = (newDate) => {
-        const dateToString = (new Date(newDate)).toISOString().split('T')[0]; 
+        const dateToString = (new Date(newDate)).toISOString().split('T')[0];
         setSelectedDate(dateToString)
     }
     const [selectedTime, setSelectedTime] = useState("")
@@ -123,6 +125,10 @@ export default function Home() {
     const handleAddToCart = async (e) => {
         //放入要送往後端的useState 取得目前你點擊得商品/租賃/活動
         e.preventDefault()
+        if (!user) {
+            alert("請先登入！")
+            return
+        }
         const formData = new FormData(e.target);
         const projectId = formData.get("projectId")
         console.log(projectId);
@@ -134,7 +140,7 @@ export default function Home() {
 
             //活動
             const activity = {
-                userId: 1, //(寫死)
+                userId: user.id, //(寫死)
                 type: "activity", //(寫死)
                 projectId: projectId, //(綁定資料來源)
                 quantity: count, //(綁定按鈕)
@@ -358,21 +364,6 @@ export default function Home() {
                                             ) : (
                                                 <li>沒有內容</li>
                                             )}
-                                            {/* <li className={styles.li}>
-                                                全程由專業的教練帶領，不會游泳也可以下水與魚兒同樂，無須擔心
-                                            </li>
-                                            <li className={styles.li}>
-                                                老幼皆宜的浮潛體驗，可以帶着年長者和小朋友同樂
-                                            </li>
-                                            <li className={styles.li}>
-                                                悠遊的欣賞海底美麗生態，幸運的話還有機會與海龜共游
-                                            </li>
-                                            <li className={styles.li}>
-                                                提供水中拍照服務，且不限張數，通通可以讓您帶回家
-                                            </li>
-                                            <li className={styles.li}>
-                                                全程由專業的教練帶領，不會游泳也可以下水與魚兒同樂，無須擔心
-                                            </li> */}
                                         </ul>
                                     </div>
                                     <div className={`d-none d-sm-block`}>
@@ -448,9 +439,9 @@ export default function Home() {
                                 <div>優惠券</div>
                             </div>
 
-                            <button className={`w-100 btn ${styles.chooseBtn}`}>
+                            <a href="#projectCard" className={`w-100 btn ${styles.chooseBtn}`}>
                                 選擇方案
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </section>
@@ -568,7 +559,7 @@ export default function Home() {
                         {projects && projects.length > 0
                             ? projects.map((v, i) => {
                                 return (
-                                    <form key={i} onSubmit={handleAddToCart} action="">
+                                    <form key={i} onSubmit={handleAddToCart} action="" id="projectCard">
                                         <input type="hidden" name="projectId" value={v.id} />
                                         <div
                                             className={`${styles.activityProject} mb-3 p-5`}>
@@ -650,15 +641,15 @@ export default function Home() {
                                                 <div
                                                     className={`d-sm-flex d-none`}>
                                                     <div className={`me-2`}>
-                                                        {v.originalPrice !=
+                                                        {v.original_price !=
                                                             v.price ? (
                                                             <>
                                                                 <div
                                                                     className={`text-nowrap text-white ${styles.fs14px} ${styles.bgSecondaryDeep} text-center rounded fw-bold`}>
                                                                     {Math.round(
-                                                                        ((v.originalPrice -
+                                                                        ((v.original_price -
                                                                             v.price) /
-                                                                            v.originalPrice) *
+                                                                            v.original_price) *
                                                                         100
                                                                     )}
                                                                     % OFF
@@ -667,7 +658,7 @@ export default function Home() {
                                                                     className={`text-nowrap text-end text-decoration-line-through ${styles.fs14px} text-secondary`}>
                                                                     NT$
                                                                     {
-                                                                        v.originalPrice
+                                                                        v.original_price
                                                                     }
                                                                 </div>
                                                                 <div
@@ -684,13 +675,25 @@ export default function Home() {
                                                         )}
                                                     </div>
                                                     <button
-                                                        className={`btn ${styles.colorPrimary} text-nowrap ${styles.chooseProjectBtn} px-4 py-2 ${styles.active}`}>
-                                                        取消選擇
+                                                        className={`btn ${styles.colorPrimary} text-nowrap ${styles.chooseProjectBtn} px-4 py-2 `}
+                                                        type="button"
+                                                        data-bs-toggle="collapse" data-bs-target={`#detail${i}`}
+                                                        onClick={(e) => {
+                                                            e.target.classList.toggle(`${styles.active}`)
+                                                            setCount(0)
+                                                            if (e.target.innerHTML == "選擇") {
+                                                                e.target.innerHTML = "取消選擇"
+                                                            } else {
+                                                                e.target.innerHTML = "選擇"
+                                                            }
+                                                        }}>
+                                                        選擇
                                                     </button>
                                                 </div>
                                             </div>
                                             <div
-                                                className={`row p-5 ${styles.collapseSession} d-none d-sm-flex`}>
+                                                className={`row py-5 ${styles.collapseSession} collapse`}
+                                                id={`detail${i}`}>
                                                 <h6
                                                     className={`${styles.fs18px}`}>
                                                     選擇日期、選項
@@ -782,7 +785,7 @@ export default function Home() {
                                                                         className={`m-0 ${styles.fs14px} text-secondary`}>
                                                                         NT $
                                                                         {
-                                                                            v.originalPrice
+                                                                            v.original_price
                                                                         }
                                                                         <span
                                                                             className={`fs-6 text-secondary fw-bold`}>
@@ -857,10 +860,11 @@ export default function Home() {
                                                         <div
                                                             className={`d-flex gap-1`}>
                                                             <button
-                                                                className={`btn ${styles.btn} ${styles.btnPrimaryLight} ${styles.projectBtn}`}>
+                                                                className={`btn ${styles.btn} ${styles.btnPrimaryLight} ${styles.projectBtn}`}
+                                                            >
                                                                 加入購物車
                                                             </button>
-                                                            <button
+                                                            <button type="button"
                                                                 className={`btn ${styles.btn} ${styles.btnPrimaryColor} ${styles.projectBtn}`}>
                                                                 立即訂購
                                                             </button>
@@ -893,7 +897,7 @@ export default function Home() {
                             <div className={`col-sm-8 col-12`}>
                                 <div
                                     className={`${styles.activityDescriptionBorder} pb-5`}>
-                                    <h4 className={`${styles.mb25px}`}>
+                                    <h4 className={`${styles.mb25px}`} id="description">
                                         活動說明
                                     </h4>
                                     <p className="">
@@ -917,13 +921,14 @@ export default function Home() {
                                             </li>
                                         )}
                                     </ol>
-                                    <div>
+                                    {/* TODO: p2 製作可以收起說明欄那些的按鈕 */}
+                                    {/* <div>
                                         <a href="#">收起</a>
-                                    </div>
+                                    </div> */}
                                 </div>
                                 <div
                                     className={`${styles.activityDescriptionBorder} py-5`}>
-                                    <h4 className={`${styles.mb25px}`}>
+                                    <h4 className={`${styles.mb25px}`} id="journey">
                                         行程介紹
                                     </h4>
                                     <p
@@ -939,44 +944,15 @@ export default function Home() {
                                         ) : (
                                             <p>沒有內容</p>
                                         )}
-                                        {/* <div>
-                                            <p>填寫報名表</p>
-                                            <div className={`${styles.descriptionImgContainer} ${styles.mb25px}`}>
-                                                <img
-                                                    className={`${styles.img}`}
-                                                    src="/image/jpg (3).webp"
-                                                    alt=""
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <p>面鏡及呼吸管如何使用之教學</p>
-                                            <div className={`${styles.descriptionImgContainer} ${styles.mb25px}`}>
-                                                <img
-                                                    className={`${styles.img}`}
-                                                    src="/image/jpg (8).webp"
-                                                    alt=""
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="">
-                                            <p>留下浮潛美好的回憶</p>
-                                            <div className={`${styles.descriptionImgContainer} ${styles.mb25px}`}>
-                                                <img
-                                                    className={`${styles.img}`}
-                                                    src="/image/jpg (4).webp"
-                                                    alt=""
-                                                />
-                                            </div>
-                                        </div> */}
                                     </div>
-                                    <div>
+                                    {/* <div>
                                         <a href="#">收起</a>
-                                    </div>
+                                    </div> */}
                                 </div>
-                                <div
+                                {/* TODO: p2 製作集合地點 */}
+                                {/* <div
                                     className={`${styles.activityDescriptionBorder} py-5`}>
-                                    <h4 className={`${styles.mb25px}`}>
+                                    <h4 className={`${styles.mb25px}`} id="meetingPoint">
                                         集合地點
                                     </h4>
                                     <div className={`card`}>
@@ -1008,10 +984,10 @@ export default function Home() {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> */}
                                 <div
                                     className={`${styles.activityDescriptionBorder} py-5`}>
-                                    <h4 className={`${styles.mb25px}`}>
+                                    <h4 className={`${styles.mb25px}`} id="comment">
                                         旅客評價
                                     </h4>
                                     <div
@@ -1249,12 +1225,46 @@ export default function Home() {
                                 <ul
                                     className={`${styles.descriptionNav} px-5 list-unstyled`}>
                                     <li
-                                        className={`${styles.li} ${styles.active}`}>
-                                        活動說明
+                                        className={`${styles.li} ${styles.active}`}
+                                        onClick={(e)=>{
+                                            const lis = document.querySelectorAll(`.${styles.li}`)
+                                            lis.forEach((v)=>{
+                                                v.classList.remove(`${styles.active}`)
+                                            })
+                                            e.currentTarget.classList.add(`${styles.active}`)
+                                        }}>
+                                        <a href="#description" className="text-reset text-decoration-none"
+                                        >活動說明</a>
                                     </li>
-                                    <li className={`${styles.li}`}>行程介紹</li>
-                                    <li className={`${styles.li}`}>集合地點</li>
-                                    <li className={`${styles.li}`}>旅客評價</li>
+                                    <li className={`${styles.li}`}
+                                    
+                                    onClick={(e)=>{
+                                            const lis = document.querySelectorAll(`.${styles.li}`)
+                                            lis.forEach((v)=>{
+                                                v.classList.remove(`${styles.active}`)
+                                            })
+                                            e.currentTarget.classList.add(`${styles.active}`)
+                                        }}>
+                                        <a href="#journey" className="text-reset text-decoration-none">行程介紹</a></li>
+                                    <li className={`${styles.li}`}
+                                    
+                                    onClick={(e)=>{
+                                            const lis = document.querySelectorAll(`.${styles.li}`)
+                                            lis.forEach((v)=>{
+                                                v.classList.remove(`${styles.active}`)
+                                            })
+                                            e.currentTarget.classList.add(`${styles.active}`)
+                                        }}>
+                                        <a href="#meetingPoint" className="text-reset text-decoration-none">集合地點</a></li>
+                                    <li className={`${styles.li}`}
+                                    
+                                    onClick={(e)=>{
+                                            const lis = document.querySelectorAll(`.${styles.li}`)
+                                            lis.forEach((v)=>{
+                                                v.classList.remove(`${styles.active}`)
+                                            })
+                                            e.currentTarget.classList.add(`${styles.active}`)
+                                        }}><a href="#comment" className="text-reset text-decoration-none">旅客評價</a></li>
                                 </ul>
                             </div>
                         </div>

@@ -23,7 +23,7 @@ router.get("/", async (req, res) => {
       `SELECT f.*, a.name, a.introduction, ai.img_url as image_url, a.price
        FROM favorites f
        JOIN activity a ON f.activity_id = a.id
-       LEFT JOIN activity_image ai ON a.id = ai.activity_id AND ai.isMain = 1
+       LEFT JOIN activity_image ai ON a.id = ai.activity_id AND ai.is_main = 1
        WHERE f.user_id = ? AND f.activity_id != 0`,
       [userId]
     );

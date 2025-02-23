@@ -30,6 +30,10 @@ aside {
         }
     }
 }
+.btn-primary-deep{
+    background-color: #023047 !important;
+    color: #fff !important;
+}
 
 @media (max-width:576px){
     .row-first{

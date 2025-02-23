@@ -4,10 +4,12 @@ import { FaSearch, FaRegUser, FaBars } from "react-icons/fa";
 import { FiShoppingCart } from "react-icons/fi";
 import Link from "next/link";
 import HeaderPop from "./headerPop"; // 引入 HeaderPop 組件
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Header() {
   const [showPop, setShowPop] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
+  const {user} = useAuth();
 
   const handleMouseEnter = (menu) => {
     setShowPop(true);
@@ -18,16 +20,15 @@ export default function Header() {
     setShowPop(false);
     setActiveMenu(null);
   };
-
   return (
     <header className="sticky-top">
       <nav className="container" onMouseLeave={handleMouseLeave}>
         {/* 電腦版 navbar */}
         <div className="d-none d-sm-flex">
           <div className="header-icon-container">
-          <Link href="/">
-            <img src="/image/DiveIn-logo-dark-final.png" alt="Logo" />
-          </Link>
+            <Link href="/">
+              <img src="/image/DiveIn-logo-dark-final.png" alt="Logo" />
+            </Link>
           </div>
           <div className="header-list d-flex justify-content-between align-items-center">
             <ul className="m-0 d-flex justify-content-between align-items-center list-unstyled">
@@ -105,9 +106,14 @@ export default function Header() {
             <a href="/cart/step1" className="header-cart a">
               <FiShoppingCart />
             </a>
-            <a href="#" className="header-cart a">
+            {user? (<Link href="/member/account" className="header-cart a">
               <FaRegUser />
-            </a>
+            </Link>
+            ):(<Link href="/member/login" className="header-cart a">
+              <FaRegUser />
+            </Link>
+            )}
+
           </div>
         </div>
 
