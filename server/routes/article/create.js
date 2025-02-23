@@ -1,11 +1,12 @@
+
 import express from "express";
 import multer from "multer";
 import { pool } from "../../config/mysql.js";
-
+import { uploadArticleImage } from "../../article/middleware/upload.js"; //處理圖片上傳，回傳圖片 URL 給前端。
 import fs from "fs";
 import path from "path";
-import { v4 as uuidv4 } from "uuid"; //生成唯一的識別碼，創建不重複的 ID 
-// import { validateUser } from "../../middlewares/auth"; // 用戶認證中介，已註解掉
+import { v4 as uuidv4 } from "uuid"; //生成唯一的識別碼，創建不重複的 ID
+import { db } from "../../config/articleDb.js";
 
 const router = express.Router();
 
@@ -28,7 +29,6 @@ const upload = multer({ storage: storage });
 // 文章創建 API 路由
 router.post(
   "/create",
-  // validateUser, // 註解掉用戶認證中介
   upload.single("cover_image"),
   async (req, res) => {
     const {
@@ -39,7 +39,9 @@ router.post(
       tags,
       status,
     } = req.body;
+    
     const coverImagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    console.log("🔍 接收到的请求数据:", req.body);  // 打印请求数据
 
     try {
       // 檢查必要的字段
@@ -64,12 +66,16 @@ router.post(
       // 插入並關聯標籤
       const tagArray = JSON.parse(tags);
       for (let tag of tagArray) {
-        // 插入標籤（如果標籤不存在則忽略）
-        const [tagResult] = await pool.query(
-          "INSERT IGNORE INTO tags (name) VALUES (?)",
-          [tag]
-        );
-        const tagId = tagResult.insertId;
+        // 先檢查標籤是否已存在
+        const [existingTag] = await pool.query("SELECT id FROM tags WHERE name = ?", [tag]);
+        let tagId;
+
+        if (existingTag.length > 0) {
+          tagId = existingTag[0].id;
+        } else {
+          const [tagResult] = await pool.query("INSERT INTO tags (name) VALUES (?)", [tag]);
+          tagId = tagResult.insertId;
+        }
 
         // 關聯標籤與文章
         await pool.query(
@@ -87,21 +93,45 @@ router.post(
   }
 );
 
+// 處理文章封面圖片上傳
+router.post("/upload-image", (req, res) => {
+  
+  uploadArticleImage(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ success: false, message: err.message });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "請選擇圖片" });
+    }
+
+    // 取得圖片存放路徑
+    const imageUrl = `/uploads/article/${req.file.filename}`;
+    console.log("🔍 接收到的请求数据:", req.body);  // 打印请求数据
+    res.status(200).json({ success: true, imageUrl });
+  });
+});
+
 // 更新文章 API
 router.put(
   "/update/:id",
-  // validateUser, // 註解掉用戶認證中介
   upload.single("cover_image"),
   async (req, res) => {
     const articleId = req.params.id;
     const { title, content, article_category_small_id, status, tags } =
       req.body;
-    const coverImagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    let coverImagePath = req.file ? `/uploads/${req.file.filename}` : null;
 
     try {
       // 檢查必要的字段
       if (!title || !content || !article_category_small_id || !tags) {
         return res.status(400).json({ message: "所有字段都是必需的！" });
+      }
+
+      // 如果沒有新圖片，保留舊的圖片
+      if (!coverImagePath) {
+        const [oldCover] = await pool.query("SELECT cover_image FROM article WHERE id = ?", [articleId]);
+        coverImagePath = oldCover.length > 0 ? oldCover[0].cover_image : null;
       }
 
       // 更新文章資料
@@ -125,12 +155,16 @@ router.put(
       // 重新關聯標籤
       const tagArray = JSON.parse(tags);
       for (let tag of tagArray) {
-        // 插入標籤（如果標籤不存在則忽略）
-        const [tagResult] = await pool.query(
-          "INSERT IGNORE INTO tags (name) VALUES (?)",
-          [tag]
-        );
-        const tagId = tagResult.insertId;
+        // 先檢查標籤是否已存在
+        const [existingTag] = await pool.query("SELECT id FROM tags WHERE name = ?", [tag]);
+        let tagId;
+
+        if (existingTag.length > 0) {
+          tagId = existingTag[0].id;
+        } else {
+          const [tagResult] = await pool.query("INSERT INTO tags (name) VALUES (?)", [tag]);
+          tagId = tagResult.insertId;
+        }
 
         // 關聯標籤與文章
         await pool.query(
@@ -148,12 +182,12 @@ router.put(
 );
 
 // 草稿儲存 API
-router.post("/save-draft", 
-  // validateUser, // 註解掉用戶認證中介
+router.post(
+  "/save-draft",
   async (req, res) => {
     const { title, content, article_category_small_id, users_id, tags } =
       req.body;
-
+      console.log("🔍 接收到的请求数据:", req.body);  // 打印请求数据
     try {
       // 檢查必要的字段
       if (!title || !content || !article_category_small_id || !tags) {
@@ -190,5 +224,25 @@ router.post("/save-draft",
     }
   }
 );
+
+// 新建文章所需分類與標籤資料 API (GET)
+router.get("/create-data", async (req, res) => {
+  try {
+    // 取得分類
+    const [categories] = await pool.query("SELECT id, name FROM article_category");
+
+    // 取得標籤
+    const [tags] = await pool.query("SELECT id, name FROM tags");
+
+    res.status(200).json({
+      success: true,
+      categories,
+      tags,
+    });
+  } catch (error) {
+    console.error("❌ 無法獲取分類與標籤：", error);
+    res.status(500).json({ success: false, message: "獲取資料失敗" });
+  }
+});
 
 export default router;

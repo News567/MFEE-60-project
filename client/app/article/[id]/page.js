@@ -2,8 +2,9 @@
 import React from "react";
 import ArticleDetail from "../components/articleDetail";
 import Sidebar from "../components/sidebar";
-import "./article.css";
 import "../components/articleAside.css";
+import "../components/article.css";
+
 
 export default function ArticlePage() {
   return (

@@ -85,24 +85,24 @@ const ArticleListPage = () => {
               <button className="btn">
                 {" "}
                 <span className="btn-icon">
-                  <i class="fa-solid fa-pen"></i>
+                  <i className="fa-solid fa-pen"></i>
                 </span>
                 新增文章
               </button>
               <button className="btn">
                 <span className="btn-icon">
-                  <i class="fa-solid fa-bookmark"></i>
+                  <i className="fa-solid fa-bookmark"></i>
                 </span>
                 我的文章
               </button>
             </div>
           </div>
-
-          {/* 文章card */}
-          {articles.map((article) => (
-            <ArticleCard key={article.id} article={article} />
-          ))}
-
+       
+            {/* 文章card */}
+            {articles.map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+       
           {/* 分頁 */}
           <div className="custom-pagination">
             <div className="page-item">

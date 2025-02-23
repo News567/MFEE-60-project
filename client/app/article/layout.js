@@ -2,8 +2,8 @@ import Breadcrumb from "../components/Breadcrumb/breadcrumb";
 // import Sidebar from './components/sidebar';
 import "./components/articleAside.css";
 import "./components/articleList.css";
-import "./[id]/article.css";
-import "./create/articleCreate.css";
+import "./components/article.css";
+import "./components/articleCreate.css";
 
 export const metadata = {
   title: "潛水 Blog",
