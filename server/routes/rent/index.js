@@ -14,6 +14,8 @@ router.get("/", async (req, res) => {
   const brand_id = req.query.brand_id || null;
   const minPrice = parseFloat(req.query.minPrice); // 最低價格
   const maxPrice = parseFloat(req.query.maxPrice); // 最高價格
+  const color_id = req.query.color_id || null;
+  const color_rgb = req.query.color_rgb || null;
 
   const offset = (page - 1) * limit; // 計算偏移量
 
@@ -64,36 +66,54 @@ router.get("/", async (req, res) => {
       priceCondition = `AND COALESCE(ri.price2, ri.price) <= ${maxPrice}`;
     }
 
+    // 處理顏色過濾
+    let colorCondition = "";
+    if (color_id) {
+      const color_ids = color_id
+        .split(",")
+        .map((id) => `'${id}'`)
+        .join(", ");
+      colorCondition = `AND rc.id IN (${color_ids})`;
+    }
+    if (color_rgb) {
+      const color_rgbs = color_rgb
+        .split(",")
+        .map((rgb) => `'${rgb.replace(/#/g, "\\#")}'`) // 處理 # 符號
+        .join(", ");
+      colorCondition = `AND rc.rgb IN (${color_rgbs})`;
+    }
+
     // 獲取商品資料
     const query = `
-      SELECT
-        ri.id, ri.name, ri.price, ri.price2, ri.description, ri.description2,
-        ri.stock, ri.created_at, ri.update_at, ri.deposit, ri.is_like,
-        rcs.id AS category_small_id,
-        rcs.name AS category_small_name,
-        rcb.id AS category_big_id,
-        rcb.name AS category_big_name,
-        ri_img.img_url AS img_url,
-        rb.id AS brand_id,
-        rb.name AS brand_name,
-        GROUP_CONCAT(DISTINCT rc.name ORDER BY rc.id ASC) AS color_name,
-        GROUP_CONCAT(DISTINCT rc.rgb ORDER BY rc.id ASC) AS color_rgb
-      FROM rent_item ri
-      JOIN rent_category_small rcs ON ri.rent_category_small_id = rcs.id
-      JOIN rent_category_big rcb ON rcs.rent_category_big_id = rcb.id
-      LEFT JOIN rent_image ri_img ON ri.id = ri_img.rent_item_id AND ri_img.is_main = 1
-      LEFT JOIN rent_specification rs ON ri.id = rs.rent_item_id AND rs.is_deleted = FALSE
-      LEFT JOIN rent_brand rb ON rs.brand_id = rb.id
-      LEFT JOIN rent_color rc ON rs.color_id = rc.id
-      WHERE ri.is_deleted = FALSE
-      ${category_big_id ? "AND rcb.id = ?" : ""}
-      ${category_small_id ? "AND rcs.id = ?" : ""}
-      ${letterCondition} /* 使用 letterCondition 過濾字母分類 */
-      ${brand_id ? "AND rb.id = ?" : ""} /* 使用 brand_id 過濾品牌 */
-      ${priceCondition} /* 使用 priceCondition 過濾價格區間 */
-      GROUP BY ri.id
-      ${orderBy} /* 確保 orderBy 不為空 */
-      LIMIT ${limit} OFFSET ${offset};
+     SELECT
+  ri.id, ri.name, ri.price, ri.price2, ri.description, ri.description2,
+  ri.stock, ri.created_at, ri.update_at, ri.deposit, ri.is_like,
+  rcs.id AS category_small_id,
+  rcs.name AS category_small_name,
+  rcb.id AS category_big_id,
+  rcb.name AS category_big_name,
+  ri_img.img_url AS img_url,
+  rb.id AS brand_id,
+  rb.name AS brand_name,
+  GROUP_CONCAT(DISTINCT rc.name ORDER BY rc.id ASC) AS color_name,
+  GROUP_CONCAT(DISTINCT rc.rgb ORDER BY rc.id ASC) AS color_rgb
+FROM rent_item ri
+JOIN rent_category_small rcs ON ri.rent_category_small_id = rcs.id
+JOIN rent_category_big rcb ON rcs.rent_category_big_id = rcb.id
+LEFT JOIN rent_image ri_img ON ri.id = ri_img.rent_item_id AND ri_img.is_main = 1
+LEFT JOIN rent_specification rs ON ri.id = rs.rent_item_id AND rs.is_deleted = FALSE
+LEFT JOIN rent_brand rb ON rs.brand_id = rb.id
+LEFT JOIN rent_color rc ON rs.color_id = rc.id
+WHERE ri.is_deleted = FALSE
+${category_big_id ? "AND rcb.id = ?" : ""}
+${category_small_id ? "AND rcs.id = ?" : ""}
+${letterCondition} /* 使用 letterCondition 過濾字母分類 */
+${brand_id ? "AND rb.id = ?" : ""} /* 使用 brand_id 過濾品牌 */
+${priceCondition} /* 使用 priceCondition 過濾價格區間 */
+${colorCondition} /* 使用 colorCondition 過濾顏色 */
+GROUP BY ri.id
+${orderBy} /* 確保 orderBy 不為空 */
+LIMIT ${limit} OFFSET ${offset};
     `;
 
     // 打印完整的 SQL 查詢
@@ -121,6 +141,7 @@ router.get("/", async (req, res) => {
       ${letterCondition} /* 使用 letterCondition 過濾字母分類 */
       ${brand_id ? "AND rb.id = ?" : ""} /* 使用 brand_id 過濾品牌 */
       ${priceCondition} /* 使用 priceCondition 過濾價格區間 */
+      ${colorCondition}
       `,
       params
     );

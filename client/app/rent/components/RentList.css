@@ -608,6 +608,20 @@
   position: relative;
   overflow: hidden; /* 隱藏超出部分 */
 }
+.main .product-lists .card .img-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+.main .product-lists .card:hover .img-container::after {
+  opacity: 1;
+}
 
 .main .product-lists .card .card-body .product-brand,
 .main .product-lists .card .card-body .product-name,

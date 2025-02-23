@@ -48,6 +48,10 @@ export default function RentList() {
   const [maxPrice, setMaxPrice] = useState(50000); // 最高價格輸入框的值
   const [tempPriceRange, setTempPriceRange] = useState([0, 50000]); // 臨時價格區間
 
+  //顏色專區
+  const [colors, setColors] = useState([]); // 存儲顏色資料
+  const [selectedColorRgb, setSelectedColorRgb] = useState(null);
+
   // 動態更新網址參數（根據每頁顯示資料數、分頁、排序條件）
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -63,7 +67,8 @@ export default function RentList() {
       letter,
       brand_id,
       minPrice = null,
-      maxPrice = null
+      maxPrice = null,
+      color_rgb = null
     ) => {
       const params = new URLSearchParams();
       params.set("page", page || 1);
@@ -75,6 +80,7 @@ export default function RentList() {
       if (brand_id) params.set("brand_id", brand_id);
       if (minPrice !== null) params.set("minPrice", minPrice); // 只有當 minPrice 不為 null 時傳遞
       if (maxPrice !== null) params.set("maxPrice", maxPrice); // 只有當 maxPrice 不為 null 時傳遞
+      if (color_rgb) params.set("color_rgb", color_rgb);
       router.push(`/rent?${params.toString()}`, undefined, { shallow: true });
     },
     [router]
@@ -91,7 +97,8 @@ export default function RentList() {
       letter = null,
       brand_id = null,
       minPrice = null,
-      maxPrice = null
+      maxPrice = null,
+      color_rgb = null
     ) => {
       console.log("請求參數:", {
         page,
@@ -103,6 +110,7 @@ export default function RentList() {
         brand_id,
         minPrice,
         maxPrice,
+        color_rgb,
       });
       try {
         const API_BASE_URL =
@@ -120,6 +128,7 @@ export default function RentList() {
         if (brand_id) url.searchParams.set("brand_id", brand_id);
         if (minPrice !== null) url.searchParams.set("minPrice", minPrice); // 只有當 minPrice 不為 null 時傳遞
         if (maxPrice !== null) url.searchParams.set("maxPrice", maxPrice); // 只有當 maxPrice 不為 null 時傳遞
+        if (color_rgb) url.searchParams.set("color_rgb", color_rgb);
 
         console.log("API 請求 URL:", url.toString()); // 調試信息
 
@@ -180,6 +189,7 @@ export default function RentList() {
     const brand_id = parseInt(searchParams.get("brand_id")) || null;
     const minPrice = parseInt(searchParams.get("minPrice")) || 0;
     const maxPrice = parseInt(searchParams.get("maxPrice")) || 50000;
+    const color_rgb = searchParams.get("color_rgb") || null;
 
     setCurrentPage(page);
     setItemsPerPage(limit);
@@ -190,6 +200,7 @@ export default function RentList() {
     setSelectedBrand(brand_id);
     setPriceRange([minPrice, maxPrice]);
     setIsPriceFilterActive(minPrice > 0 || maxPrice < 50000);
+    setSelectedColorRgb(color_rgb);
 
     // 先檢查 localStorage 是否有快取
     const cacheKey = `products_${page}_${limit}_${sort}_${bigCategory}_${smallCategory}_${letter}_${brand_id}`;
@@ -236,7 +247,8 @@ export default function RentList() {
       letter,
       brand_id,
       minPrice,
-      maxPrice
+      maxPrice,
+      color_rgb
     );
   }, [searchParams, debouncedFetchProducts]);
 
@@ -445,6 +457,101 @@ export default function RentList() {
 
     fetchBrands();
   }, []);
+
+  // 從後端獲取顏色資料
+  useEffect(() => {
+    const fetchColors = async () => {
+      try {
+        const API_BASE_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
+        const response = await fetch(`${API_BASE_URL}/api/rent/colors`);
+
+        // 檢查回應是否成功
+        if (!response.ok) {
+          throw new Error(`HTTP 錯誤！狀態碼: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        // 檢查回應格式是否正確
+        if (result && result.success && Array.isArray(result.data)) {
+          setColors(result.data); // 設置顏色資料
+        } else {
+          console.error("API 返回的顏色資料格式不正確:", result);
+        }
+      } catch (error) {
+        console.error("獲取顏色資料失敗:", error);
+      }
+    };
+
+    fetchColors();
+  }, []);
+
+  // 處理顏色專區選擇
+  const handleColorSelect = (color_rgb) => {
+    setSelectedColorRgb(color_rgb); // 更新選中的顏色
+    setCurrentPage(1); // 重置頁數
+
+    // 更新 URL 參數並發起 API 請求
+    updateUrlParams(
+      1, // page
+      itemsPerPage, // limit
+      sort, // sort
+      selectedBigCategory, // category_big_id
+      selectedSmallCategory, // category_small_id
+      selectedLetter, // letter
+      selectedBrandId, // brand_id
+      isPriceFilterActive ? priceRange[0] : null, // minPrice
+      isPriceFilterActive ? priceRange[1] : null, // maxPrice
+      color_rgb // color_rgb
+    );
+
+    // 發送 API 請求
+    debouncedFetchProducts(
+      1, // page
+      sort, // sort
+      itemsPerPage, // limit
+      selectedBigCategory, // category_big_id
+      selectedSmallCategory, // category_small_id
+      selectedLetter, // letter
+      selectedBrandId, // brand_id
+      isPriceFilterActive ? priceRange[0] : null, // minPrice
+      isPriceFilterActive ? priceRange[1] : null, // maxPrice
+      color_rgb // color_rgb
+    );
+  };
+
+  const handleClearColorFilter = () => {
+    setSelectedColorRgb(null); // 清除選中的顏色
+    setCurrentPage(1); // 重置頁數
+
+    // 更新 URL 參數並發起 API 請求
+    updateUrlParams(
+      1, // page
+      itemsPerPage, // limit
+      sort, // sort
+      selectedBigCategory, // category_big_id
+      selectedSmallCategory, // category_small_id
+      selectedLetter, // letter
+      selectedBrandId, // brand_id
+      isPriceFilterActive ? priceRange[0] : null, // minPrice
+      isPriceFilterActive ? priceRange[1] : null, // maxPrice
+      null // 清除 color_rgb
+    );
+
+    // 發送 API 請求
+    debouncedFetchProducts(
+      1, // page
+      sort, // sort
+      itemsPerPage, // limit
+      selectedBigCategory, // category_big_id
+      selectedSmallCategory, // category_small_id
+      selectedLetter, // letter
+      selectedBrandId, // brand_id
+      isPriceFilterActive ? priceRange[0] : null, // minPrice
+      isPriceFilterActive ? priceRange[1] : null // maxPrice
+    );
+  };
 
   // 初始加載
   useEffect(() => {
@@ -1163,20 +1270,26 @@ export default function RentList() {
                 <div className="product-filter-color">
                   <p className="filter-subtitle filter-subtitle2">
                     <i className="bi bi-chevron-down"></i>顏色類別
+                    {selectedColorRgb && (
+                      <i
+                        className="bi bi-x clear-filter"
+                        onClick={handleClearColorFilter}
+                        style={{ cursor: "pointer", marginLeft: "10px" }}
+                      ></i>
+                    )}
                   </p>
                   <div className="d-flex flex-wrap align-items-center color-options">
-                    <div className="color-circle bg-danger"></div>
-                    <div className="color-circle bg-success"></div>
-                    <div className="color-circle bg-primary"></div>
-                    <div className="color-circle bg-warning"></div>
-                    <div className="color-circle bg-pink"></div>
-                    <div className="color-circle bg-info"></div>
-                    <div className="color-circle bg-brown"></div>
-                    <div className="color-circle bg-secondary"></div>
-                    <div className="color-circle bg-danger"></div>
-                    <div className="color-circle bg-success"></div>
-                    <div className="color-circle bg-primary"></div>
-                    <div className="color-circle bg-warning"></div>
+                  {colors.map((color) => (
+            <div
+              key={color.id}
+              className={`color-circle ${
+                selectedColorRgb === color.rgb ? "selected" : ""
+              }`}
+              style={{ backgroundColor: color.rgb }}
+              onClick={() => handleColorSelect(color.rgb)}
+              title={`${color.name} (${color.rgb})`} // 懸停時顯示顏色名稱和 RGB
+            ></div>
+          ))}
                   </div>
                 </div>
               </div>
