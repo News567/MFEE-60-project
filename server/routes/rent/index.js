@@ -1,23 +1,22 @@
 import express from "express";
 import { pool } from "../../config/mysql.js";
 
-// import rentBrandCategoryRouter from "./brandcategories.js";
-
-// router.use("/brandcategories", rentBrandCategoryRouter);
-
 const router = express.Router();
 
 router.get("/", async (req, res) => {
   const page = parseInt(req.query.page) || 1; // 當前頁數，默認為第 1 頁
   const limit = parseInt(req.query.limit) || 16; // 每頁顯示的商品數量，默認為 16
+
   const sort = req.query.sort; // 排序方式
   const category_big_id = req.query.category_big_id || null;
   const category_small_id = req.query.category_small_id || null;
+  const letter = req.query.letter || null; // 字母分類
   const brand_id = req.query.brand_id || null;
 
   const offset = (page - 1) * limit; // 計算偏移量
 
-  let orderBy = "";
+  // 設置默認排序條件
+  let orderBy = "ORDER BY ri.created_at DESC";
   if (sort === "price_desc") {
     orderBy = "ORDER BY COALESCE(ri.price2, ri.price) DESC";
   } else if (sort === "price_asc") {
@@ -32,10 +31,24 @@ router.get("/", async (req, res) => {
     console.log("查詢條件:", {
       category_big_id,
       category_small_id,
+      brand_id,
+      letter,
       limit,
       offset,
     });
 
+    // 處理 letter 參數
+    let letterCondition = "";
+    if (letter) {
+      const letters = letter.split("、"); // 將 "B、C、D" 拆分為 ["B", "C", "D"]
+      if (letters.length > 1) {
+        letterCondition = `AND SUBSTRING(rb.name, 1, 1) IN (${letters.map((l) => `'${l}'`).join(", ")})`;
+      } else {
+        letterCondition = `AND SUBSTRING(rb.name, 1, 1) = '${letters[0]}'`;
+      }
+    }
+
+    // 獲取商品資料
     const query = `
       SELECT
         ri.id, ri.name, ri.price, ri.price2, ri.description, ri.description2,
@@ -59,9 +72,10 @@ router.get("/", async (req, res) => {
       WHERE ri.is_deleted = FALSE
       ${category_big_id ? "AND rcb.id = ?" : ""}
       ${category_small_id ? "AND rcs.id = ?" : ""}
-      ${brand_id ? "AND rb.id = ?" : ""}
+      ${letterCondition} /* 使用 letterCondition 過濾字母分類 */
+      ${brand_id ? "AND rb.id = ?" : ""} /* 使用 brand_id 過濾品牌 */
       GROUP BY ri.id
-      ${orderBy}
+      ${orderBy} /* 確保 orderBy 不為空 */
       LIMIT ${limit} OFFSET ${offset};
     `;
 
@@ -79,38 +93,26 @@ router.get("/", async (req, res) => {
       FROM rent_item ri
       JOIN rent_category_small rcs ON ri.rent_category_small_id = rcs.id
       JOIN rent_category_big rcb ON rcs.rent_category_big_id = rcb.id
+      LEFT JOIN rent_specification rs ON ri.id = rs.rent_item_id AND rs.is_deleted = FALSE
+      LEFT JOIN rent_brand rb ON rs.brand_id = rb.id
       WHERE ri.is_deleted = FALSE
       ${category_big_id ? "AND rcb.id = ?" : ""}
       ${category_small_id ? "AND rcs.id = ?" : ""}
-      ${brand_id ? "AND rb.id = ?" : ""}
-    `,
+      ${letterCondition} /* 使用 letterCondition 過濾字母分類 */
+      ${brand_id ? "AND rb.id = ?" : ""} /* 使用 brand_id 過濾品牌 */
+      `,
       params
     );
 
     const total = totalRows[0]?.total || 0;
 
-    // **品牌大分類（字母列表）**
-    const [brandLetters] = await pool.query(`
-      SELECT DISTINCT SUBSTRING(rb.name, 1, 1) AS letter
-      FROM rent_brand rb
-      ORDER BY letter ASC;
-    `);
-
-    // **品牌小分類（對應品牌名稱）**
-    const [brands] = await pool.query(`
-      SELECT rb.id AS brand_id, rb.name AS brand_name, SUBSTRING(rb.name, 1, 1) AS letter
-      FROM rent_brand rb
-      ORDER BY rb.name ASC;
-    `);
-
+    // 返回結果
     res.json({
       data: rows,
       page,
       limit,
       total,
       totalPages: Math.ceil(total / limit),
-      brand_letters: brandLetters.map((b) => b.letter), // 品牌字母大分類
-      brands, // 品牌單個小分類
     });
   } catch (err) {
     console.error("SQL 錯誤:", err);
