@@ -1,6 +1,6 @@
 .content {
   display: flex;
-  /* padding: 25px 10px 40px 10px; */
+  padding: 25px 0px 40px 0px;
   justify-content: center;
   align-items: flex-start;
   gap: 20px;

@@ -11,19 +11,28 @@ export default function MemberGroupPage() {
   const [mygroups, setMyGroups] = useState([]);
 
   // 獲取會員
-  const {user} = useAuth()
-
+  const { user } = useAuth()
+  
   // 設定api路徑
   const api = "http://localhost:3005/api";
-  
+
 
   // 連接後端獲取揪團資料
   useEffect(() => {
+    if(!user){
+      alert("請先登入！")
+      window.location = "/member/login"
+      return
+    }
+    const userId = user.id
+    const condition = {
+      user:userId
+    }
     const getList = async () => {
       await axios
-        .get(api + "/group")
+        .post((api + "/member/myGroup"),condition)
         .then((res) => {
-          // console.log(res.data.data);
+          console.log(res.data);
           setMyGroups(res.data.data);
         })
         .catch((error) => {
@@ -85,7 +94,7 @@ export default function MemberGroupPage() {
             <GroupCard key={i} group={mygroup} />
           )
         })) : ("目前沒有揪團")}
-        
+
       </div>
     </div>
   );
