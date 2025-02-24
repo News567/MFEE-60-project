@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../components/sidebar";
-import articleForm from "../components/articleForm"; // 引入表單組件
+import ArticleForm from "../components/articleForm"; // 引入表單組件
 import "../components/articleCreate.css";
 
 export default function ArticleCreate() {
@@ -27,7 +27,7 @@ export default function ArticleCreate() {
         <Sidebar />
         <div className="article-create col-9">
        
-          <articleForm categories={categories} tags={tags} />
+          <ArticleForm categories={categories} tags={tags} />
         </div>
       </div>
     </div>

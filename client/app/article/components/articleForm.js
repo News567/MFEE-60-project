@@ -1,13 +1,9 @@
 import { useState } from "react";
-import Forum from "../api/forum"; // 引入 forum.js API
-import dynamic from "next/dynamic";
+import { createArticle } from "../../api/article/create";
 import "./articleCreate.css";
+import Myeditor from "../components/Myeditor";
 
-// 動態加載 CKEditor，避免在伺服器端渲染時出現錯誤
-const CKEditor = dynamic(() => import("@ckeditor/ckeditor5-react"), { ssr: false });
-const ClassicEditor = dynamic(() => import("@ckeditor/ckeditor5-build-classic"), { ssr: false });
-
-const articleForm = ({ categories, tags }) => {
+const ArticleForm = ({ categories, tags }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [categoryBig, setCategoryBig] = useState("");
@@ -18,7 +14,7 @@ const articleForm = ({ categories, tags }) => {
 
   // 處理標籤輸入
   const handleTagInput = (e) => setNewTag(e.target.value);
-  
+
   const addTag = (e) => {
     if (e.key === "Enter" && newTag.trim() !== "") {
       setTagsList([...tagsList, newTag.trim()]);
@@ -46,7 +42,8 @@ const articleForm = ({ categories, tags }) => {
     }
 
     try {
-      const response = await Forum.submitArticle(formData); // 使用 forum.js 提交文章
+      const response = await createArticle(formData); // ✅ 直接使用 createArticle
+
       if (response.success) {
         alert("文章發表成功！");
       } else {
@@ -107,10 +104,11 @@ const articleForm = ({ categories, tags }) => {
       {/* 文章內容 (CKEditor) */}
       <div className="form-group">
         <label>內容</label>
-        <CKEditor
-          editor={ClassicEditor}
-          data={content}
-          onChange={(event, editor) => setContent(editor.getData())}
+        <Myeditor
+          name="content"
+          value={content}
+          editorLoaded={true}
+          onChange={(data) => setContent(data)}
         />
       </div>
 
@@ -158,4 +156,4 @@ const articleForm = ({ categories, tags }) => {
   );
 };
 
-export default articleForm;
+export default ArticleForm;
