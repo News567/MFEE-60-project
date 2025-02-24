@@ -3,6 +3,7 @@ import { createArticle } from "../../api/article/create";
 import "./articleCreate.css";
 import Myeditor from "../components/Myeditor";
 
+
 const ArticleForm = ({ categories, tags }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -19,6 +20,7 @@ const ArticleForm = ({ categories, tags }) => {
     if (e.key === "Enter" && newTag.trim() !== "") {
       setTagsList([...tagsList, newTag.trim()]);
       setNewTag("");
+      e.preventDefault(); // 防止按下 Enter 會觸發其他預設行為，如提交表單
     }
   };
 
@@ -54,81 +56,110 @@ const ArticleForm = ({ categories, tags }) => {
     }
   };
 
+  // 處理封面圖片的選擇
+  const [previewImage, setPreviewImage] = useState(null); // 用來儲存預覽圖片的狀態
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCoverImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result); // 設置圖片預覽
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit}>
-      {/* 標題 */}
-      <div className="title">發表新文章</div>
-      <div className="form-group">
-        <label>標題</label>
+    <div className="create-form">
+      <form onSubmit={handleSubmit}>
+        <div className="create-title">發表新文章</div>
+        {/* 封面圖 */}
+        <div className="secondaryTitle">上傳封面縮圖</div>
+        <div className="image-upload-box">
+          <label htmlFor="coverImage" className="upload-square">
+            {previewImage ? (
+              <img src={previewImage} alt="封面預覽" className="upload-image" />
+            ) : (
+              <>
+                <div className="upload-square-icon"></div> {/* 顯示 + 標誌 */}
+              </>
+            )}
+          </label>
+
+          <input
+            type="file"
+            id="coverImage"
+            className="form-control"
+            onChange={handleImageChange}
+            style={{ display: "none" }} // 隱藏實際的 input
+          />
+        </div>
+
+        {/* 標題 */}
+        <div className="secondaryTitle">標題</div>
         <input
           type="text"
           className="form-control"
+          placeholder="限 60 個中英字母"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
         />
-      </div>
 
-      {/* 顯示分類選項 */}
-      <div className="form-group">
-        <label>大分類</label>
-        <select
-          className="form-control"
-          value={categoryBig}
-          onChange={(e) => setCategoryBig(e.target.value)}
-          required
-        >
-          <option value="">請選擇大分類</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* 小分類 */}
-      <div className="form-group">
-        <label>小分類</label>
-        <select
-          className="form-control"
-          value={categorySmall}
-          onChange={(e) => setCategorySmall(e.target.value)}
-          required
-        >
-          <option value="">請選擇小分類</option>
-          {/* 可根據大分類的選擇顯示小分類選項 */}
-        </select>
-      </div>
-
-      {/* 文章內容 (CKEditor) */}
-      <div className="form-group">
-        <label>內容</label>
+        {/* 顯示分類選項 */}
+        <div className="secondaryTitle">文章分類</div>
+        <div className="category-container">
+          <select
+            className="form-control category-big"
+            value={categoryBig}
+            onChange={(e) => setCategoryBig(e.target.value)}
+            required
+          >
+            <option value="">請選擇大分類</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          {/* 小分類 */}
+          <select
+            className="form-control category-small"
+            value={categorySmall}
+            onChange={(e) => setCategorySmall(e.target.value)}
+            required
+          >
+            <option value="">請選擇小分類</option>
+            {/* 可根據大分類的選擇顯示小分類選項 */}
+          </select>
+        </div>
+        {/* 文章內容 (CKEditor) */}
+        <div className="secondaryTitle">內容</div>
         <Myeditor
           name="content"
           value={content}
           editorLoaded={true}
           onChange={(data) => setContent(data)}
         />
-      </div>
 
-      {/* 標籤 */}
-      <div className="form-group">
-        <label>標籤</label>
+        {/* 標籤 */}
+        <div className="secondaryTitle">標籤</div>
         <input
           type="text"
-          className="form-control"
+          className="form-control create-tag"
+          placeholder="請輸入標籤內容，按enter即可新增"
           value={newTag}
           onChange={handleTagInput}
           onKeyDown={addTag}
         />
         <div>
           {tagsList.map((tag, index) => (
-            <span key={index} className="badge badge-primary">
-              {tag}{" "}
+            <span key={index} className="new-tag">
+              #{tag}{" "}
               <button
                 type="button"
-                className="close"
+                className="close-tag-btn"
                 onClick={() => removeTag(tag)}
               >
                 ×
@@ -136,23 +167,14 @@ const ArticleForm = ({ categories, tags }) => {
             </span>
           ))}
         </div>
-      </div>
 
-      {/* 上傳封面圖片 */}
-      <div className="form-group">
-        <label>封面圖片</label>
-        <input
-          type="file"
-          className="form-control"
-          onChange={(e) => setCoverImage(e.target.files[0])}
-        />
-      </div>
-
-      {/* 提交按鈕 */}
-      <button type="submit" className="btn btn-primary">
-        提交
-      </button>
-    </form>
+        {/* 提交按鈕 */}
+        <div className="btnarea">
+          <button className="btn article-create-btn">儲存草稿</button>
+          <button className="btn article-create-btn">發表文章</button>
+        </div>
+      </form>
+    </div>
   );
 };
 
