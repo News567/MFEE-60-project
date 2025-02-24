@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, useMemo } from "react"; // useState 儲存從後端獲取的資料，並使用 useEffect 在組件加載時發送請求
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Slider from "rc-slider";
 import "./RentList.css";
@@ -51,6 +52,12 @@ export default function RentList() {
   //顏色專區
   const [colors, setColors] = useState([]); // 存儲顏色資料
   const [selectedColorId, setSelectedColorId] = useState(null);
+
+  // 新上市商品推薦專區
+  const [newArrivals, setNewArrivals] = useState([]); // 存儲新品資料
+
+  // 特惠商品推薦專區
+  const [saleProducts, setSaleProducts] = useState([]);
 
   // 動態更新網址參數（根據每頁顯示資料數、分頁、排序條件）
   const router = useRouter();
@@ -567,6 +574,74 @@ export default function RentList() {
       isPriceFilterActive ? priceRange[1] : null // maxPrice
     );
   };
+
+  // 獲取新品資料
+  useEffect(() => {
+    const fetchNewArrivals = async () => {
+      try {
+        const API_BASE_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
+        const response = await fetch(`${API_BASE_URL}/api/rent/new-arrivals`);
+
+        // 檢查回應是否成功
+        if (!response.ok) {
+          throw new Error(`HTTP 錯誤！狀態碼: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        // 檢查回應格式是否正確
+        if (result && result.success && Array.isArray(result.data)) {
+          setNewArrivals(result.data); // 設置新品資料
+        } else {
+          console.error("API 返回的新品資料格式不正確:", result);
+        }
+      } catch (error) {
+        console.error("獲取新品資料失敗:", error);
+      }
+    };
+
+    fetchNewArrivals();
+  }, []);
+
+  // 格式化日期
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("zh-TW", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
+
+  // 特惠商品推薦
+  useEffect(() => {
+    const fetchSaleProducts = async () => {
+      try {
+        const API_BASE_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:3005";
+        const response = await fetch(`${API_BASE_URL}/api/rent/new-discounted`);
+
+        // 檢查回應是否成功
+        if (!response.ok) {
+          throw new Error(`HTTP 錯誤！狀態碼: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        // 檢查回應格式是否正確
+        if (result && result.success && Array.isArray(result.data)) {
+          setSaleProducts(result.data); // 設置新品資料
+        } else {
+          console.error("API 返回的特惠商品資料格式不正確:", result);
+        }
+      } catch (error) {
+        console.error("獲取特惠商品資料失敗:", error);
+      }
+    };
+
+    fetchSaleProducts();
+  }, []);
 
   // 初始加載
   useEffect(() => {
@@ -1255,39 +1330,12 @@ export default function RentList() {
                   />
                 </div>
 
-                {/* 品牌類別 */}
-                {/* <div className="product-filter-brand">
-                  <p className="filter-subtitle filter-subtitle2">
-                    <i className="bi bi-chevron-down"></i>品牌類別
-                  </p>
-                  <div className="brand-select d-flex flex-row align-items-center">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      value=""
-                      id="brand1"
-                    />
-                    <label className="form-check-label brand" htmlFor="brand1">
-                      LEADERFINS (4)
-                    </label>
-                  </div>
-                  <div className="brand-select d-flex flex-row align-items-center">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      value=""
-                      id="brand2"
-                    />
-                    <label className="form-check-label brand" htmlFor="brand2">
-                      OMER (15)
-                    </label>
-                  </div>
-                </div> */}
-
                 {/* 顏色類別 */}
-                <div className="product-filter-color">
-                  <p className="filter-subtitle filter-subtitle2">
-                    <i className="bi bi-chevron-down"></i>顏色類別
+                <div className="product-filter-color ">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <p className="filter-subtitle filter-subtitle2">
+                      <i className="bi bi-chevron-down"></i>顏色類別{" "}
+                    </p>
                     {selectedColorId && ( // 當選中顏色時顯示清除按鈕
                       <i
                         className="bi bi-x clear-filter"
@@ -1295,7 +1343,7 @@ export default function RentList() {
                         style={{ cursor: "pointer", marginLeft: "10px" }}
                       ></i>
                     )}
-                  </p>
+                  </div>
                   <div className="d-flex flex-wrap align-items-center color-options">
                     {colors.map((color) => (
                       <div
@@ -1319,38 +1367,55 @@ export default function RentList() {
                 </div>
                 <div className="d-flex flex-column new-product-lists">
                   {/* 新品商品卡片 */}
-                  {[1, 2, 3].map((item) => (
-                    <div className="card" key={item}>
-                      <div className="d-flex flex-row align-items-center new-product">
-                        <Image
-                          src="/img/rent/fit/1732690021_5668.jpg"
-                          className="card-img-left product-img"
-                          alt={`新產品 ${item}`}
-                          width={90} // 設定圖片的寬度
-                          height={90} // 設定圖片的高度
-                          priority
-                          unoptimized
-                        />
-                        <div className="card-body d-flex flex-column">
-                          <p className="product-brand">TRYGONS</p>
-                          <p className="product-name">液態面鏡</p>
-                          <h6 className="product-price">NT $740</h6>
-                          <div className="d-flex flex-row align-items-center product-color">
-                            <span
-                              className="color-box"
-                              style={{ backgroundColor: "#4d4244" }}
-                            ></span>
-                            <span
-                              className="color-box"
-                              style={{ backgroundColor: "#403f6f" }}
-                            ></span>
-                            <span
-                              className="color-box"
-                              style={{ backgroundColor: "white" }}
-                            ></span>
+                  {newArrivals.map((product) => (
+                    <div className="card" key={product.id}>
+                      <Link
+                        href={`/rent/${product.id}`}
+                        passHref
+                        style={{
+                          cursor: "pointer",
+                          textDecoration: "none",
+                          color: "none",
+                        }}
+                      >
+                        <div className="d-flex flex-row align-items-center new-product">
+                          <Image
+                            src={product.img_url}
+                            alt={product.name}
+                            width={90} // 設定圖片的寬度
+                            height={90} // 設定圖片的高度
+                            className="card-img-left product-img"
+                            priority
+                            unoptimized
+                          />
+                          <div className="card-body d-flex flex-column">
+                            <p className="product-brand">{product.brand}</p>
+                            <p className="product-name">{product.name}</p>
+                            <h6 className="product-price">
+                              NT$ {product.price}
+                            </h6>
+                            <div className="d-flex flex-row align-items-center product-color">
+                              {/* 假設商品顏色資料在 product.color_rgb 中 */}
+                              {product.color_rgb &&
+                                product.color_rgb
+                                  .split(", ")
+                                  .map((color, index) => (
+                                    <span
+                                      key={index}
+                                      className="color-box"
+                                      style={{ backgroundColor: color }}
+                                    ></span>
+                                  ))}
+                            </div>
+                            {/* <p className="product-created-at">
+                    上架時間: {formatDate(product.created_at)}
+                  </p>
+                  <p className="product-updated-at">
+                    最後更新: {formatDate(product.update_at)}
+                  </p> */}
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     </div>
                   ))}
                 </div>
@@ -1363,39 +1428,51 @@ export default function RentList() {
                 </div>
                 <div className="d-flex flex-column sale-product-lists">
                   {/* 特惠商品卡片 */}
-                  {[1, 2, 3].map((item) => (
-                    <div className="card" key={item}>
-                      <div className="d-flex flex-row align-items-center sale-product">
-                        <Image
-                          src="/img/rent/fit/1732690021_5668.jpg"
-                          className="card-img-left product-img"
-                          alt={`特惠產品 ${item}`}
-                          width={90} // 設定圖片的寬度
-                          height={98} // 設定圖片的高度
-                          priority
-                          unoptimized
-                        />
-                        <div className="card-body d-flex flex-column">
-                          <p className="product-brand">TRYGONS</p>
-                          <p className="product-name">液態面鏡</p>
-                          <h6 className="product-price">NT $740</h6>
-                          <h6 className="product-price2">NT $350</h6>
-                          <div className="d-flex flex-row align-items-center product-color">
-                            <span
-                              className="color-box"
-                              style={{ backgroundColor: "#4d4244" }}
-                            ></span>
-                            <span
-                              className="color-box"
-                              style={{ backgroundColor: "#403f6f" }}
-                            ></span>
-                            <span
-                              className="color-box"
-                              style={{ backgroundColor: "white" }}
-                            ></span>
+                  {saleProducts.map((product) => (
+                    <div className="card" key={product.id}>
+                      <Link
+                        href={`/rent/${product.id}`}
+                        passHref
+                        style={{
+                          cursor: "pointer",
+                          textDecoration: "none",
+                          color: "none",
+                        }}
+                      >
+                        <div className="d-flex flex-row align-items-center sale-product">
+                          <Image
+                            src={product.img_url || "/image/rent/no-img.png"} // 如果沒有圖片則顯示預設圖
+                            alt={product.name}
+                            width={90}
+                            height={90}
+                            className="card-img-left product-img"
+                            priority
+                            unoptimized
+                          />
+                          <div className="card-body d-flex flex-column">
+                            <p className="product-brand">{product.brand}</p>
+                            <p className="product-name">{product.name}</p>
+                            <h6 className="product-price">
+                              NT$ {product.price}
+                            </h6>
+                            <h6 className="product-price2">
+                              NT$ {product.price2}
+                            </h6>
+                            <div className="d-flex flex-row align-items-center product-color">
+                              {product.color_rgb &&
+                                product.color_rgb
+                                  .split(", ")
+                                  .map((color, index) => (
+                                    <span
+                                      key={index}
+                                      className="color-box"
+                                      style={{ backgroundColor: color }}
+                                    ></span>
+                                  ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     </div>
                   ))}
                 </div>

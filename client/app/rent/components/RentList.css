@@ -235,7 +235,6 @@
   color: var(--gray-600-color);
 }
 
-
 /* 覆蓋 rc-slider 的默認樣式 */
 .custom-slider .rc-slider-track {
   background-color: var(--primary-light-color); /* 滑軌顏色 */
@@ -249,7 +248,6 @@
 .custom-slider .rc-slider-dot-active {
   border-color: var(--primary-color); /* 刻度點顏色 */
 }
-
 
 .sidebar .product-filter .product-filter-brand .brand-select {
   gap: 10px;
@@ -286,24 +284,32 @@
 }
 
 .sidebar .product-new .new-product-lists {
+  width: 100%;
   padding: 10px;
   gap: 10px;
 }
 
 .sidebar .product-new .new-product-lists .card {
+  width: 100%;
   border: none;
 }
 
 .sidebar .product-new .new-product-lists .card .new-product {
-  max-width: 186px;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .sidebar .product-new .new-product-lists .card .new-product .product-img {
   width: 90px;
-  height: 100%;
+  flex-shrink: 0;
 }
 
 .sidebar .product-new .new-product-lists .card .new-product .card-body {
+  flex-grow: 1;
+  min-width: 0;
   gap: 2px;
   padding: 0px 0px 0px 10px;
 }
@@ -330,6 +336,7 @@
   .card-body
   .product-price {
   margin: 0;
+  color: var(--black);
 }
 
 .sidebar
@@ -340,7 +347,7 @@
   .card-body
   .product-brand {
   color: var(--gray-600-color);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .sidebar
@@ -351,7 +358,10 @@
   .card-body
   .product-name {
   font-size: 14px;
-  text-overflow: ellipsis;
+  white-space: nowrap; /* 防止換行 */
+  overflow: hidden; /* 隱藏溢出部分 */
+  text-overflow: ellipsis; /* 顯示省略號 */
+  width: 100%; /* 確保它有固定的寬度 */
 }
 
 .sidebar
@@ -362,8 +372,9 @@
   .card-body
   .product-price {
   display: inline-block;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
+  color: var(--black) !important;
 }
 
 .sidebar
@@ -384,11 +395,11 @@
   .card-body
   .product-color
   .color-box {
-  width: 15px;
-  height: 15px;
+  width: 13px;
+  height: 13px;
   border: 0.5px solid var(--gray-200-color);
   border-radius: 50%;
-  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.06));
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.4));
 }
 
 .sidebar .product-new .pagination.page-link {
@@ -406,15 +417,21 @@
 }
 
 .sidebar .product-sale .sale-product-lists .card .sale-product {
-  max-width: 186px;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .sidebar .product-sale .sale-product-lists .card .sale-product .product-img {
   width: 90px;
-  height: 100%;
+  flex-shrink: 0;
 }
 
 .sidebar .product-sale .sale-product-lists .card .sale-product .card-body {
+  flex-grow: 1;
+  min-width: 0;
   gap: 2px;
   padding: 0px 0px 0px 10px;
 }
@@ -448,6 +465,7 @@
   .card-body
   .product-price2 {
   margin: 0;
+  color: var(--black);
 }
 
 .sidebar
@@ -469,7 +487,10 @@
   .card-body
   .product-name {
   font-size: 14px;
-  text-overflow: ellipsis;
+  white-space: nowrap; /* 防止換行 */
+  overflow: hidden; /* 隱藏溢出部分 */
+  text-overflow: ellipsis; /* 顯示省略號 */
+  width: 100%; /* 確保它有固定的寬度 */
 }
 
 .sidebar
@@ -487,7 +508,7 @@
   .card-body
   .product-price2 {
   display: inline-block;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -509,11 +530,11 @@
   .card-body
   .product-color
   .color-box {
-  width: 15px;
-  height: 15px;
+  width: 13px;
+  height: 13px;
   border: 0.5px solid var(--gray-200-color);
   border-radius: 50%;
-  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.06));
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.4));
 }
 
 .sidebar .product-sale .pagination.page-link {
@@ -615,7 +636,11 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.1));
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.02),
+    rgba(0, 0, 0, 0.1)
+  );
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
 }
