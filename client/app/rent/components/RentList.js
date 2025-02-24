@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Slider from "rc-slider";
+import flatpickr from "flatpickr";
+import "flatpickr/dist/flatpickr.min.css";
 import "./RentList.css";
 import "./modal.css";
 import "../../../public/globals.css";
@@ -99,6 +101,7 @@ export default function RentList() {
     },
     [router]
   );
+  
 
   // 從後端獲取商品資料回前端
   const fetchProducts = useCallback(
@@ -190,6 +193,7 @@ export default function RentList() {
     () => debounce(fetchProducts, 300),
     [fetchProducts]
   );
+  
 
   // 從 URL 初始化狀態
   useEffect(() => {
@@ -1792,7 +1796,7 @@ export default function RentList() {
                     {/* modal內容區塊 */}
                     <div className="modal-body">
                       {selectedProduct ? (
-                        <div className="row">
+                        <div className="row d-flex flex-row justify-content-center align-items-center">
                           {/* 左側：商品圖片 */}
                           <div className="col-md-5">
                             <Image
