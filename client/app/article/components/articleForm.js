@@ -1,5 +1,5 @@
 import { useState } from "react";
-// import Forum from "../api/forum"; // 引入 forum.js API
+import Forum from "../api/forum"; // 引入 forum.js API
 import dynamic from "next/dynamic";
 import "./articleCreate.css";
 
@@ -7,7 +7,7 @@ import "./articleCreate.css";
 const CKEditor = dynamic(() => import("@ckeditor/ckeditor5-react"), { ssr: false });
 const ClassicEditor = dynamic(() => import("@ckeditor/ckeditor5-build-classic"), { ssr: false });
 
-const ArticleForm = ({ categories, tags }) => {
+const articleForm = ({ categories, tags }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [categoryBig, setCategoryBig] = useState("");
@@ -158,4 +158,4 @@ const ArticleForm = ({ categories, tags }) => {
   );
 };
 
-export default ArticleForm;
+export default articleForm;
