@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Slider from "rc-slider";
 import "./RentList.css";
+import "./modal.css";
 import "../../../public/globals.css";
 import "rc-slider/assets/index.css";
 import RentBrand from "./RentBrand"; // 匯入，處理品牌專區
@@ -59,6 +60,11 @@ export default function RentList() {
 
   // 特惠商品推薦專區
   const [saleProducts, setSaleProducts] = useState([]);
+
+  //商品列表頁跳出modal選擇詳細資訊
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
   // 動態更新網址參數（根據每頁顯示資料數、分頁、排序條件）
   const router = useRouter();
@@ -1073,6 +1079,71 @@ export default function RentList() {
     });
   }, [products]); // 當 products 更新時執行
 
+  // 點擊圖標時顯示 Modal
+  const handleIconClick = (product, e) => {
+    e.stopPropagation(); // 防止事件冒泡（才不會點到跳轉 rent detail）
+    setSelectedProduct(product);
+
+    // // 取得商品圖片
+    // const images = product.images || [];
+    // const mainImage =
+    //   images.find((img) => img.is_main === 1)?.img_url ||
+    //   images[0]?.img_url ||
+    //   "/image/rent/no-img.png"; // 預設圖片
+
+    // setSelectedProduct({ ...product, mainImage });
+
+    // 觸發 Bootstrap Modal
+    const myModal = new bootstrap.Modal(
+      document.getElementById("rentDetailModal")
+    );
+    myModal.show();
+  };
+
+  // 確認租借資訊
+  // const handleConfirmRent = () => {
+  //   const rentDate = document.getElementById('rentDate').value;
+  //   const rentQuantity = document.getElementById('rentQuantity').value;
+
+  //   if (!rentDate || !rentQuantity) {
+  //     alert('請填寫完整的租借資訊');
+  //     return;
+  //   }
+
+  //   // 將商品 ID、租借日期和數量發送到後端
+  //   addToCart(selectedProductId, rentDate, rentQuantity);
+
+  //   // 關閉 Modal
+  //   closeModal();
+  // };
+
+  // 加入購物車的函數
+  // const addToCart = async (productId, rentDate, rentQuantity) => {
+  //   try {
+  //     const response = await fetch('/add-to-cart', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         productId,
+  //         rentDate,
+  //         rentQuantity,
+  //       }),
+  //     });
+
+  //     const data = await response.json();
+  //     if (data.success) {
+  //       alert('商品已成功加入購物車');
+  //     } else {
+  //       alert('加入購物車失敗');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //     alert('發生錯誤，請稍後再試');
+  //   }
+  // };
+
   // 租借商品列表（動態渲染）
   return (
     <div>
@@ -1356,7 +1427,11 @@ export default function RentList() {
                       ></i>
                     )}
                   </div>
-                  <div className={`d-flex flex-wrap align-items-center color-options ${isExpanded ? 'expanded' : ''}`}>
+                  <div
+                    className={`d-flex flex-wrap align-items-center color-options ${
+                      isExpanded ? "expanded" : ""
+                    }`}
+                  >
                     {colors.map((color) => (
                       <div
                         key={color.id} // 使用 color.id 作為 key
@@ -1693,6 +1768,179 @@ export default function RentList() {
                 </div>
               </div>
 
+              {/* Bootstrap Modal */}
+              <div
+                className="modal fade"
+                id="rentDetailModal"
+                tabIndex="-1"
+                aria-hidden="true"
+              >
+                <div className="modal-dialog modal-dialog-centered">
+                  <div className="modal-content">
+                    {/* modal標題 */}
+                    <div className="modal-header">
+                      <h5 className="modal-title">
+                        {selectedProduct?.name || "租借商品詳情"}
+                      </h5>
+                      <button
+                        type="button"
+                        className="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                      ></button>
+                    </div>
+                    {/* modal內容區塊 */}
+                    <div className="modal-body">
+                      {selectedProduct ? (
+                        <div className="row">
+                          {/* 左側：商品圖片 */}
+                          <div className="col-md-5">
+                            <Image
+                              src={
+                                selectedProduct?.img_url ||
+                                "/image/rent/no-img.png"
+                              }
+                              className="img-fluid"
+                              alt={selectedProduct?.name}
+                              width={360}
+                              height={360}
+                              layout="responsive"
+                              priority
+                              unoptimized
+                            />
+                          </div>
+
+                          {/* 右側：商品資訊 */}
+                          <div className="col-md-7 d-flex flex-column gap-2">
+                            {/* 商品價格 */}
+                            <div className="subdetails-titles d-flex flex-column">
+                              {/* 判斷是否有特價資料 */}
+                              {selectedProduct.price2 ? (
+                                <>
+                                  {/* 顯示特價並加強顯示 */}
+                                  <p className="modal-product-price2">
+                                    NT${selectedProduct.price2}/日
+                                  </p>
+                                  {/* 顯示劃掉的原價 */}
+                                  <p
+                                    className="modal-product-price"
+                                    style={{
+                                      color: "var(--gray-600-color)",
+                                      fontWeight: "400",
+                                      textDecoration: "line-through",
+                                    }}
+                                  >
+                                    NT${selectedProduct.price}/日
+                                  </p>
+                                </>
+                              ) : (
+                                // 沒有特價則只顯示原價
+                                <p className="modal-product-price">
+                                  NT${selectedProduct.price}/日
+                                </p>
+                              )}
+                            </div>
+
+                            {/* 商品顏色 */}
+                            <div className="product-color">
+                              <p className="color-title fw-bold">商品顏色</p>
+                              <div className="colors d-flex flex-row">
+                                {selectedProduct.color_rgb ? (
+                                  // 將 color_rgb 字串分割成陣列
+                                  <div className="product-colors d-flex">
+                                    {selectedProduct.color_rgb
+                                      .split(",")
+                                      .map((color, index) => (
+                                        <span
+                                          key={index}
+                                          className="color-box rounded-circle mx-1 border"
+                                          style={{
+                                            backgroundColor: color.trim(), // 使用每個顏色值來設置背景顏色
+                                            width: "20px",
+                                            height: "20px",
+                                            display: "inline-block",
+                                          }}
+                                        ></span>
+                                      ))}
+                                  </div>
+                                ) : (
+                                  <p className="no-colors">
+                                    本商品暫無其他顏色
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* 商品數量 */}
+                            <div className="product-amount">
+                              <p className="fw-bold amount-title">商品數量</p>
+                              <div className="amounts d-flex align-items-center">
+                                <button
+                                  className="btn btn-outline-secondary btn-sm"
+                                  onClick={() =>
+                                    setQuantity((prev) =>
+                                      prev > 1 ? prev - 1 : prev
+                                    )
+                                  }
+                                >
+                                  <i className="bi bi-dash"></i>
+                                </button>
+                                <input
+                                  type="text"
+                                  className="form-control text-center mx-2"
+                                  style={{ width: "50px" }}
+                                  value={quantity}
+                                  readOnly
+                                />
+                                <button
+                                  className="btn btn-outline-secondary btn-sm"
+                                  onClick={() =>
+                                    setQuantity((prev) => prev + 1)
+                                  }
+                                >
+                                  <i className="bi bi-plus"></i>
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* 庫存資訊 */}
+                            {selectedProduct.stock &&
+                            selectedProduct.stock > 0 ? (
+                              <p className="product-stock">
+                                庫存僅剩 {selectedProduct.stock} 件
+                              </p>
+                            ) : (
+                              <p className="stock-available">庫存餘量充足</p>
+                            )}
+
+                            {/* 預訂日期 */}
+                            <div className="booking-date mt-3">
+                              <p className="fw-bold">預訂日期</p>
+                              <input type="date" className="form-control" />
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <p>租借商品資訊載入中...</p>
+                      )}
+                    </div>
+
+                    {/* 按鈕區 */}
+                    <div className="modal-footer">
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                      >
+                        取消租借
+                      </button>
+                      <button type="button" className="btn btn-primary">
+                        確認租借
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
               {/* Product Lists */}
               <div className="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4 product-lists">
                 {/* 商品卡片cards */}
@@ -1717,7 +1965,7 @@ export default function RentList() {
                             // layout="intrinsic"
                             width={124}
                             height={124}
-                            style={{ objectFit: "contain" }} 
+                            style={{ objectFit: "contain" }}
                             priority
                             unoptimized
                           />
@@ -1767,7 +2015,10 @@ export default function RentList() {
                             <div className="icon d-flex justify-content-center align-items-center">
                               <i className="bi bi-heart"></i>
                             </div>
-                            <div className="icon d-flex justify-content-center align-items-center">
+                            <div
+                              className="icon d-flex justify-content-center align-items-center"
+                              onClick={(e) => handleIconClick(product, e)}
+                            >
                               <i className="bi bi-cart"></i>
                             </div>
                           </div>

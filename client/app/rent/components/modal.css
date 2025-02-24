@@ -1,0 +1,42 @@
+.subdetails-titles {
+  gap: 10px;
+}
+
+.modal-body .subdetails-titles .modal-product-price {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.modal-body .subdetails-titles .modal-product-price2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.product-color {
+  gap: 10px;
+}
+.color-title {
+  margin: 0;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.no-colors {
+  margin: 0;
+  color: var(--gray-600-color);
+}
+
+.amount-title {
+  margin-bottom: 10px;
+}
+.product-stock {
+  margin: 0;
+  color: var(--gray-600-color);
+}
+.stock-available {
+  margin: 0;
+  margin-left: 10;
+  color: var(--gray-600-color);
+}

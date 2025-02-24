@@ -59,7 +59,7 @@ export default function RentProductDetail() {
         const mainImage =
           (images && images.find((img) => img.is_main === 1)?.img_url) ||
           (images && images[0]?.img_url) ||
-          "/rent/no-img.png"; // 如果沒有圖片，顯示"本商品暫時沒有圖片"的預設圖片
+          "/image/rent/no-img.png"; // 如果沒有圖片，顯示"本商品暫時沒有圖片"的預設圖片
         setMainImage(mainImage);
 
         console.log("Product images:", images); // 調試訊息
@@ -514,7 +514,7 @@ export default function RentProductDetail() {
               </div>
               <div className="details-select d-flex flex-column">
                 <div className="product-color">
-                  <p className="color-title">產品顏色</p>
+                  <p className="color-title">商品顏色</p>
                   <div className="colors d-flex flex-row">
                     {product.specifications &&
                     product.specifications.some((spec) => spec.color_rgb) ? (
@@ -536,7 +536,7 @@ export default function RentProductDetail() {
                   </div>
                 </div>
                 <div className="product-amount">
-                  <p className="amount-title">產品數量</p>
+                  <p className="amount-title">商品數量</p>
                   <div className="amounts d-flex flex-row align-items-center">
                     <button
                       className="quantity-btn minus"
@@ -668,7 +668,7 @@ export default function RentProductDetail() {
                 <div className="card border-0 h-100">
                   <div className="d-flex justify-content-center align-items-center img-container">
                     <Image
-                      src={product.img_url || "/img/rent/no-img.png"}
+                      src={product.img_url || "/image/rent/no-img.png"}
                       className="product-img"
                       alt={product.name}
                       layout="intrinsic"
