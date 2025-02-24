@@ -5,6 +5,7 @@ import axios from "axios";
 import CouponCard from "../../components/CouponCard";
 import "./CouponHistory.css";
 import Image from "next/image";
+import '@fortawesome/fontawesome-free/css/all.min.css'
 
 const API_BASE_URL = "http://localhost:3005/api";
 

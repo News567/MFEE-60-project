@@ -45,7 +45,7 @@ export default function GroupDetailPage() {
             <div className="row">
                 <div className="col-sm-8 col-12 d-flex flex-column middle-section">
                     <div className="img-container">
-                        <img className="img" src={`/image/group/${id}/${group.group_img}`} alt="" />
+                        <img className="img" src={`/image/group/${group.group_img}`} alt="" />
                     </div>
                     <h4 className="text-center fs-26px fw-bold m-0">
                         {group.name}

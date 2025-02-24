@@ -19,7 +19,7 @@ export default function RecommendCard({activity}) {
                 <div className={`${styles.cardImgContainer}`}>
                     <Image
                         className={`${styles.img}`}
-                        src={`/image/activity/${activity.id}/${activity.imgUrl}`}
+                        src={`/image/activity/${activity.id}/${activity.img_url}`}
                         
                         alt=""  
                         layout="fill"  // 使用 layout="fill"

@@ -39,7 +39,7 @@ export function buildProductQuery({
     queryParams.push(bigCategoryId);
   }
 
-  // ✅ `color_id` 篩選（影響 WHERE 過濾）
+  //  `color_id` 篩選（影響 WHERE 過濾）
   if (colorIds && colorIds.length > 0) {
     whereClause += ` AND p.id IN (
           SELECT pv.product_id FROM product_variant pv 

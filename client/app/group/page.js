@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 import "./styles.css";
 import Link from "next/link";
 import axios from "axios";
+import { useAuth } from "@/hooks/use-auth";
 export default function GroupHomePage() {
+    // 檢查登入狀態用
+    const {user} = useAuth();
     // 設定揪團資料
     const [groups, setGroups] = useState([]);
     const [progressing, setProgressing] = useState(0);
@@ -87,7 +90,7 @@ export default function GroupHomePage() {
                 <div className="publicity-title">最新揪團</div>
                 <div className="d-flex justify-content-between group-cards">
                     {groups && groups.length > 0 ? (
-                        groups.map((group, i) => {
+                        groups.slice(0,4).map((group, i) => {
                             return (
                                 <Link
                                     className="link"
@@ -97,7 +100,7 @@ export default function GroupHomePage() {
                                         <div className="img-container">
                                             <img
                                                 className="img"
-                                                src={`/image/group/${group.id}/${group.group_img}`}
+                                                src={`/image/group/${group.group_img}`}
                                                 alt=""
                                             />
                                         </div>

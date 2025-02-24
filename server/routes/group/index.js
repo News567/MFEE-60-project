@@ -7,7 +7,8 @@ router.get("/", async (req, res) => {
         // res.json({message:"連接成功"})
         const sql = `SELECT groups.*, activity_city.name AS city_name, groups_image.img_url AS group_img FROM groups 
         LEFT JOIN activity_city ON groups.groups_city_id = activity_city.id
-        LEFT JOIN groups_image ON groups.id = groups_image.groups_id`;
+        LEFT JOIN groups_image ON groups.id = groups_image.groups_id
+        ORDER BY created_at DESC `;
         const [rows] = await pool.execute(sql);
         // console.log(rows[0]);
         res.status(200).json({

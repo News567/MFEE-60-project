@@ -1,75 +1,331 @@
-.cartCss3 {
+/* 主色調變數 */
+:root {
   --primary-color: #219ebc;
-  --primary-hover: #cab331;
+  --primary-hover:rgb(38, 111, 207);
   --primary-light: #e6f3f7;
 }
 
-.cartCss3 .card-header {
+/* 修改按鈕樣式 */
+.cartCss2 .btn-primary {
   background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.cartCss2 .btn-primary:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.cartCss2 .btn-outline-primary {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.cartCss2 .btn-outline-primary:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* 修改連結顏色 */
+.cartCss2 .btn-link {
+  color: var(--primary-color);
+}
+
+.cartCss2 .btn-link:hover {
+  color: var(--primary-hover);
+}
+
+/* 修改卡片樣式 */
+.cartCss2 .card-header {
+  background-color: var(--primary-color);
+  color: white;
+  border-bottom: none;
+}
+
+/* 修改信用卡樣式 */
+.cartCss2 .card-container {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.cartCss2 .credit-card {
+  width: 100%;
+  height: 200px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+}
+
+.cartCss2 .credit-card.flipped {
+  transform: rotateY(180deg);
+}
+
+.cartCss2 .card-front,
+.cartCss2 .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cartCss2 .card-front {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-hover)
+  );
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cartCss2 .card-back {
+  background: linear-gradient(
+    135deg,
+    var(--primary-hover),
+    var(--primary-color)
+  );
+  transform: rotateY(180deg);
+}
+
+.cartCss2 .card-logo {
+  font-size: 28px;
   color: white;
 }
 
-.cartCss3 .activity-item {
-  padding: 15px;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  transition: all 0.3s ease;
+.cartCss2 .card-number {
+  font-size: 1.5em;
+  letter-spacing: 4px;
+  text-align: center;
+  margin: 20px 0;
+  color: white;
 }
 
-.cartCss3 .activity-item.active {
+.cartCss2 .card-holder,
+.cartCss2 .card-expiry {
+  font-size: 0.9em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.cartCss2 .card-strip {
+  background: #000;
+  height: 40px;
+  margin: 20px 0;
+}
+
+.cartCss2 .card-signature {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px;
+  margin-top: 20px;
+  border-radius: 4px;
+}
+
+.cartCss2 .signature-line {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  margin-bottom: 5px;
+}
+
+.cartCss2 .cvc {
+  text-align: right;
+  color: white;
+  font-size: 1.1em;
+  letter-spacing: 2px;
+}
+
+/* 修改表單focus狀態 */
+.cartCss2 .form-control:focus,
+.cartCss2 .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.25rem rgba(33, 158, 188, 0.25);
+}
+
+/* 修改邊框顏色 */
+.cartCss2 .total-price-area {
+  border-color: var(--primary-color);
+}
+
+/* 修改滾動條顏色 */
+.cartCss2 .cart-preview-items::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+}
+
+.cartCss2 .cart-preview-items::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-hover);
+}
+
+/* 修改文字顏色 */
+.cartCss2 .text-primary {
+  color: var(--primary-color) !important;
+}
+
+/* 修改徽章樣式 */
+.cartCss2 .badge.bg-success {
+  background-color: var(--primary-color) !important;
+}
+
+/* 修改hover效果 */
+.cartCss2 .recommend-item:hover,
+.cartCss2 .cart-preview-item:hover {
+  border-color: var(--primary-color) !important;
+  background-color: var(--primary-light);
+}
+
+/* 自定義表單樣式 */
+.cartCss2 .form-floating {
+  margin-bottom: 1rem;
+}
+
+.cartCss2 .form-control:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 4px rgba(13, 71, 161, 0.25);
+}
+
+.cartCss2 .border {
+  border-color: #dee2e6 !important;
+}
+
+.cartCss2 .border:hover {
+  border-color: #e99191 !important;
+}
+
+.cartCss2 .btn-outline-danger {
+  border-color: #e99191;
+  color: #e99191;
+}
+
+.cartCss2 .btn-outline-danger:hover {
+  background-color: #e99191;
+  border-color: #e99191;
+  color: white;
+}
+
+.cartCss2 .text-danger {
+  color: #e99191 !important;
+}
+
+.cartCss2 .cart-preview-items {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.cartCss2 .cart-preview-item {
+  transition: background-color 0.2s;
+}
+
+.cartCss2 .cart-preview-item:hover {
+  background-color: #f8f9fa;
+}
+
+.cartCss2 .btn-link {
+  color: #e99191;
+}
+
+.cartCss2 .btn-link:hover {
+  color: #d77777;
+}
+
+/* 自定義滾動條樣式 */
+.cartCss2 .cart-preview-items::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cartCss2 .cart-preview-items::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.cartCss2 .cart-preview-items::-webkit-scrollbar-thumb {
+  background: #e99191;
+  border-radius: 3px;
+}
+
+.cartCss2 .cart-preview-items::-webkit-scrollbar-thumb:hover {
+  background: #d77777;
+}
+
+.cartCss2 .recommend-products {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.cartCss2 .recommend-item {
+  transition: all 0.2s;
+}
+
+.cartCss2 .recommend-item:hover {
+  border-color: #e99191 !important;
+  background-color: #fff4f4;
+}
+
+.cartCss2 .free-shipping-hint {
+  font-size: 0.875rem;
+}
+
+/* 自定義滾動條樣式 */
+.cartCss2 .recommend-products::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cartCss2 .recommend-products::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.cartCss2 .recommend-products::-webkit-scrollbar-thumb {
+  background: #e99191;
+  border-radius: 3px;
+}
+
+.cartCss2 .recommend-products::-webkit-scrollbar-thumb:hover {
+  background: #d77777;
+}
+
+/* 配送方式卡片樣式 */
+.shipping-method-card {
+  flex: 1;
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.shipping-method-card:hover {
+  border-color: var(--primary-color);
+}
+
+.shipping-method-card input[type="radio"]:checked + label {
+  color: var(--primary-color);
+}
+
+.shipping-method-card:has(input[type="radio"]:checked) {
   border-color: var(--primary-color);
   background-color: var(--primary-light);
 }
 
-.cartCss3 .activity-item.completed {
-  opacity: 0.7;
+.shipping-fee {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
-.cartCss3 .activity-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+/* 免運標籤樣式 */
+.badge.bg-success {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  margin-top: 0.5rem;
 }
 
-.cartCss3 .activity-number {
-  width: 24px;
-  height: 24px;
-  background-color: var(--primary-color);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
+/* 湊免運提示樣式 */
+.free-shipping-hint {
+  font-size: 0.875rem;
+  padding: 0.25rem 0;
 }
 
-.cartCss3 .activity-details {
-  padding-left: 34px;
-}
-
-.cartCss3 .detail-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 5px;
-  color: #666;
-  font-size: 14px;
-}
-
-.cartCss3 .price {
-  font-weight: bold;
-  color: var(--primary-color);
-  margin-top: 10px;
-}
-
-.cartCss3 .btn-primary {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-}
-
-.cartCss3 .btn-primary:hover {
-  background-color: var(--primary-hover);
-  border-color: var(--primary-hover);
+.free-shipping-hint i {
+  font-size: 0.875rem;
 }

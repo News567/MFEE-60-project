@@ -23,7 +23,7 @@ export default function GroupCard({ group }) {
                 <div className="group-card-img">
                     <img
                         className="img"
-                        src={`/image/group/${group.id}/${group.group_img}`}
+                        src={`/image/group/${group.group_img}`}
                         alt
                     />
                 </div>

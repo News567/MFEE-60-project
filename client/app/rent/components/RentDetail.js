@@ -679,7 +679,7 @@ export default function RentProductDetail() {
                       unoptimized
                     />
                   </div>
-                  <div className="p-0 d-flex flex-column justify-content-start align-items-center card-body">
+                  <div className="d-flex flex-column justify-content-start align-items-center card-body">
                     <p className="product-brand">{product.brand}</p>
                     <p className="product-name text-center">{product.name}</p>
 

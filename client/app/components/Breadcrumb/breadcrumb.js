@@ -28,7 +28,7 @@ export default function Breadcrumb() {
         },
         rent: {
             "": "租借商品列表", // rent 主分類名稱
-            list: "租借商商品詳情",
+            list: "租借商品詳情",
             detail: "",
         },
         products: {
@@ -48,13 +48,15 @@ export default function Breadcrumb() {
             "": "會員中心",
             account: "我的帳戶",
             favorite: "我的最愛",
-            group: "",
+            group: "我的揪團",
             order: "我的訂單",
             orderActivity: "活動清單",
             orderProduct: "商品清單",
             orderRent: "租借清單",
             account: "個人資料",
             account: "個人資料",
+            login: "用戶登入",
+            coupon: "我的優惠券"
         }};
 
         // 租借用：在商品詳情頁獲取商品名稱

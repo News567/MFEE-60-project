@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import "./cart1.css";
 import { useRouter } from "next/navigation";
 import CartFlow from "../components/cartFlow";
@@ -10,35 +10,111 @@ import { useCart } from "@/hooks/cartContext";
 
 const Cart1 = () => {
   const router = useRouter();
-  const userId = 1; // 這裡要改成實際的用戶ID
-  const { cartData, loading, error, fetchCart, selectedItems, removeFromCart } =
-    useCart();
-  const [isDeleting, setIsDeleting] = useState(false);
+  const userId = 1;
+  const { cartData, fetchCart, selectedItems, proceedToCheckout } = useCart();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // 計算商品小計
+  const calculateSubtotal = () => {
+    return cartData.total?.final || 0;
+  };
+
+  // 計算運費
+  const calculateShipping = () => {
+    // 如果只有活動商品，不需要運費
+    if (hasOnlyActivities) {
+      return 0;
+    }
+    // 根據配送方式計算運費
+    const subtotal = calculateSubtotal();
+    return subtotal >= 1000 ? 0 : 60; // step1 階段都用超商運費計算
+  };
+
+  // 計算總金額
+  const calculateTotal = () => {
+    return calculateSubtotal() + calculateShipping();
+  };
+
+  // 計算單個商品的小計
+  const calculateItemSubtotal = (item, type) => {
+    switch (type) {
+      case "products":
+        return Number(item.price) * item.quantity;
+      case "activities":
+        return Number(item.price) * item.quantity;
+      case "rentals":
+        return Number(item.discounted_price) * item.rental_days * item.quantity;
+      default:
+        return 0;
+    }
+  };
+
+  // 使用 useMemo 計算所有金額
+  const totals = useMemo(() => {
+    const selectedProducts = cartData.products.filter((item) =>
+      selectedItems.products.includes(item.id)
+    );
+    const selectedActivities = cartData.activities.filter((item) =>
+      selectedItems.activities.includes(item.id)
+    );
+    const selectedRentals = cartData.rentals.filter((item) =>
+      selectedItems.rentals.includes(item.id)
+    );
+
+    const productsTotal = selectedProducts.reduce(
+      (sum, item) => sum + calculateItemSubtotal(item, "products"),
+      0
+    );
+    const activitiesTotal = selectedActivities.reduce(
+      (sum, item) => sum + calculateItemSubtotal(item, "activities"),
+      0
+    );
+    const rentalsTotal = selectedRentals.reduce(
+      (sum, item) => sum + calculateItemSubtotal(item, "rentals"),
+      0
+    );
+
+    // 計算租賃押金總額
+    const deposit = selectedRentals.reduce(
+      (sum, item) => sum + Number(item.deposit_fee || 0) * item.quantity,
+      0
+    );
+
+    return {
+      products: productsTotal,
+      activities: activitiesTotal,
+      rentals: rentalsTotal,
+      deposit,
+      subtotal: productsTotal + activitiesTotal + rentalsTotal,
+      total: productsTotal + activitiesTotal + rentalsTotal + deposit,
+    };
+  }, [cartData, selectedItems]);
 
   useEffect(() => {
-    fetchCart(userId);
-  }, [userId]);
+    // 簡化 useEffect，只負責獲取購物車數據
+    fetchCart(userId).finally(() => {
+      setIsInitialLoad(false);
+    });
+  }, [userId]); // 只依賴 userId
 
-  if (loading) {
-    return <div>載入中...</div>;
+  // 在初始載入時不顯示任何內容
+  if (isInitialLoad) {
+    return null;
   }
 
-  if (error) {
-    return <div>錯誤: {error}</div>;
-  }
+  // 確保資料載入後才進行空購物車的判斷
+  const isEmpty =
+    !cartData.products?.length &&
+    !cartData.activities?.length &&
+    !cartData.rentals?.length;
 
-  // 如果 cartData 為 []，顯示空購物車
-  if (
-    cartData.products?.length === 0 &&
-    cartData.activities?.length === 0 &&
-    cartData.rentals?.length === 0
-  ) {
-    return (
-      <div className="cartCss">
-        <div className="container py-5">
-          <CartFlow currentStep={1} />
+  return (
+    <div className="cartCss">
+      <div className="container py-5">
+        <CartFlow currentStep={1} />
+        {isEmpty ? (
           <div className="card">
-            <div className="card-body text-center py-5">
+            <div className="card-body text-center py-4">
               <h5>購物車是空的</h5>
               <button
                 className="btn btn-primary mt-3"
@@ -48,32 +124,24 @@ const Cart1 = () => {
               </button>
             </div>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  const { products = [], activities = [], rentals = [], total = {} } = cartData;
-
-  return (
-    <div>
-      <div className="cartCss">
-        <div className="container py-5">
-          <CartFlow currentStep={1} />
+        ) : (
           <div className="row mt-3">
             <div className="col-12">
               {/* 一般商品區塊 */}
-              {products.length > 0 && (
+              {cartData.products?.length > 0 && (
                 <div className="card mb-3">
-                  <CartHeader title="一般商品" totalItems={products.length} />
+                  <CartHeader
+                    title="一般商品"
+                    totalItems={cartData.products.length}
+                  />
                   <div className="card-body">
                     <BatchActions type="products" />
-                    {products.map((item) => (
+                    {cartData.products.map((item) => (
                       <CartItem
                         key={item.id}
                         item={{
                           ...item,
-                          image: "/article-5ae9687eec0d4.jpg" || item.image_url,
+                          image: "/article-5ae9687eec0d4.jpg",
                           name: item.product_name,
                           color: item.color_name,
                           size: item.size_name,
@@ -86,18 +154,20 @@ const Cart1 = () => {
               )}
 
               {/* 活動商品區塊 */}
-              {activities.length > 0 && (
+              {cartData.activities?.length > 0 && (
                 <div className="card mb-3">
-                  <CartHeader title="活動商品" totalItems={activities.length} />
+                  <CartHeader
+                    title="活動商品"
+                    totalItems={cartData.activities.length}
+                  />
                   <div className="card-body">
                     <BatchActions type="activities" />
-                    {activities.map((item) => (
+                    {cartData.activities.map((item) => (
                       <CartItem
                         key={item.id}
                         item={{
                           ...item,
-                          image:
-                            "./article-5ae9687eec0d4.jpg" || item.image_url,
+                          image: "./article-5ae9687eec0d4.jpg",
                           name: item.activity_name,
                           activityInfo: `${item.date} ${item.time}`,
                         }}
@@ -109,21 +179,23 @@ const Cart1 = () => {
               )}
 
               {/* 租賃商品區塊 */}
-              {rentals.length > 0 && (
+              {cartData.rentals?.length > 0 && (
                 <div className="card mb-3">
-                  <CartHeader title="租賃商品" totalItems={rentals.length} />
+                  <CartHeader
+                    title="租賃商品"
+                    totalItems={cartData.rentals.length}
+                  />
                   <div className="card-body">
                     <BatchActions type="rentals" />
-                    {rentals.map((item) => (
+                    {cartData.rentals.map((item) => (
                       <CartItem
                         key={item.id}
                         item={{
                           ...item,
-                          image:
-                            "./article-5ae9687eec0d4.jpg" || item.image_url,
+                          image: "./article-5ae9687eec0d4.jpg",
                           name: item.rental_name,
                           rentalInfo: `${item.start_date} ~ ${item.end_date} (${item.rental_days}天)`,
-                          deposit: item.deposit_fee,
+                          deposit: item.deposit,
                         }}
                         type="rentals"
                       />
@@ -133,33 +205,30 @@ const Cart1 = () => {
               )}
 
               {/* 訂單總計 */}
-              {(products.length > 0 ||
-                activities.length > 0 ||
-                rentals.length > 0) && (
+              {!isEmpty && (
                 <div className="card">
                   <div className="card-body">
                     <div className="row align-items-center">
                       <div className="col text-end">
-                        {total.rentals?.deposit > 0 && (
+                        {totals.deposit > 0 && (
                           <div className="text-muted mb-2">
-                            租賃押金：NT$ {total.rentals.deposit}
+                            租賃押金：NT$ {totals.deposit}
                           </div>
                         )}
                         <div className="mb-2">
                           <span className="me-3">總計金額：</span>
                           <span className="h4 text-danger mb-0">
-                            NT$ {total.final || 0}
+                            NT$ {totals.total}
                           </span>
                         </div>
                         <small className="text-muted">
-                          結帳後可獲得 {Math.floor((total.final || 0) / 100)}{" "}
-                          點購物金
+                          結帳後可獲得 {Math.floor(totals.total / 100)} 點購物金
                         </small>
                       </div>
                       <div className="col-auto">
                         <button
                           className="btn btn-primary btn-lg"
-                          onClick={() => router.push("/cart/step2")}
+                          onClick={proceedToCheckout}
                         >
                           前往結帳
                         </button>
@@ -170,7 +239,7 @@ const Cart1 = () => {
               )}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
