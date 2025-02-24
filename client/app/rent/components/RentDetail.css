@@ -240,7 +240,6 @@
 
 .main-details .details-select .product-color .color-title {
   margin: 0;
-  color: var(--gray-600-color);
   font-weight: 700;
   margin-bottom: 10px;
 }
@@ -265,12 +264,11 @@
 
 .main-details .product-amount .amount-title {
   margin: 0;
-  color: var(--gray-600-color);
   font-weight: 700;
 }
 
 .main-details .product-amount .amounts {
-  padding: 14px 9px;
+  padding: 14px 9px 14px 0px;
 }
 
 .main-details .product-amount .amounts .quantity-btn {
@@ -300,7 +298,7 @@
 
 .main-details .booking-date .booking-title {
   margin: 0;
-  color: var(--gray-600-color);
+  color: var(--black);
   font-weight: 700;
   margin-bottom: 10px;
 }

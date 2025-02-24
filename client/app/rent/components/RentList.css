@@ -189,6 +189,9 @@
   align-items: center;
   gap: 10px;
 }
+.sidebar .product-filter .filter-subtitle2 i {
+  font-size: 10px;
+}
 
 .sidebar .product-filter .product-filter-price .price-input {
   gap: 10px;

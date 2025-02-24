@@ -2,41 +2,106 @@
   gap: 10px;
 }
 
+.modal-dialog.modal-custom {
+  max-width: 60%;
+}
+
 .modal-body .subdetails-titles .modal-product-price {
   margin: 0;
-  font-size: 16px;
+  font-size: 24px;
   font-weight: 700;
 }
 
 .modal-body .subdetails-titles .modal-product-price2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
 }
 
-.product-color {
+.modal-body .product-color {
   gap: 10px;
 }
-.color-title {
+.modal-body .product-color .colors .color-box {
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.4));
+}
+.modal-body .color-title {
   margin: 0;
   margin-top: 10px;
   margin-bottom: 10px;
 }
 
-.no-colors {
+.modal-body .no-colors {
   margin: 0;
   color: var(--gray-600-color);
 }
 
-.amount-title {
+.modal-body .amount-title {
   margin-bottom: 10px;
 }
-.product-stock {
+.modal-body .product-stock {
   margin: 0;
   color: var(--gray-600-color);
 }
-.stock-available {
+.modal-body .stock-available {
   margin: 0;
-  margin-left: 10;
   color: var(--gray-600-color);
+}
+
+
+
+
+/* 取消按鈕樣式 */
+.cancel-button {
+  background-color: #ff4d4d; /* 紅色 */
+  color: #fff; /* 白色文字 */
+  border: none;
+  border-radius: 8px; /* 圓角 */
+  padding: 10px 20px; /* 內邊距 */
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease; /* 過渡效果 */
+  margin-right: 10px; /* 右邊距 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 陰影效果 */
+}
+
+.cancel-button:hover {
+  background-color: #e60000; /* 滑鼠懸停時的深紅色 */
+  transform: translateY(-2px); /* 懸停時稍微上移 */
+}
+
+.cancel-button:active {
+  transform: translateY(0); /* 點擊時恢復原位 */
+}
+
+/* 確認按鈕樣式 */
+.confirm-button {
+  background-color: #4caf50; /* 綠色 */
+  color: #fff; /* 白色文字 */
+  border: none;
+  border-radius: 8px; /* 圓角 */
+  padding: 10px 20px; /* 內邊距 */
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease; /* 過渡效果 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 陰影效果 */
+}
+
+.confirm-button:hover {
+  background-color: #45a049; /* 滑鼠懸停時的深綠色 */
+  transform: translateY(-2px); /* 懸停時稍微上移 */
+}
+
+.confirm-button:active {
+  transform: translateY(0); /* 點擊時恢復原位 */
+}
+
+/* 禁用狀態 */
+.confirm-button:disabled,
+.cancel-button:disabled {
+  background-color: #cccccc; /* 灰色 */
+  color: #666666; /* 深灰色文字 */
+  cursor: not-allowed; /* 禁用游標 */
+  box-shadow: none; /* 移除陰影 */
 }

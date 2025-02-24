@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo } from "react"; // useState 儲存從後端獲取的資料，並使用 useEffect 在組件加載時發送請求
+import { useRef, useCallback, useEffect, useState, useMemo } from "react"; // useState 儲存從後端獲取的資料，並使用 useEffect 在組件加載時發送請求
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import Slider from "rc-slider";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
@@ -13,6 +14,8 @@ import "../../../public/globals.css";
 import "rc-slider/assets/index.css";
 import RentBrand from "./RentBrand"; // 匯入，處理品牌專區
 import { debounce } from "lodash"; // 引入 debounce 解決刷新有參數的介面資料閃動問題
+
+const Flatpickr = dynamic(() => import("flatpickr"), { ssr: false });
 
 export default function RentList() {
   const [products, setProducts] = useState([]); // 儲存從後端獲取的商品資料
@@ -67,6 +70,8 @@ export default function RentList() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [bookingDate, setBookingDate] = useState("");
+  const [rentDateRange, setRentDateRange] = useState([]); // 租借日期
 
   // 動態更新網址參數（根據每頁顯示資料數、分頁、排序條件）
   const router = useRouter();
@@ -101,7 +106,6 @@ export default function RentList() {
     },
     [router]
   );
-  
 
   // 從後端獲取商品資料回前端
   const fetchProducts = useCallback(
@@ -193,7 +197,6 @@ export default function RentList() {
     () => debounce(fetchProducts, 300),
     [fetchProducts]
   );
-  
 
   // 從 URL 初始化狀態
   useEffect(() => {
@@ -256,32 +259,32 @@ export default function RentList() {
         setSelectedSort("下拉選取排序條件");
     }
     // 根據 URL 參數初始化商品列表
-    // debouncedFetchProducts(
-    //   page,
-    //   sort,
-    //   limit,
-    //   bigCategory,
-    //   smallCategory,
-    //   letter,
-    //   brand_id,
-    //   minPrice,
-    //   maxPrice,
-    //   color_id
-    // );
+    debouncedFetchProducts(
+      page,
+      sort,
+      limit,
+      bigCategory,
+      smallCategory,
+      letter,
+      brand_id,
+      minPrice,
+      maxPrice,
+      color_id
+    );
 
-    // // 更新 URL 參數
-    // updateUrlParams(
-    //   page,
-    //   limit,
-    //   sort,
-    //   bigCategory,
-    //   smallCategory,
-    //   letter,
-    //   brand_id,
-    //   minPrice,
-    //   maxPrice,
-    //   color_id
-    // );
+    // 更新 URL 參數
+    updateUrlParams(
+      page,
+      limit,
+      sort,
+      bigCategory,
+      smallCategory,
+      letter,
+      brand_id,
+      minPrice,
+      maxPrice,
+      color_id
+    );
   }, [searchParams, debouncedFetchProducts, updateUrlParams]);
 
   useEffect(() => {
@@ -1086,22 +1089,124 @@ export default function RentList() {
   // 點擊圖標時顯示 Modal
   const handleIconClick = (product, e) => {
     e.stopPropagation(); // 防止事件冒泡（才不會點到跳轉 rent detail）
-    setSelectedProduct(product);
+    // setSelectedProduct(product);
 
-    // // 取得商品圖片
-    // const images = product.images || [];
-    // const mainImage =
-    //   images.find((img) => img.is_main === 1)?.img_url ||
-    //   images[0]?.img_url ||
-    //   "/image/rent/no-img.png"; // 預設圖片
+    // 重設選擇的商品及相關狀態
+    setSelectedProduct({
+      ...product,
+      quantity: 1, // 重置數量
+    });
 
-    // setSelectedProduct({ ...product, mainImage });
+    setQuantity(1); // 確保數量輸入框重置
+    setBookingDate(""); // 重置預訂日期
+    setRentDateRange([]); // 重置日期區間
+
+    // 清空日期選擇器的值
+    const dateRangeInput = document.getElementById("rentDateRange");
+    if (dateRangeInput) {
+      dateRangeInput.value = "";
+    }
 
     // 觸發 Bootstrap Modal
     const myModal = new bootstrap.Modal(
       document.getElementById("rentDetailModal")
     );
     myModal.show();
+    // 在 modal 顯示後初始化 flatpickr
+    const modalElement = document.getElementById("rentDetailModal");
+
+    const handleModalShown = () => {
+      const dateRangeInput = document.getElementById("rentDateRange");
+
+      if (dateRangeInput && !dateRangeInput._flatpickr) {
+        dateRangeInput.classList.add("rentlist-flatpickr");
+
+        const flatpickrInstance = flatpickr(dateRangeInput, {
+          mode: "range", // 設置為日期區間選擇模式
+          dateFormat: "Y年m月d日", // 設置日期格式
+          minDate: "today", // 設置最小日期為今天
+          locale: {
+            rangeSeparator: " ~ ", // 設置日期區間的分隔符
+            firstDayOfWeek: 1,
+            weekdays: {
+              shorthand: [
+                "週日",
+                "週一",
+                "週二",
+                "週三",
+                "週四",
+                "週五",
+                "週六",
+              ],
+              longhand: [
+                "週日",
+                "週一",
+                "週二",
+                "週三",
+                "週四",
+                "週五",
+                "週六",
+              ],
+            },
+            months: {
+              shorthand: [
+                "1月",
+                "2月",
+                "3月",
+                "4月",
+                "5月",
+                "6月",
+                "7月",
+                "8月",
+                "9月",
+                "10月",
+                "11月",
+                "12月",
+              ],
+              longhand: [
+                "一月",
+                "二月",
+                "三月",
+                "四月",
+                "五月",
+                "六月",
+                "七月",
+                "八月",
+                "九月",
+                "十月",
+                "十一月",
+                "十二月",
+              ],
+            },
+          },
+          disableMobile: true,
+          onClose: (selectedDates) => {
+            if (selectedDates.length === 2) {
+              const [startDate, endDate] = selectedDates;
+              setRentDateRange([startDate, endDate]);
+              console.log("選擇的日期區間:", startDate, endDate);
+            }
+          },
+          onOpen: () => {
+            // 在日曆打開時，將 rentlist-flatpickr 類名添加到日曆容器
+            const calendarContainer = document.querySelector(
+              ".flatpickr-calendar"
+            );
+            if (calendarContainer) {
+              calendarContainer.classList.add("rentlist-flatpickr");
+            }
+          },
+        });
+      }
+    };
+
+    // 綁定事件監聽器
+    modalElement.addEventListener("shown.bs.modal", handleModalShown);
+
+    // 清理事件監聽器
+    return () => {
+      modalElement.removeEventListener("shown.bs.modal", handleModalShown);
+    };
   };
 
   // 確認租借資訊
@@ -1776,14 +1881,17 @@ export default function RentList() {
               <div
                 className="modal fade"
                 id="rentDetailModal"
+                data-bs-backdrop="static"
+                data-bs-keyboard="false"
                 tabIndex="-1"
                 aria-hidden="true"
               >
-                <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-dialog modal-dialog-centered modal-custom">
                   <div className="modal-content">
                     {/* modal標題 */}
                     <div className="modal-header">
                       <h5 className="modal-title">
+                        {selectedProduct?.brand_name || "未知品牌"} -{" "}
                         {selectedProduct?.name || "租借商品詳情"}
                       </h5>
                       <button
@@ -1831,6 +1939,7 @@ export default function RentList() {
                                     style={{
                                       color: "var(--gray-600-color)",
                                       fontWeight: "400",
+                                      fontSize: "16px",
                                       textDecoration: "line-through",
                                     }}
                                   >
@@ -1896,11 +2005,17 @@ export default function RentList() {
                                   value={quantity}
                                   readOnly
                                 />
+                                {/* 增加數量按鈕 */}
                                 <button
                                   className="btn btn-outline-secondary btn-sm"
-                                  onClick={() =>
-                                    setQuantity((prev) => prev + 1)
-                                  }
+                                  onClick={() => {
+                                    if (
+                                      !selectedProduct.stock ||
+                                      quantity < selectedProduct.stock
+                                    ) {
+                                      setQuantity((prev) => prev + 1);
+                                    }
+                                  }}
                                 >
                                   <i className="bi bi-plus"></i>
                                 </button>
@@ -1920,7 +2035,12 @@ export default function RentList() {
                             {/* 預訂日期 */}
                             <div className="booking-date mt-3">
                               <p className="fw-bold">預訂日期</p>
-                              <input type="date" className="form-control" />
+                              <input
+                                type="text"
+                                id="rentDateRange"
+                                className="form-control"
+                                placeholder="選擇日期區間"
+                              />
                             </div>
                           </div>
                         </div>
@@ -1933,12 +2053,15 @@ export default function RentList() {
                     <div className="modal-footer">
                       <button
                         type="button"
-                        className="btn btn-secondary"
+                        className="cancel-button"
                         data-bs-dismiss="modal"
                       >
                         取消租借
                       </button>
-                      <button type="button" className="btn btn-primary">
+                      <button
+                        type="button"
+                        className="confirm-button"
+                      >
                         確認租借
                       </button>
                     </div>

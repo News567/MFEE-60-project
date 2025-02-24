@@ -33,6 +33,7 @@ export default function RentProductDetail() {
   const [recommendedProducts, setRecommendedProducts] = useState([]); // 你可能會喜歡的隨機推薦商品
 
   const [quantity, setQuantity] = useState(1);
+  const quantityInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState("description"); // 商品描述區塊切換tab
 
   // 從後端獲取商品數據
@@ -217,8 +218,12 @@ export default function RentProductDetail() {
           const unitPrice = Number(price2 ? price2 : price);
 
           // 動態數量（假設 quantity 是使用者選擇的數量）
+          // const quantity =
+          //   parseInt(document.querySelector("#quantity").value, 10) || 1;
+          
           const quantity =
-            parseInt(document.querySelector("#quantity").value, 10) || 1;
+            parseInt(quantityInputRef.current?.value, 10) || 1;
+
 
           // 計算押金（單價的 3 折）
           const deposit = Number(unitPrice * 0.3);
@@ -303,9 +308,18 @@ export default function RentProductDetail() {
       });
 
       // 監聽數量輸入框的變化
-      const quantityInput = document.querySelector("#quantity");
-      if (quantityInput) {
-        quantityInput.addEventListener("input", () => {
+      // const quantityInput = document.querySelector("#quantity");
+      // if (quantityInput) {
+      //   quantityInput.addEventListener("input", () => {
+      //     const selectedDates = calendar.selectedDates;
+      //     if (selectedDates.length === 2) {
+      //       // 如果有選擇完整的日期範圍，更新價格明細
+      //       updatePriceDetails(selectedDates, calendar);
+      //     }
+      //   });
+      // }
+      if (quantityInputRef.current) {
+        quantityInputRef.current.addEventListener("input", () => {
           const selectedDates = calendar.selectedDates;
           if (selectedDates.length === 2) {
             // 如果有選擇完整的日期範圍，更新價格明細
@@ -538,27 +552,37 @@ export default function RentProductDetail() {
                 <div className="product-amount">
                   <p className="amount-title">商品數量</p>
                   <div className="amounts d-flex flex-row align-items-center">
+                    {/* 減少數量按鈕 */}
                     <button
-                      className="quantity-btn minus"
-                      onClick={() =>
-                        setQuantity((prev) => (prev > 1 ? prev - 1 : prev))
-                      }
+                      className="btn btn-outline-secondary btn-sm"
+                      onClick={() => {
+                        if (quantity > 1) {
+                          setQuantity((prev) => prev - 1);
+                        }
+                      }}
                     >
                       <i className="bi bi-dash"></i>
                     </button>
+                    {/* 數量輸入框 */}
                     <input
                       type="text"
-                      id="quantity"
-                      className="quantity-input"
+                      className="form-control text-center mx-2"
+                      style={{ width: "50px" }}
                       value={quantity}
                       readOnly
                     />
+                    {/* 增加數量按鈕 */}
                     <button
-                      className="quantity-btn plus"
-                      onClick={() => setQuantity((prev) => prev + 1)}
+                      className="btn btn-outline-secondary btn-sm"
+                      onClick={() => {
+                        if (!product.stock || quantity < product.stock) {
+                          setQuantity((prev) => prev + 1);
+                        }
+                      }}
                     >
                       <i className="bi bi-plus"></i>
                     </button>
+
                     {/* 庫存判斷 */}
                     {product.stock && product.stock > 0 ? (
                       <p className="product-stock">
