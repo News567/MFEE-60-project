@@ -1,6 +1,7 @@
 /* article-controls */
 .article-controls {
   width: 100%;
+  height: 60px;
   margin-bottom: 20px; /* 添加底部间距 */
   display: flex;
   justify-content: space-between; /* 将筛选器和按钮区域分开 */
@@ -18,6 +19,8 @@
   margin-right: 10px;
 }
 .article-controls-btn .btn {
+  width: 120px;
+  height: 40px;
   display: inline-block; /* 按鈕為行內區塊元素 */
   align-items: center; /* 垂直居中对齐内容 */
   padding: 8px 19px; /* 內邊距 */
@@ -38,18 +41,21 @@
 
 /* card */
 .article-list {
-  display: flex;
+  grid-template-columns: repeat(2, 1fr); /* 设定两列布局，每列占 1fr */
   flex-wrap: wrap;
-  justify-content: space-between; /* 两两一行 */
+  justify-content: flex-start;
+  align-items: flex-start; /* 确保内容从上往下排列 */
+  min-height: auto; /* 让容器自动适应高度 */
+  text-align: left; /* 避免 inline-block 触发居中 */
+  padding-bottom: 650px; /* 確保底部有足夠的間距 */
 }
 
 .article-list-card {
-  margin: 8px;
-  width: calc(50% - 16px); /* 每行两个卡片，宽度为父容器宽度的一半 */
-  height: 380px; /* 固定高度 */
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; /* 隐藏超出部分 */
+  display: inline-block;
+  width: 48%; /* 让每个卡片占 48%，留一点间距 */
+  margin: 8px 1%; /* 水平间距 */
+  vertical-align: top; /* 避免 inline-block 造成的对齐问题 */
+  height: 25%; /* 让所有卡片高度一致 */
 }
 
 .article-list-card-photo {
@@ -139,9 +145,9 @@
   justify-content: flex-end; /* 让分页按钮置中 */
   background-color: white;
   list-style: none;
-  margin: 70px 0;
   width: 100%;
-  gap: 5px;
+  /* padding: 40px 0; */
+  margin-top: 100px;
 }
 
 .page-item {
