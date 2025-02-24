@@ -1,8 +1,40 @@
+"use client"
 import styles from "./group.module.css";
+import GroupCard from "@/group/_components/GroupCard";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useAuth } from "@/hooks/use-auth";
 
-export default function group() {
+
+export default function MemberGroupPage() {
+  // 設定揪團資料
+  const [mygroups, setMyGroups] = useState([]);
+
+  // 獲取會員
+  const {user} = useAuth()
+
+  // 設定api路徑
+  const api = "http://localhost:3005/api";
+  
+
+  // 連接後端獲取揪團資料
+  useEffect(() => {
+    const getList = async () => {
+      await axios
+        .get(api + "/group")
+        .then((res) => {
+          // console.log(res.data.data);
+          setMyGroups(res.data.data);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    };
+    getList();
+  }, []);
+
   return (
-    <div className={styles.content}>
+    <div className={`${styles.content} container`}>
       <div className={styles.aside}>
         <div className={styles.listBox}>
           <div className={styles.asideTitle}>
@@ -48,57 +80,12 @@ export default function group() {
             <h6>已取消</h6>
           </div>
         </div>
-        {/* Repeat for each order section */}
-        <div className={styles.sectionContent}>
-          <div className={styles.SCcard}>
-            <img src="/dc48b717dc65c863526fd471b4d2a2c7.jpg" alt="" />
-            <div className={styles.SCtext}>
-              <p>揪團名稱揪團名稱</p>
-              <p>
-                <span>
-                  <i class="bi bi-at"></i>
-                </span>
-                浮潛
-              </p>
-              <p>
-                <span>
-                  <i class="bi bi-calendar"></i>
-                </span>{" "}
-                2025-01-10
-              </p>
-            </div>
-          </div>
-          <div className={styles.SCtextlf}>
-            <p><span><i class="bi bi-person"></i></span> 不限性別</p>
-            <p>參加人數 : 20</p>
-            <h6>揪團截止 : 2025-01-07</h6>
-          </div>
-        </div>
-        <div className={styles.sectionContent1}>
-          <div className={styles.SCcard}>
-            <img src="/dc48b717dc65c863526fd471b4d2a2c7.jpg" alt="" />
-            <div className={styles.SCtext}>
-              <p>揪團名稱揪團名稱</p>
-              <p>
-                <span>
-                  <i class="bi bi-at"></i>
-                </span>
-                浮潛
-              </p>
-              <p>
-                <span>
-                  <i class="bi bi-calendar"></i>
-                </span>{" "}
-                2025-01-10
-              </p>
-            </div>
-          </div>
-          <div className={styles.SCtextlf}>
-            <p><span><i class="bi bi-person"></i></span> 不限性別</p>
-            <p>參加人數 : 20</p>
-            <h6>揪團截止 : 2025-01-07</h6>
-          </div>
-        </div>
+        {mygroups && mygroups.length > 0 ? (mygroups.map((mygroup, i) => {
+          return (
+            <GroupCard key={i} group={mygroup} />
+          )
+        })) : ("目前沒有揪團")}
+        
       </div>
     </div>
   );

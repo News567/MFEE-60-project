@@ -47,59 +47,11 @@ export default function ProductList() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // 處理 URL 更新
-    // const updateURL = (
-    //     newPage,
-    //     newLimit,
-    //     newSort,
-    //     newLocation,
-    //     newCountry,
-    //     language,
-    //     minPrice,
-    //     maxPrice,
-    //     newDuration
-    // ) => {
-    //     const params = new URLSearchParams();
-    //     // 先確保變數不是 undefined，若是則設置默認值
-    //     params.set("page", (newPage || 1).toString()); // 如果 newPage 是 undefined，則使用 1
-    //     params.set("limit", (newLimit || 24).toString()); // 如果 newLimit 是 undefined，則使用 24
-    //     params.set("sort", (newSort || 1).toString()); // 如果 newSort 是 undefined，則使用 1
-    //     if (newLocation) {
-    //         params.set("location", (newLocation || "").toString());
-    //     } // 如果 newLocation 是 undefined，則使用空字串
-    //     if (newCountry) {
-    //         params.set("country", (newCountry || "").toString());
-    //     }
-    //     if (language) {
-    //         if (language.length > 1) {
-    //             language.map((v) => {
-    //                 params.append("language", v.toString());
-    //             });
-    //         } else {
-    //             params.set("language", language.toString());
-    //         }
-    //     }
-    //     if (minPrice) {
-    //         params.set("minPrice", minPrice.toString());
-    //     }
-    //     if (maxPrice) {
-    //         params.set("maxPrice", maxPrice.toString());
-    //     }
-    //     if (newDuration) {
-    //         params.set("duration", newDuration.toString());
-    //     }
-
-    //     router.push(`/activity?${params.toString()}`, undefined, {
-    //         shallow: true,
-    //     });
-    // };
-
     // 獲取產品資料
-    // FIXME: - 有依賴問題
     useEffect(() => {
         console.log("有動");
         fetchActivity(page, limit, selectedSort.value, location,country,language,minPrice,maxPrice,duration); // 讓 API 依照當前排序方式請求
-    }, [page, limit, selectedSort.value, location,country,language,minPrice,maxPrice,duration]); // 監聽 selectedSort.value
+    }, [page, limit, selectedSort.value, location,country,language,minPrice,maxPrice,duration]);
 
     // 每頁顯示按鈕
     const handleDisplayChange = (newLimit, displayText) => {

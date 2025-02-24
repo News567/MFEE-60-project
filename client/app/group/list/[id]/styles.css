@@ -1,9 +1,3 @@
-
-aside {
-    width: 276px;
-    background-color: #ccc;
-    flex-shrink: 0;
-}
 .main {
     gap: 12px;
     padding-bottom: 50px;

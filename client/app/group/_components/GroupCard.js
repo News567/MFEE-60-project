@@ -18,13 +18,13 @@ export default function GroupCard({ group }) {
     //     addToCart(group);
     // };
     return (
-        <div className="group-card row d-flex justify-content-between align-items-center">
+        <div className="group-card row d-flex justify-content-between align-items-center w-100">
             <div className="col-12 col-sm-6 d-flex avatar">
                 <div className="group-card-img">
                     <img
                         className="img"
                         src={`/image/group/${group.group_img}`}
-                        alt
+                        alt=""
                     />
                 </div>
                 <div className="description">
@@ -90,7 +90,7 @@ export default function GroupCard({ group }) {
                     <div>
                         <i className="bi bi-person color-primary" />{" "}
                         {(() => {
-                            console.log("123");
+                            {/* console.log("123"); */}
                             switch (group.gender) {
                                 case 1:
                                     return "不限性別";
