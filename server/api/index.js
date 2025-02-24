@@ -32,6 +32,7 @@ import articleSidebarRouter from "../routes/article/sidebar.js"; // 側邊欄篩
 import articleReplyRouter from "../routes/article/reply.js"; // 留言 & 回覆
 import articleLikeRouter from "../routes/article/like.js"; // 文章與留言按讚
 import couponRouter from "../routes/coupon/index.js";
+import couponClaimRouter from "../routes/coupon/claim.js";
 import memberRouter from "../routes/member/index.js";
 // import shipmentRouter from "../routes/ship/index.js"; // 運送相關路由
 // 建立 Express 應用程式
@@ -98,7 +99,8 @@ apiRouter.use("/article", articleReplyRouter); // `/api/article/reply` 留言 & 
 apiRouter.use("/article", articleLikeRouter); // `/api/article/like` 文章 & 留言按讚
 
 // 優惠券相關路由
-apiRouter.use("/coupon", couponRouter); // 負責 `/api/coupon`
+apiRouter.use("/coupon", couponRouter); // 負責 `/api/coupon/index`
+apiRouter.use("/coupon", couponClaimRouter); // 負責 `/api/coupon/claim`
 
 // 會員相關路由
 apiRouter.use("/member", memberRouter);

@@ -1,0 +1,42 @@
+/* 輪播指示器按鈕：圓形、固定尺寸、半透明背景與間距 */
+.carousel-indicators button {
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
+    background-color: rgba(255, 255, 255, 0.5) !important;
+    border: none !important;
+    opacity: 1 !important;
+    /* Bootstrap 可能有預設 opacity */
+    margin: 0 5px;
+    /* 設定間距 */
+    transition: background-color 0.3s ease;
+  }
+  
+  /* 活躍狀態的指示器按鈕，背景顏色改為橘黃色 */
+  .carousel-indicators .active {
+    background-color: #ffa500 !important;
+    /* 當前圖片變橘黃色 */
+  }
+  
+  /* 自訂輪播控制按鈕設定：圓形、置中、半透明背景 */
+  .custom-carousel-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* 半透明黑色背景 */
+    border-radius: 50%;
+    /* 變成圓形 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    transition: background-color 0.3s ease;
+  }
+  
+  .custom-carousel-btn i{
+    font-size: 1.25rem;
+  }
