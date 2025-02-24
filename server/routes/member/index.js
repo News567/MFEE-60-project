@@ -3,7 +3,7 @@ import multer from "multer";
 import moment from "moment";
 import cors from "cors";
 import { checkToken } from "../../middleware/auth.js";
-import jwt from "jsonwebtoken"; 
+import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
@@ -28,7 +28,6 @@ router.use(cors(corsOptions));
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
-
 // 測試 API
 router.get("/", (req, res) => {
   res.json({ status: "success", data: null, message: "會員首頁" });
@@ -50,7 +49,6 @@ router.get("/users", async (req, res) => {
     });
   }
 });
-
 
 // const app = express();
 // app.use(cors(corsOptions));
@@ -120,70 +118,145 @@ router.get("/users/:id", async (req, res) => {
   }
 });
 
-router.post("/users", upload.none(), async (req, res) => {
-  const { account, name, mail, password } = req.body;
+router.post("/users/info", checkToken, upload.none(), async (req, res) => {
+  const {
+    name,
+    password,
+    phone,
+    birthday,
+    address,
+    emergency_contact,
+    emergency_phone,
+  } = req.body;
 
-  if (!account || !name || !mail || !password) {
-    res.status(400).json({
+  if (
+    !name ||
+    !password ||
+    !phone ||
+    !birthday ||
+    !address ||
+    !emergency_contact ||
+    !emergency_phone
+  ) {
+    return res.status(400).json({
       status: "error",
-      message: "請提供完整的使用者資訊!",
+      message: "請提供至少一個要更新的欄位",
     });
   }
-  const id = uuidv4();
-  const head = await getRandomAvatar();
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const sql =
-    "INSERT INTO `users` (`id`, `account`, `password`, `name`, `mail`, `head`) VALUES (?,?,?,?,?,?);";
-
-  const result = await pool.execute(sql, [
-    id,
-    account,
-    hashedPassword,
-    name,
-    mail,
-    head,
-  ]);
-  console.log(result);
-
-  res.status(201).json({
-    status: "success",
-    data: { id },
-    message: "新增一個使用者成功",
-  });
-});
-
-router.put("/users/:account", checkToken, upload.none(), async (req, res) => {
-  const { account } = req.params;
-  console.log(account);
-
-  const { name, password, head } = req.body;
 
   try {
-    if (account != req.decoded.account) throw new Error("沒有修改權限");
+    const email = req.decoded.account;
+
+    const updateFields = [];
+    const values = [];
+
+    if (name) {
+      updateFields.push("`name` = ?");
+      values.push(name);
+    }
+
+    if (password) {
+      updateFields.push("`password` = ?");
+      const hashedPassword = await bcrypt.hash(password, 10);
+      values.push(hashedPassword);
+    }
+    if (phone) {
+      const phoneRegex = /^09\d{8}$/;
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).json({
+          status: "error",
+          message: "手機號碼格式不正確",
+        });
+      }
+      updateFields.push("`phone` = ?");
+      values.push(phone);
+    }
+    if (birthday) {
+      updateFields.push("`birthday` = ?");
+      values.push(birthday);
+    }
+
+    if (address) {
+      updateFields.push("`address` = ?");
+      values.push(address);
+    }
+
+    if (emergency_contact) {
+      updateFields.push("`emergency_contact` = ?");
+      values.push(emergency_contact);
+    }
+    if (emergency_phone) {
+      const emergencyPhoneRegex = /^09\d{8}$/;
+      if (!emergencyPhoneRegex.test(emergency_phone)) {
+        return res.status(400).json({
+          status: "error",
+          message: "緊急聯絡人號碼格式不正確",
+        });
+      }
+      updateFields.push("`emergency_phone` = ?");
+      values.push(emergency_phone);
+    }
+
+    values.push(email);
+
+    const sql = `UPDATE users SET ${updateFields.join(", ")} WHERE email = ?;`;
+    const [result] = await pool.execute(sql, values);
+
+    if (result.affectedRows == 0) {
+      throw new Error("更新失敗");
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: `更新使用者成功: ${email}`,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json({
+      status: "error",
+      message: err.message ? err.message : "修改失敗",
+    });
+  }
+});
+
+router.put("/users/:email", checkToken, upload.none(), async (req, res) => {
+  const { email } = req.params;
+
+  const {
+    name,
+    password,
+    phone,
+    birthday,
+    address,
+    emergency_contact,
+    emergency_phone,
+  } = req.body;
+
+  try {
+    if (email != req.decoded.email) {
+      throw new Error("沒有修改權限");
+    }
 
     const updateFields = [];
     const value = [];
 
     if (name) {
       updateFields.push("`name` = ?");
-      value.push(name);
+      values.push(name);
     }
-    if (head) {
-      updateFields.push("`head` = ?");
-      value.push(head);
-    }
+
     if (password) {
       updateFields.push("`password` = ?");
       const hashedPassword = await bcrypt.hash(password, 10);
-      value.push(hashedPassword);
+      values.push(hashedPassword);
     }
     value.push(account);
-    const sql = `UPDATE users SET ${updateFields.join(
-      ", "
-    )} WHERE account = ?;`;
-    const [result] = await pool.execute(sql, value);
+    const sql = `UPDATE users SET ${updateFields.join(", ")} WHERE email = ?;`;
+    const [result] = await pool.execute(sql, values);
 
-    if (result.affectedRows == 0) throw new Error("更新失敗");
+    if (result.affectedRows == 0) {
+      throw new Error("更新失敗");
+    }
 
     res.status(200).json({
       status: "success",
@@ -209,7 +282,7 @@ router.delete("/users/:id", (req, res) => {
 router.post("/users/login", upload.none(), async (req, res) => {
   const { email, password } = req.body;
 
-  if ((!email) || !password) {
+  if (!email || !password) {
     return res.status(400).json({ message: "請提供Email 和密碼" });
   }
 
@@ -224,7 +297,7 @@ router.post("/users/login", upload.none(), async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     // console.log(password, user.password);
     console.log("輸入密碼:", password);
-     console.log("資料庫密碼:", user.password);
+    console.log("資料庫密碼:", user.password);
     // console.log("比對結果:", isMatch);
     if (!isMatch) throw new Error("帳號或密碼錯誤");
 
@@ -275,17 +348,26 @@ router.post("/users/register", async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({ message: "請提供Email或密碼" });
   }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "請提供有效的 Email" });
+  }
+
   try {
     const checkSql = "SELECT * FROM `users` WHERE email = ?";
     const [existingUser] = await pool.execute(checkSql, [email]);
-
+    console.log(existingUser);
     if (existingUser.length > 0) {
-      return res.status(409).json({ status: "exists", message: "帳號或 Email 已存在" });
+      return res
+        .status(409)
+        .json({ status: "exists", message: "帳號或 Email 已存在" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql =
       "INSERT INTO `users` (`email`, `password`, `created_at`) VALUES (?, ?, ?)";
     const [result] = await pool.execute(sql, [email, hashedPassword, createAt]);
+
     res.status(201).json({
       message: "註冊成功",
       userId: result.insertId,

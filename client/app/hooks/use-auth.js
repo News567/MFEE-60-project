@@ -19,8 +19,8 @@ export function AuthProvider({ children }) {
     const API = "http://localhost:3005/api/member/users/login";
 
     try {
-      const bodyData = {email, password};
-    
+      const bodyData = { email, password };
+
       console.log("Request Body:", bodyData);
 
       const res = await fetch(API, {
@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
 
       if (!res.ok) {
         const errorDetails = await res.json();
-        console.error("Error Details:", errorDetails); 
+        console.error("Error Details:", errorDetails);
         throw new Error(errorDetails.message || "Unknown error");
       }
 
@@ -81,14 +81,24 @@ export function AuthProvider({ children }) {
         body: JSON.stringify({ email, password }),
       });
 
-      const result = await res.json();
-      if (result.status !== "success") throw new Error(result.message);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "註冊失敗，請稍後再試");
+      }
 
-      alert("註冊成功,請登入!");
-      router.replace(loginRoute);
+      const result = await res.json();
+      if (result.status !== "success") {
+        throw new Error(result.message || "註冊失敗，請稍後再試");
+      }
+
+      // 回傳結果
+      return { status: "success", message: result.message || "註冊成功" };
     } catch (err) {
       console.log(err);
-      alert(err.message); // 顯示錯誤訊息
+      return {
+        status: "error",
+        message: err.message || "註冊失敗，請稍後再試",
+      };
     }
   };
 

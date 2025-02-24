@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 
 export default function Register() {
   const [checkingAuth, setCheckingAuth] = useState(true);
-  // const [account, setAccount] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { user, register } = useAuth() || {};
@@ -25,15 +24,22 @@ export default function Register() {
       alert("請輸入密碼");
       return;
     }
-
     setLoading(true);
 
     try {
-      await register(email, password);
-      router.push("/member/login");
+      const response = await register(email, password);
+  
+      if (response?.status === "success") {
+        alert("註冊成功，請登入！");
+        router.push("/member/login"); 
+      } else if (response?.status === "exists") {
+        alert("此 Email 已被註冊，請直接登入！");
+        router.push("/member/login"); 
+      } else {
+        alert(response?.message || "註冊失敗，請稍後再試");
+      }
     } catch (error) {
       console.error("註冊錯誤:", error);
-      alert("註冊失敗，請稍後再試");
     } finally {
       setLoading(false);
     }
@@ -51,7 +57,11 @@ export default function Register() {
   return (
     <div className={styles.loginPage}>
       <div className={styles.main}>
-        <img src="/image/DiveIn-logo-dark-final.png" alt="logo" className={styles.logo} />
+        <img
+          src="/image/DiveIn-logo-dark-final.png"
+          alt="logo"
+          className={styles.logo}
+        />
         <div className={styles.line1}></div>
         <div className={styles.sectionLogin}>
           <h3>註冊</h3>

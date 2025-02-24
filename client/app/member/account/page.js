@@ -1,10 +1,72 @@
 import { useAuth } from "@/hooks/use-auth";
 import styles from "./account.module.css";
-// import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-// import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function Account() {
+  const { token } = useAuth(); // 获取 JWT token
+  const router = useRouter();
+  const [userData, setUserData] = useState({
+    id: "",
+    name: "",
+    email: "",
+  });
+
+  const [newName, setNewName] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newAvatar, setNewAvatar] = useState(null);
+  // 获取用户信息
+  const fetchUserData = async () => {
+    try {
+      const response = await axios.get(`/api/member/users/status`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUserData(response.data.data); // 设置用户信息
+      setNewName(response.data.data.name);
+    } catch (error) {
+      console.error("获取用户数据失败:", error);
+    }
+  };
+
+  // 更新用户信息
+  const handleUpdateUser = async (e) => {
+    e.preventDefault();
+    try {
+      const formData = new FormData();
+      if (newName) formData.append("name", newName);
+      if (newPassword) formData.append("password", newPassword);
+      if (newAvatar) formData.append("head", newAvatar);
+
+      const response = await axios.put(
+        `/api/member/users/${userData.id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      alert(response.data.message);
+      fetchUserData(); // 更新成功后重新获取数据
+    } catch (error) {
+      console.error("更新用户信息失败:", error);
+    }
+  };
+
+  // 选择文件（头像）
+  const handleAvatarChange = (e) => {
+    setNewAvatar(e.target.files[0]);
+  };
+
+  // 处理表单
+  useEffect(() => {
+    fetchUserData();
+  }, [token]);
+
   return (
     <>
       <div className={styles.content}>
@@ -15,13 +77,13 @@ export default function Account() {
             </div>
             <div className={styles.asideContent}>
               <div className={styles.ASpoint}>
-                <Link href="/member/account" className={styles.ASpoint}><h6>我的帳戶</h6></Link>
-                <i className="bi bi-chevron-down" aria-label="Expand"></i>
+                <Link href="/member/account" className={styles.ASpoint}>
+                  <h6>我的帳戶</h6>
+                </Link>
               </div>
-              <div className={styles.ASpointList}>
-                <h6>個人資料</h6>
-              </div>
-              <Link href="/member/order/orderRent" className={styles.ASother}><h6>我的訂單</h6></Link>
+              <Link href="/member/order/orderRent" className={styles.ASother}>
+                <h6>我的訂單</h6>
+              </Link>
               <div className={styles.ASother}>
                 <h6>我的揪團</h6>
               </div>
@@ -62,6 +124,12 @@ export default function Account() {
                   <div className={`${styles.box1} ${styles.boxSame}`}>
                     <p>使用者帳號</p>
                   </div>
+                  <input
+                      type="text"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      placeholder="姓名"
+                    />
                   <div className={`${styles.box2} ${styles.boxSame}`}>
                     <p>姓名</p>
                   </div>
@@ -71,6 +139,16 @@ export default function Account() {
                   <div className={`${styles.box1} ${styles.boxSame}`}>
                     <p>手機號碼</p>
                   </div>
+                  <input
+                    type="email"
+                    name="email"
+                    className={`${styles.box3} ${styles.boxSame}`}
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                    }}
+                    placeholder="Email"
+                  />
                   <div className={`${styles.box3} ${styles.boxSame}`}>
                     <p>Email</p>
                   </div>
@@ -96,9 +174,9 @@ export default function Account() {
                 </div>
               </div>
               <div className={`${styles.IBbtn}`}>
-                  <div className={`${styles.hvbtn}`}>變更</div>
-                  <div className={`${styles.dfbtn}`}>取消</div>
-                </div>
+                <div className={`${styles.hvbtn}`}>變更</div>
+                <div className={`${styles.dfbtn}`}>取消</div>
+              </div>
             </div>
             <div className={styles.line2}></div>
 
