@@ -52,6 +52,7 @@ export default function RentList() {
   //顏色專區
   const [colors, setColors] = useState([]); // 存儲顏色資料
   const [selectedColorId, setSelectedColorId] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false); // 控制顏色選項展開/收起
 
   // 新上市商品推薦專區
   const [newArrivals, setNewArrivals] = useState([]); // 存儲新品資料
@@ -573,6 +574,11 @@ export default function RentList() {
       isPriceFilterActive ? priceRange[0] : null, // minPrice
       isPriceFilterActive ? priceRange[1] : null // maxPrice
     );
+  };
+
+  // 切換顏色選項展開/收起
+  const toggleExpansion = () => {
+    setIsExpanded((prevState) => !prevState); // 切換展開狀態
   };
 
   // 獲取新品資料
@@ -1334,7 +1340,13 @@ export default function RentList() {
                 <div className="product-filter-color ">
                   <div className="d-flex justify-content-between align-items-center">
                     <p className="filter-subtitle filter-subtitle2">
-                      <i className="bi bi-chevron-down"></i>顏色類別{" "}
+                      顏色類別
+                      <i
+                        className={`bi bi-chevron-down ${
+                          isExpanded ? "rotate" : ""
+                        }`}
+                        onClick={toggleExpansion}
+                      ></i>{" "}
                     </p>
                     {selectedColorId && ( // 當選中顏色時顯示清除按鈕
                       <i
@@ -1344,7 +1356,7 @@ export default function RentList() {
                       ></i>
                     )}
                   </div>
-                  <div className="d-flex flex-wrap align-items-center color-options">
+                  <div className={`d-flex flex-wrap align-items-center color-options ${isExpanded ? 'expanded' : ''}`}>
                     {colors.map((color) => (
                       <div
                         key={color.id} // 使用 color.id 作為 key
@@ -1702,10 +1714,10 @@ export default function RentList() {
                             src={product.img_url || "/image/rent/no-img.png"}
                             className="card-img-top product-img"
                             alt={product.name}
-                            layout="intrinsic"
+                            // layout="intrinsic"
                             width={124}
                             height={124}
-                            objectFit="contain"
+                            style={{ objectFit: "contain" }} 
                             priority
                             unoptimized
                           />
@@ -1751,7 +1763,7 @@ export default function RentList() {
                             )}
                           </div>
                           {/* 右上角hover */}
-                          <div className="icon-container d-flex flex-column">
+                          <div className="icon-container d-flex flex-row justify-content-center align-items-center">
                             <div className="icon d-flex justify-content-center align-items-center">
                               <i className="bi bi-heart"></i>
                             </div>

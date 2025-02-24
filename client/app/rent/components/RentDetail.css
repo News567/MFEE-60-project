@@ -421,6 +421,10 @@
   position: relative;
   overflow: hidden; /* 隱藏超出部分 */
 }
+.you-may-like-products .you-may-like-product .card .card-body {
+  padding: 10px 0px 10px 0px;
+  gap: 10px;
+}
 
 .you-may-like-products .you-may-like-product .card .card-body .product-brand,
 .you-may-like-products .you-may-like-product .card .card-body .product-name,
@@ -436,6 +440,7 @@
 }
 
 .you-may-like-products .you-may-like-product .card .card-body .product-name {
+  /* margin-bottom: 10px; */
   padding: 10px;
   font-size: 14px;
   text-align: center;
@@ -505,12 +510,33 @@
   overflow: hidden;
   transition: all 0.4s ease-in-out;
 }
+.you-may-likes .you-may-like-products .card:hover {
+  box-shadow: 2px 4px 15px rgba(0, 0, 0, 0.08);
+  transform: scale(1.05);
+}
+
 .you-may-likes .you-may-like-products .card .img-container {
   width: 100%;
   aspect-ratio: 1 / 1; /* 確保所有圖片為正方形 */
   position: relative;
   overflow: hidden; /* 隱藏超出部分 */
 }
+.you-may-likes .you-may-like-products .card .img-container::after {
+  content: "";
+  position: absolute;
+  top: 40%;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.4));
+  filter: blur(2px); /* 模糊效果 */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.you-may-likes .you-may-like-products .card:hover .img-container::after {
+  opacity: 1;
+}
+
 .you-may-likes
   .you-may-like-products
   .card
@@ -525,12 +551,13 @@
   bottom: 35%;
   left: 50%;
   transform: translateX(-50%);
-  gap: 10px;
+  gap: 15px;
   opacity: 0;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .you-may-likes .you-may-like-products .card .card-body .icon-container .icon {
+  text-align: center;
   background-color: var(--white);
   border-radius: 50%;
   width: 36px;
@@ -539,6 +566,7 @@
 }
 
 .you-may-likes .you-may-like-products .card .card-body .icon-container .icon i {
+  text-align: center;
   font-size: 16px;
   color: var(--black);
 }
