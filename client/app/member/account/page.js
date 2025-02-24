@@ -1,3 +1,5 @@
+"use client";
+
 import { useAuth } from "@/hooks/use-auth";
 import styles from "./account.module.css";
 import { useState, useEffect } from "react";
@@ -14,18 +16,28 @@ export default function Account() {
   });
 
   const [newName, setNewName] = useState("");
+  const [newBirth, setNewBirth] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [newAvatar, setNewAvatar] = useState(null);
+  const [newGender, setNewGender] = useState("");
+
+  // const [newAvatar, setNewAvatar] = useState(null);
+
   // 获取用户信息
   const fetchUserData = async () => {
     try {
-      const response = await axios.get(`/api/member/users/status`, {
+      const response = await fetch(`/api/member/users/status`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setUserData(response.data.data); // 设置用户信息
-      setNewName(response.data.data.name);
+      const data = await response.json();
+      if (data.status === "success") {
+        setUserData(data.data); // 设置用户信息
+        setNewName(data.data.name);
+
+      } else {
+        console.error("获取用户数据失败:", data.message);
+      }
     } catch (error) {
       console.error("获取用户数据失败:", error);
     }
@@ -37,32 +49,34 @@ export default function Account() {
     try {
       const formData = new FormData();
       if (newName) formData.append("name", newName);
+      if (newBirth) formData.append("birthday", newBirth)
       if (newPassword) formData.append("password", newPassword);
-      if (newAvatar) formData.append("head", newAvatar);
+      if (newGender) formData.append("gender", newGender);
+      // if (newAvatar) formData.append("head", newAvatar);
 
-      const response = await axios.put(
-        `/api/member/users/${userData.id}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`/api/member/users/${userData.id}`, {
+        method: "PUT",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      alert(response.data.message);
-      fetchUserData(); // 更新成功后重新获取数据
+      const result = await response.json();
+      alert(result.message);
+      if (result.status === "success") {
+        fetchUserData(); // 更新成功后重新获取数据
+      }
     } catch (error) {
       console.error("更新用户信息失败:", error);
     }
   };
 
   // 选择文件（头像）
-  const handleAvatarChange = (e) => {
-    setNewAvatar(e.target.files[0]);
-  };
+  // const handleAvatarChange = (e) => {
+  //   setNewAvatar(e.target.files[0]);
+  // };
 
-  // 处理表单
   useEffect(() => {
     fetchUserData();
   }, [token]);
@@ -84,15 +98,15 @@ export default function Account() {
               <Link href="/member/order/orderRent" className={styles.ASother}>
                 <h6>我的訂單</h6>
               </Link>
-              <div className={styles.ASother}>
+              <Link href="/member/group" className={styles.ASother}>
                 <h6>我的揪團</h6>
-              </div>
-              <div className={styles.ASother}>
+              </Link>
+              <Link href="/member/favorite" className={styles.ASother}>
                 <h6>我的最愛</h6>
-              </div>
-              <div className={styles.ASother}>
+              </Link>
+              <Link href="/member/coupon" className={styles.ASother}>
                 <h6>我的優惠券</h6>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
@@ -110,61 +124,75 @@ export default function Account() {
             <div className={styles.infoBox}>
               <div className={styles.IBlist}>
                 <div className={styles.IBLTitle}>
-                  <p>使用者帳號</p>
                   <p>姓名</p>
                   <p>生日</p>
                   <p>手機號碼</p>
-                  <p>Email</p>
                   <p>地址</p>
                   <p>性別</p>
                   <p>緊急連絡人</p>
                   <p>緊急連絡人電話</p>
                 </div>
                 <div className={styles.IBLcontent}>
-                  <div className={`${styles.box1} ${styles.boxSame}`}>
-                    <p>使用者帳號</p>
-                  </div>
                   <input
-                      type="text"
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
-                      placeholder="姓名"
-                    />
-                  <div className={`${styles.box2} ${styles.boxSame}`}>
-                    <p>姓名</p>
-                  </div>
-                  <div className={`${styles.box2} ${styles.boxSame}`}>
-                    <p>生日</p>
-                  </div>
+                    type="text"
+                    value={newName}
+                    className={`${styles.box2} ${styles.boxSame}`}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="姓名"
+                  />
+                  <input
+                    type="date"
+                    value={newName}
+                    className={`${styles.box} ${styles.boxSame}`}
+                    onChange={(e) => setNewBirth(e.target.value)}
+                    placeholder="生日"
+                  />
                   <div className={`${styles.box1} ${styles.boxSame}`}>
                     <p>手機號碼</p>
-                  </div>
-                  <input
-                    type="email"
-                    name="email"
-                    className={`${styles.box3} ${styles.boxSame}`}
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                    }}
-                    placeholder="Email"
-                  />
-                  <div className={`${styles.box3} ${styles.boxSame}`}>
-                    <p>Email</p>
                   </div>
                   <div className={`${styles.box3} ${styles.boxSame}`}>
                     <p>地址</p>
                   </div>
-                  <div className={styles.box4}>
+                  <div className={`form-check-inline ${styles.box4}`}>
+  <div className={styles.boxlist}>
+    <input
+      type="radio"
+      id="male"
+      name="gender"
+      value="male"
+      onChange={(e) => setNewGender(e.target.value)} // 捕獲選擇的性別
+    />
+    <label htmlFor="male" className="form-check-label">男性</label>
+
+    <input
+      type="radio"
+      id="female"
+      name="gender"
+      value="female"
+      onChange={(e) => setNewGender(e.target.value)} // 捕獲選擇的性別
+    />
+    <label htmlFor="female" className="form-check-label">女性</label>
+
+    <input
+      type="radio"
+      id="other"
+      name="gender"
+      value="other"
+      onChange={(e) => setNewGender(e.target.value)} // 捕獲選擇的性別
+    />
+    <label htmlFor="other" className="form-check-label">其他</label>
+  </div>
+</div>
+                  {/* <div className={`form-check-inline ${styles.box4}`}>
                     <div className={styles.boxlist}>
-                      <i className="bi bi-0-circle" aria-label="Male"></i>
-                      <p>男性</p>
-                      <i className="bi bi-0-circle" aria-label="Female"></i>
-                      <p>女性</p>
-                      <i className="bi bi-0-circle" aria-label="Other"></i>
-                      <p>其他</p>
+                      <input type="radio" />
+                      <label className="form-check-label">男性</label>
+                      <input type="radio" />
+                      <label className="form-check-label">女性</label>
+                      <input type="radio" />
+                      <label className="form-check-label">其他</label>
                     </div>
-                  </div>
+                  </div> */}
                   <div className={`${styles.box2} ${styles.boxSame}`}>
                     <p>緊急連絡人</p>
                   </div>

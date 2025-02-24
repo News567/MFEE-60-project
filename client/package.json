@@ -21,6 +21,7 @@
     "link": "^2.1.1",
     "lodash": "^4.17.21",
     "next": "^15.1.6",
+    "node-fetch": "^3.3.2",
     "react": "^19.0.0",
     "react-calendar": "^5.1.0",
     "react-countdown": "^2.3.6",

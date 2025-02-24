@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { pool } from "../../config/mysql.js";
+import fetch from 'node-fetch';
 
 dotenv.config();
 const upload = multer();
@@ -50,28 +51,6 @@ router.get("/users", async (req, res) => {
   }
 });
 
-// const app = express();
-// app.use(cors(corsOptions));
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
-
-// app.get("/api/users", async (req, res) => {
-//   try {
-//     const [rows] = await pool.execute("SELECT * FROM `users`");
-//     res.status(200).json({
-//       status: "success",
-//       data: rows,
-//       message: "取得資料成功",
-//     });
-//   } catch (err) {
-//     console.log(err);
-//     res.status(400).json({
-//       status: "error",
-//       message: err.message ? err.message : "取得資料失敗",
-//     });
-//   }
-// });
-
 router.get("/users/search", async (req, res) => {
   const { q } = req.query;
   try {
@@ -95,19 +74,21 @@ router.get("/users/search", async (req, res) => {
 });
 
 router.get("/users/:id", async (req, res) => {
+  const { name, gender } = req.body;
   const { id } = req.params;
   try {
-    if (!id) throw new Error("請提供查詢字串");
+    let updateQuery = "UPDATE users SET name = ?, gender = ? WHERE id = ?";
+    const updateValues = [name, gender, id];
 
     const sql = "SELECT * FROM `users` WHERE id = ?";
     const [rows] = await pool.execute(sql, [id]);
 
     if (rows.length === 0) throw new Error("找不到使用者");
-
+    await db.query(updateQuery, updateValues);
     res.status(200).json({
       status: "success",
       data: rows[0],
-      message: `獲取特定 ID 的使用者: ${id}`,
+      message: "用戶資料已更新",
     });
   } catch (err) {
     console.log(err);
@@ -118,7 +99,115 @@ router.get("/users/:id", async (req, res) => {
   }
 });
 
-router.post("/users/info", checkToken, upload.none(), async (req, res) => {
+// router.post("/users/info", checkToken, upload.none(), async (req, res) => {
+//   const {
+//     name,
+//     password,
+//     phone,
+//     birthday,
+//     address,
+//     emergency_contact,
+//     emergency_phone,
+//   } = req.body;
+
+//   if (
+//     !name ||
+//     !password ||
+//     !phone ||
+//     !birthday ||
+//     !address ||
+//     !emergency_contact ||
+//     !emergency_phone
+//   ) {
+//     return res.status(400).json({
+//       status: "error",
+//       message: "請提供至少一個要更新的欄位",
+//     });
+//   }
+
+//   try {
+//     const email = req.decoded.account;
+
+//     const updateFields = [];
+//     const values = [];
+
+//     if (name) {
+//       updateFields.push("`name` = ?");
+//       values.push(name);
+//     }
+
+//     if (password) {
+//       updateFields.push("`password` = ?");
+//       const hashedPassword = await bcrypt.hash(password, 10);
+//       values.push(hashedPassword);
+//     }
+//     if (phone) {
+//       const phoneRegex = /^09\d{8}$/;
+//       if (!phoneRegex.test(phone)) {
+//         return res.status(400).json({
+//           status: "error",
+//           message: "手機號碼格式不正確",
+//         });
+//       }
+//       updateFields.push("`phone` = ?");
+//       values.push(phone);
+//     }
+//     if (birthday) {
+//       updateFields.push("`birthday` = ?");
+//       values.push(birthday);
+//     }
+
+//     if (address) {
+//       updateFields.push("`address` = ?");
+//       values.push(address);
+//     }
+
+//     if (emergency_contact) {
+//       updateFields.push("`emergency_contact` = ?");
+//       values.push(emergency_contact);
+//     }
+//     if (emergency_phone) {
+//       const emergencyPhoneRegex = /^09\d{8}$/;
+//       if (!emergencyPhoneRegex.test(emergency_phone)) {
+//         return res.status(400).json({
+//           status: "error",
+//           message: "緊急聯絡人號碼格式不正確",
+//         });
+//       }
+//       updateFields.push("`emergency_phone` = ?");
+//       values.push(emergency_phone);
+//     }
+
+//     values.push(email);
+
+//     const sql = `UPDATE users SET ${updateFields.join(", ")} WHERE email = ?;`;
+//     const [result] = await pool.execute(sql, values);
+
+//     if (result.affectedRows == 0) {
+//       throw new Error("更新失敗");
+//     }
+
+//     res.status(200).json({
+//       status: "success",
+//       message: `更新使用者成功: ${email}`,
+//     });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(400).json({
+//       status: "error",
+//       message: err.message ? err.message : "修改失敗",
+//     });
+//   }
+// });
+
+router.put("/users/:email", checkToken, upload.none(), async (req, res) => {
+  const { email } = req.params;
+  if (email !== req.decoded.email) {
+    return res.status(403).json({
+      status: "error",
+      message: "沒有修改權限",
+    });
+  }
   const {
     name,
     password,
@@ -129,23 +218,10 @@ router.post("/users/info", checkToken, upload.none(), async (req, res) => {
     emergency_phone,
   } = req.body;
 
-  if (
-    !name ||
-    !password ||
-    !phone ||
-    !birthday ||
-    !address ||
-    !emergency_contact ||
-    !emergency_phone
-  ) {
-    return res.status(400).json({
-      status: "error",
-      message: "請提供至少一個要更新的欄位",
-    });
-  }
-
   try {
-    const email = req.decoded.account;
+    if (email != req.decoded.email) {
+      throw new Error("沒有修改權限");
+    }
 
     const updateFields = [];
     const values = [];
@@ -154,7 +230,6 @@ router.post("/users/info", checkToken, upload.none(), async (req, res) => {
       updateFields.push("`name` = ?");
       values.push(name);
     }
-
     if (password) {
       updateFields.push("`password` = ?");
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -175,82 +250,21 @@ router.post("/users/info", checkToken, upload.none(), async (req, res) => {
       updateFields.push("`birthday` = ?");
       values.push(birthday);
     }
-
     if (address) {
       updateFields.push("`address` = ?");
       values.push(address);
     }
-
     if (emergency_contact) {
       updateFields.push("`emergency_contact` = ?");
       values.push(emergency_contact);
     }
+
     if (emergency_phone) {
-      const emergencyPhoneRegex = /^09\d{8}$/;
-      if (!emergencyPhoneRegex.test(emergency_phone)) {
-        return res.status(400).json({
-          status: "error",
-          message: "緊急聯絡人號碼格式不正確",
-        });
-      }
       updateFields.push("`emergency_phone` = ?");
       values.push(emergency_phone);
     }
 
     values.push(email);
-
-    const sql = `UPDATE users SET ${updateFields.join(", ")} WHERE email = ?;`;
-    const [result] = await pool.execute(sql, values);
-
-    if (result.affectedRows == 0) {
-      throw new Error("更新失敗");
-    }
-
-    res.status(200).json({
-      status: "success",
-      message: `更新使用者成功: ${email}`,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(400).json({
-      status: "error",
-      message: err.message ? err.message : "修改失敗",
-    });
-  }
-});
-
-router.put("/users/:email", checkToken, upload.none(), async (req, res) => {
-  const { email } = req.params;
-
-  const {
-    name,
-    password,
-    phone,
-    birthday,
-    address,
-    emergency_contact,
-    emergency_phone,
-  } = req.body;
-
-  try {
-    if (email != req.decoded.email) {
-      throw new Error("沒有修改權限");
-    }
-
-    const updateFields = [];
-    const value = [];
-
-    if (name) {
-      updateFields.push("`name` = ?");
-      values.push(name);
-    }
-
-    if (password) {
-      updateFields.push("`password` = ?");
-      const hashedPassword = await bcrypt.hash(password, 10);
-      values.push(hashedPassword);
-    }
-    value.push(account);
     const sql = `UPDATE users SET ${updateFields.join(", ")} WHERE email = ?;`;
     const [result] = await pool.execute(sql, values);
 
@@ -383,12 +397,10 @@ router.post("/users/status", checkToken, (req, res) => {
   const token = jwt.sign(
     {
       id: decoded.id,
-      account: decoded.account,
       name: decoded.name,
       mail: decoded.mail,
-      head: decoded.head,
     },
-    process.env.JWT_SECRET_KEY,
+    process.env.JWT_SECRET,
     { expiresIn: "30m" }
   );
   res.json({
