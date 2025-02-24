@@ -90,7 +90,7 @@ export default function GroupHomePage() {
                 <div className="publicity-title">最新揪團</div>
                 <div className="d-flex justify-content-between group-cards">
                     {groups && groups.length > 0 ? (
-                        groups.map((group, i) => {
+                        groups.slice(0,4).map((group, i) => {
                             return (
                                 <Link
                                     className="link"
@@ -100,7 +100,7 @@ export default function GroupHomePage() {
                                         <div className="img-container">
                                             <img
                                                 className="img"
-                                                src={`/image/group/${group.id}/${group.group_img}`}
+                                                src={`/image/group/${group.group_img}`}
                                                 alt=""
                                             />
                                         </div>

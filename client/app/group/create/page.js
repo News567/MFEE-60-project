@@ -10,6 +10,10 @@ export default function GroupDetailPage() {
     const api = "http://localhost:3005/api"
     // 判斷是否有登入，沒登入就自動跳轉至登入頁
     const { user } = useAuth();
+    if(!user){
+        alert("請先登入！")
+        window.location = "/member/login"
+    }
     const [userId, setUserId] = useState(user ? user.id : 0)
     console.log(user);
     // useEffect(() => {
