@@ -41,7 +41,6 @@ export default function ProductList() {
   const [limit, setLimit] = useState(parseInt(searchParams.get("limit")) || 24);
   const [totalPages, setTotalPages] = useState(1);
   // 可以放動畫 先不動
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // 修改初始化 currentQuery，從 URL 參數中恢復狀態
@@ -66,7 +65,7 @@ export default function ProductList() {
     params.set("page", newPage.toString());
     params.set("limit", newLimit.toString());
 
-    // 根据查询类型设置相应参数
+    // 根據查詢類型設定相應參數
     if (query.type === "category") {
       params.set("category_id", query.id);
     } else if (query.type === "bigCategory") {
@@ -75,7 +74,7 @@ export default function ProductList() {
       params.set("brand_id", query.id);
     }
 
-    // 添加颜色筛选参数
+    // 添加顏色篩選參數
     if (tempFilters.colors.length > 0) {
       params.set("color_id", tempFilters.colors.join(","));
     }
@@ -83,11 +82,11 @@ export default function ProductList() {
     router.push(`/products?${params.toString()}`);
   };
 
-  // 修改颜色相关的状态
-  const [colors, setColors] = useState([]); // 所有颜色
-  const [availableColors, setAvailableColors] = useState([]); // 当前可用的颜色
+  // 修改顏色相關的狀態
+  const [colors, setColors] = useState([]); // 所有顏色
+  const [availableColors, setAvailableColors] = useState([]); // 當前可用的顏色
   const [tempFilters, setTempFilters] = useState({
-    colors: [], // 存储选中的颜色 ID
+    colors: [], // 儲存選中的顏色 ID
     price: {
       min: "",
       max: "",
@@ -121,7 +120,7 @@ export default function ProductList() {
     }
   }, [products]);
 
-  // 从 URL 初始化筛选条件
+  // 從 URL 初始化篩選條件
   useEffect(() => {
     const colorParam = searchParams.get("color_id");
     const minPrice = searchParams.get("min_price");
@@ -137,7 +136,7 @@ export default function ProductList() {
     }));
   }, [searchParams]);
 
-  // 在 ProductList 组件中添加價格範圍的狀態
+  // 在 ProductList 組件中添加價格範圍的狀態
   const [priceRange, setPriceRange] = useState({
     min: 0,
     max: 40000,
@@ -274,12 +273,11 @@ export default function ProductList() {
     });
   };
 
-  // 添加一个状态来控制是否显示筛选标签
+  // 添加一個狀態來控制是否顯示篩選標籤
   const [showFilters, setShowFilters] = useState(false);
 
-  // 修改 applyFilters 函数
+  // 修改 applyFilters 函數
   const applyFilters = async () => {
-    if (loading) return;
     setShowFilters(true);
 
     // 構建查詢參數
@@ -368,21 +366,9 @@ export default function ProductList() {
     });
   }, [searchParams]); // 只依賴 searchParams
 
-  const [productsCache, setProductsCache] = useState({});
-
-  // 在現有的 state 聲明中添加
-  const [listHeight, setListHeight] = useState("auto");
-  const productListRef = useRef(null);
-
-  // 修改统一的数据获取函数
+  // 修改統一的數據獲取函數
   const fetchProducts = async (params = {}) => {
     try {
-      // 開始加載前保存當前高度
-      if (productListRef.current) {
-        setListHeight(`${productListRef.current.offsetHeight}px`);
-      }
-
-      setLoading(true);
       let url = `${API_BASE_URL}/products`;
 
       // 構建查詢參數
@@ -425,19 +411,8 @@ export default function ProductList() {
     } catch (error) {
       console.error("Error fetching products:", error);
       setError("獲取產品數據時發生錯誤");
-    } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 300);
     }
   };
-
-  // 在 useEffect 中添加高度監聽
-  useEffect(() => {
-    if (productListRef.current && products.length > 0) {
-      setListHeight(`${productListRef.current.offsetHeight}px`);
-    }
-  }, [products]);
 
   // 修改分類展開狀態的管理方式
   const [expandedSection, setExpandedSection] = useState(null); // 'classification', 'brand', 或 null
@@ -511,7 +486,7 @@ export default function ProductList() {
     };
     setCurrentQuery(newQuery);
 
-    // 更新标题
+    // 更新標題
     setPageTitle({
       title: brandName,
       subtitle: "品牌精選系列",
@@ -520,7 +495,7 @@ export default function ProductList() {
     updateURL(1, limit, newQuery);
   };
 
-  // 添加重置标题的函数
+  // 添加重置標題的函數
   const resetPageTitle = () => {
     setPageTitle({
       title: "潛水必備裝備",
@@ -528,7 +503,7 @@ export default function ProductList() {
     });
   };
 
-  // 在 useEffect 中处理标题重置
+  // 在 useEffect 中處理標題重置
   useEffect(() => {
     const categoryId = searchParams.get("category_id");
     const bigCategoryId = searchParams.get("big_category_id");
@@ -551,20 +526,7 @@ export default function ProductList() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  // 使用 debounce 包裝 fetchProducts
-  const fetchWithRetry = async (fn, retries = 3) => {
-    try {
-      return await fn();
-    } catch (error) {
-      if (retries > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        return fetchWithRetry(fn, retries - 1);
-      }
-      throw error;
-    }
-  };
-
-  // 修改清除所有筛选函数
+  // 修改清除所有篩選函數
   const clearAllFilters = async () => {
     // 重置所有篩選條件
     setTempFilters({
@@ -669,14 +631,14 @@ export default function ProductList() {
     });
   };
 
-  // 辅助函数：判断颜色是否为浅色
+  // 輔助函數：判斷顏色是否為淺色
   const isLightColor = (color) => {
-    // 移除 # 号
+    // 移除 # 號
     const hex = color.replace("#", "");
     const r = parseInt(hex.substr(0, 2), 16);
     const g = parseInt(hex.substr(2, 2), 16);
     const b = parseInt(hex.substr(4, 2), 16);
-    // 计算亮度
+    // 計算亮度
     return r * 0.299 + g * 0.587 + b * 0.114 > 186;
   };
 
@@ -710,7 +672,6 @@ export default function ProductList() {
     fetchSidebarProducts();
   }, []);
 
-  if (loading) return <div className="text-center py-4">...</div>;
   if (error) return <div className="text-center py-4 text-danger">{error}</div>;
 
   return (
@@ -874,7 +835,6 @@ export default function ProductList() {
             <button
               className="btn btn-primary w-100 mb-3"
               onClick={applyFilters}
-              disabled={loading}
             >
               篩選({getSelectedFiltersCount()}/20)
             </button>
@@ -951,12 +911,11 @@ export default function ProductList() {
                           ${!isAvailable ? styles.disabled : ""}`}
                         style={{
                           backgroundColor: color.color_code,
-                          cursor:
-                            loading || !isAvailable ? "not-allowed" : "pointer",
+                          cursor: !isAvailable ? "not-allowed" : "pointer",
                           opacity: isAvailable ? 1 : 0.5,
                         }}
                         onClick={() => {
-                          if (!loading && isAvailable) {
+                          if (isAvailable) {
                             handleColorClick(color.id);
                           }
                         }}
@@ -1099,21 +1058,7 @@ export default function ProductList() {
           </div>
 
           {/* 商品列表 */}
-          <div
-            className={styles.productListContainer}
-            ref={productListRef}
-            style={{ minHeight: listHeight }}
-          >
-            <div
-              className={`${styles.loadingOverlay} ${
-                loading ? styles.visible : ""
-              }`}
-            >
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
-
+          <div className={styles.productListContainer}>
             <div className="row g-4">
               {products.map((product) => (
                 <div

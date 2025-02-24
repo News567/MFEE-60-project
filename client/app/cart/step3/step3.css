@@ -1,7 +1,7 @@
 /* 主色調變數 */
 :root {
   --primary-color: #219ebc;
-  --primary-hover: #cab331;
+  --primary-hover:rgb(38, 111, 207);
   --primary-light: #e6f3f7;
 }
 
@@ -284,4 +284,48 @@
 
 .cartCss2 .recommend-products::-webkit-scrollbar-thumb:hover {
   background: #d77777;
+}
+
+/* 配送方式卡片樣式 */
+.shipping-method-card {
+  flex: 1;
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.shipping-method-card:hover {
+  border-color: var(--primary-color);
+}
+
+.shipping-method-card input[type="radio"]:checked + label {
+  color: var(--primary-color);
+}
+
+.shipping-method-card:has(input[type="radio"]:checked) {
+  border-color: var(--primary-color);
+  background-color: var(--primary-light);
+}
+
+.shipping-fee {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* 免運標籤樣式 */
+.badge.bg-success {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* 湊免運提示樣式 */
+.free-shipping-hint {
+  font-size: 0.875rem;
+  padding: 0.25rem 0;
+}
+
+.free-shipping-hint i {
+  font-size: 0.875rem;
 }

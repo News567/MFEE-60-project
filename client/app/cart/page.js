@@ -2,17 +2,15 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import CartFlow from "./components/cartFlow";
+import { redirect } from "next/navigation";
 
 export default function CartPage() {
   const router = useRouter();
 
-  // useEffect(() => {
-  //   router.replace("/cart/step1"); // 直接跳轉到第一步
-  // }, []);
+  useEffect(() => {
+    // 跳轉到第一步
+    redirect("/cart/step1");
+  }, []);
 
-  return (
-    <div>
-      <CartFlow currentStep={1} />
-    </div>
-  );
+  return <></>;
 }
