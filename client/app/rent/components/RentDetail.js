@@ -11,6 +11,7 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import "./flatpickr.css"; // 我定義的小日曆css
 import "./RentDetail.css";
+import "./modal.css";
 import "../../../public/globals.css";
 import HeartIcon from "./HeartIcon/HeartIcon";
 
@@ -35,6 +36,12 @@ export default function RentProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const quantityInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState("description"); // 商品描述區塊切換tab
+
+  //跳出modal選擇詳細資訊
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [bookingDate, setBookingDate] = useState("");
+  const [rentDateRange, setRentDateRange] = useState([]); // 租借日期
 
   // 從後端獲取商品數據
   useEffect(() => {
@@ -220,10 +227,8 @@ export default function RentProductDetail() {
           // 動態數量（假設 quantity 是使用者選擇的數量）
           // const quantity =
           //   parseInt(document.querySelector("#quantity").value, 10) || 1;
-          
-          const quantity =
-            parseInt(quantityInputRef.current?.value, 10) || 1;
 
+          const quantity = parseInt(quantityInputRef.current?.value, 10) || 1;
 
           // 計算押金（單價的 3 折）
           const deposit = Number(unitPrice * 0.3);
@@ -363,6 +368,173 @@ export default function RentProductDetail() {
   // 判斷是否顯示小圖的上一頁和下一頁按鈕
   const showPrevButton = currentImageIndex > 0;
   const showNextButton = currentImageIndex + 3 < product.images.length;
+
+  // 點擊圖標時顯示 Modal
+  const handleIconClick = (product, e) => {
+    e.stopPropagation(); // 防止事件冒泡（才不會點到跳轉 rent detail）
+    // setSelectedProduct(product);
+
+    // 重設選擇的商品及相關狀態
+    setSelectedProduct({
+      ...product,
+      quantity: 1, // 重置數量
+    });
+
+    setQuantity(1); // 確保數量輸入框重置
+    setBookingDate(""); // 重置預訂日期
+    setRentDateRange([]); // 重置日期區間
+
+    // 清空日期選擇器的值
+    const dateRangeInput = document.getElementById("rentDateRange");
+    if (dateRangeInput) {
+      dateRangeInput.value = "";
+    }
+
+    // 觸發 Bootstrap Modal
+    const myModal = new bootstrap.Modal(
+      document.getElementById("rentDetailModal")
+    );
+    myModal.show();
+    // 在 modal 顯示後初始化 flatpickr
+    const modalElement = document.getElementById("rentDetailModal");
+
+    const handleModalShown = () => {
+      const dateRangeInput = document.getElementById("rentDateRange");
+
+      if (dateRangeInput && !dateRangeInput._flatpickr) {
+        dateRangeInput.classList.add("rentlist-flatpickr");
+
+        const flatpickrInstance = flatpickr(dateRangeInput, {
+          mode: "range", // 設置為日期區間選擇模式
+          dateFormat: "Y年m月d日", // 設置日期格式
+          minDate: "today", // 設置最小日期為今天
+          locale: {
+            rangeSeparator: " ~ ", // 設置日期區間的分隔符
+            firstDayOfWeek: 1,
+            weekdays: {
+              shorthand: [
+                "週日",
+                "週一",
+                "週二",
+                "週三",
+                "週四",
+                "週五",
+                "週六",
+              ],
+              longhand: [
+                "週日",
+                "週一",
+                "週二",
+                "週三",
+                "週四",
+                "週五",
+                "週六",
+              ],
+            },
+            months: {
+              shorthand: [
+                "1月",
+                "2月",
+                "3月",
+                "4月",
+                "5月",
+                "6月",
+                "7月",
+                "8月",
+                "9月",
+                "10月",
+                "11月",
+                "12月",
+              ],
+              longhand: [
+                "一月",
+                "二月",
+                "三月",
+                "四月",
+                "五月",
+                "六月",
+                "七月",
+                "八月",
+                "九月",
+                "十月",
+                "十一月",
+                "十二月",
+              ],
+            },
+          },
+          disableMobile: true,
+          onClose: (selectedDates) => {
+            if (selectedDates.length === 2) {
+              const [startDate, endDate] = selectedDates;
+              setRentDateRange([startDate, endDate]);
+              console.log("選擇的日期區間:", startDate, endDate);
+            }
+          },
+          onOpen: () => {
+            // 在日曆打開時，將 rentlist-flatpickr 類名添加到日曆容器
+            const calendarContainer = document.querySelector(
+              ".flatpickr-calendar"
+            );
+            if (calendarContainer) {
+              calendarContainer.classList.add("rentlist-flatpickr");
+            }
+          },
+        });
+      }
+    };
+
+    // 綁定事件監聽器
+    modalElement.addEventListener("shown.bs.modal", handleModalShown);
+
+    // 清理事件監聽器
+    return () => {
+      modalElement.removeEventListener("shown.bs.modal", handleModalShown);
+    };
+  };
+
+  // 確認租借資訊
+  // const handleConfirmRent = () => {
+  //   const rentDate = document.getElementById('rentDate').value;
+  //   const rentQuantity = document.getElementById('rentQuantity').value;
+
+  //   if (!rentDate || !rentQuantity) {
+  //     alert('請填寫完整的租借資訊');
+  //     return;
+  //   }
+
+  //   // 將商品 ID、租借日期和數量發送到後端
+  //   addToCart(selectedProductId, rentDate, rentQuantity);
+
+  //   // 關閉 Modal
+  //   closeModal();
+  // };
+
+  // 加入購物車的函數
+  // const addToCart = async (productId, rentDate, rentQuantity) => {
+  //   try {
+  //     const response = await fetch('/add-to-cart', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         productId,
+  //         rentDate,
+  //         rentQuantity,
+  //       }),
+  //     });
+
+  //     const data = await response.json();
+  //     if (data.success) {
+  //       alert('商品已成功加入購物車');
+  //     } else {
+  //       alert('加入購物車失敗');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //     alert('發生錯誤，請稍後再試');
+  //   }
+  // };
 
   return (
     <div className="container py-4 mx-auto">
@@ -688,6 +860,10 @@ export default function RentProductDetail() {
                   textDecoration: "none",
                   color: "none",
                 }}
+                onClick={(e) => {
+                  // 阻止 Link 的默認跳轉行為
+                  e.preventDefault();
+                }}
               >
                 <div className="card border-0 h-100">
                   <div className="d-flex justify-content-center align-items-center img-container">
@@ -765,7 +941,13 @@ export default function RentProductDetail() {
                       <div className="icon d-flex justify-content-center align-items-center">
                         <i className="bi bi-heart"></i>
                       </div>
-                      <div className="icon d-flex justify-content-center align-items-center">
+                      <div
+                        className="icon d-flex justify-content-center align-items-center"
+                        onClick={(e) => {
+                          e.stopPropagation(); // 阻止事件冒泡
+                          handleIconClick(product, e); // 觸發 Modal 顯示
+                        }}
+                      >
                         <i className="bi bi-cart"></i>
                       </div>
                     </div>
