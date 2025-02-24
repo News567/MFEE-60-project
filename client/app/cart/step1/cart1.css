@@ -171,7 +171,7 @@
 .cartCss .spec-display {
   position: relative;
   padding: 5px 8px;
-  height: 100px;
+  height: auto;
   cursor: pointer;
   border-radius: 4px;
   display: flex;

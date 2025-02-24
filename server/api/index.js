@@ -34,6 +34,9 @@ import articleLikeRouter from "../routes/article/like.js"; // 文章與留言按
 import couponRouter from "../routes/coupon/index.js";
 import memberRouter from "../routes/member/index.js";
 // import shipmentRouter from "../routes/ship/index.js"; // 運送相關路由
+import checkoutRouter from "../routes/checkout/index.js";
+//ecpay
+import ecpayRouter from "../routes/ecpay/index.js";
 // 建立 Express 應用程式
 const app = express();
 // 設定 CORS
@@ -66,9 +69,14 @@ apiRouter.use("/cart", cartRouter); // 負責 `/api/cart`
 apiRouter.use("/categories", categoriesRouter); // 負責 `/api/categories`
 // 品牌相關路由
 apiRouter.use("/brands", brandRouter); // 負責 `/api/brands`
+// 訂單相關路由
+apiRouter.use("/checkout", checkoutRouter); // 負責 `/api/checkout`
 
-// 運送相關路由
+// 運送相關路由 (暫時使用next.js的api路由)
 // apiRouter.use("/shipment", shipmentRouter); // 負責 `/api/shipment`
+
+// ecpay
+apiRouter.use("/ecpay", ecpayRouter); // 負責 `/api/ecpay`
 
 // 活動相關路由
 apiRouter.use("/activity", activityRouter);

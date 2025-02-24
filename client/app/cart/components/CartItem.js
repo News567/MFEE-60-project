@@ -5,12 +5,32 @@ import axios from "axios";
 import "./CartItem.css";
 import SpecModal from "./SpecModal";
 import { useCart } from "@/hooks/cartContext";
+import useFavorite from "@/hooks/useFavorite";
 
 const CartItem = ({ item, type = "products" }) => {
-  const { selectedItems, handleSelectItem, removeFromCart } = useCart();
+  const { selectedItems, handleSelectItem, removeFromCart, updateQuantity } =
+    useCart();
   const [quantity, setQuantity] = useState(item.quantity);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // 根據類型獲取正確的 ID
+  const getFavoriteId = () => {
+    switch (type) {
+      case "products":
+        return item.product_id;
+      case "activities":
+        return item.activity_id;
+      case "rentals":
+        return item.rental_id;
+      default:
+        return null;
+    }
+  };
+
+  const favoriteId = getFavoriteId();
+  // 不需要轉換 type，直接使用複數形式
+  const { isFavorite, toggleFavorite } = useFavorite(favoriteId, type);
 
   // 檢查是否被選中
   const isSelected = selectedItems[type]?.includes(item.id);
@@ -21,32 +41,9 @@ const CartItem = ({ item, type = "products" }) => {
     setIsUpdating(true);
 
     try {
-      // 根據不同類型設置正確的 type 值
-      const updateType =
-        type === "products"
-          ? "product"
-          : type === "activities"
-          ? "activity"
-          : type === "rentals"
-          ? "rental"
-          : type;
-
-      const response = await axios.put(
-        "http://localhost:3005/api/cart/update",
-        {
-          userId: 1, // 暫時寫死
-          type: updateType, // 使用轉換後的 type
-          itemId: item.id,
-          quantity: newQuantity,
-        }
-      );
-
-      if (response.data.success) {
-        setQuantity(newQuantity);
-        console.log("數量更新成功");
-      } else {
-        throw new Error(response.data.message || "更新失敗");
-      }
+      // 更新購物車
+      await updateQuantity(type, item.id, newQuantity);
+      setQuantity(newQuantity);
     } catch (error) {
       console.error("更新數量錯誤:", error);
       alert(
@@ -70,6 +67,19 @@ const CartItem = ({ item, type = "products" }) => {
       alert(error.message);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // 加入收藏
+  const handleAddToFavorites = async () => {
+    try {
+      const success = await toggleFavorite();
+      if (success) {
+        // 成功加入收藏後從購物車移除
+        await removeFromCart(type, item.id);
+      }
+    } catch (error) {
+      console.error("加入收藏失敗:", error);
     }
   };
 
@@ -151,8 +161,12 @@ const CartItem = ({ item, type = "products" }) => {
                 </div>
               </div>
               <div className="info-row">
+                <span className="info-label">每日租金：</span>
+                <span className="info-value">NT$ {item.discounted_price}</span>
+              </div>
+              <div className="info-row">
                 <span className="info-label">押金：</span>
-                <span className="info-value">NT$ {item.deposit}</span>
+                <span className="info-value">NT$ {item.deposit_fee}</span>
               </div>
             </div>
           </div>
@@ -187,6 +201,9 @@ const CartItem = ({ item, type = "products" }) => {
           </div>
           <div className="flex-grow-1">
             <div className="product-name mb-2">{item.name}</div>
+            {type === "activities" && (
+              <div className="text-muted">{item.project_name}</div>
+            )}
           </div>
         </div>
       </div>
@@ -195,8 +212,12 @@ const CartItem = ({ item, type = "products" }) => {
 
       <div className="col-4 col-md-1 mb-3 mb-md-0">
         <div className="text-start text-md-center">
-          <span className="d-inline d-md-none">單價：</span>
-          <span className="text-muted">${item.price}</span>
+          <span className="d-inline d-md-none">
+            {type === "rentals" ? "每日租金：" : "單價："}
+          </span>
+          <span className="text-muted">
+            ${type === "rentals" ? item.discounted_price : item.price}
+          </span>
         </div>
       </div>
 
@@ -209,15 +230,30 @@ const CartItem = ({ item, type = "products" }) => {
       <div className="col-6 col-md-1 mb-3 mb-md-0">
         <div className="text-start text-md-center">
           <span className="d-inline d-md-none">小計：</span>
-          <span className="text-danger">
-            ${type === "rentals" ? item.rental_fee : item.subtotal}
-          </span>
+          <div className="price">
+            NT${" "}
+            {type === "rentals"
+              ? Number(item.discounted_price) * quantity * item.rental_days
+              : Number(item.price) * quantity}
+            {type === "rentals" && item.deposit_fee > 0 && (
+              <div className="text-muted small">
+                (押金：NT$ {item.deposit_fee})
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="col-6 col-md-2">
         <div className="d-flex flex-row flex-md-column align-items-end align-items-md-center gap-2">
-          <button className="btn p-0 text-muted">加入收藏</button>
+          <button
+            className="btn p-0 text-muted"
+            onClick={handleAddToFavorites}
+            disabled={isFavorite}
+            title={isFavorite ? "商品已在收藏中" : "加入收藏"}
+          >
+            {isFavorite ? "已在收藏中" : "加入收藏"}
+          </button>
           <button
             className="btn p-0 text-muted"
             onClick={handleDelete}

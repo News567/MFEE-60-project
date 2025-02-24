@@ -302,7 +302,8 @@ router.post("/add", async (req, res) => {
            WHERE cart_id = ? 
            AND rental_id = ? 
            AND start_date = ? 
-           AND end_date = ?`[(cartId, rentalId, startDate, endDate)]
+           AND end_date = ?`,
+          [cartId, rentalId, startDate, endDate]
         );
 
         if (existingItem.length > 0) {
@@ -401,6 +402,7 @@ router.get("/:userId", async (req, res) => {
         ap.id AS project_id,
         ap.price,
         ap.original_price AS original_price,
+        ap.name AS project_name,
         a.name AS activity_name,
         a.id AS activity_id,
         ai.img_url AS image_url
