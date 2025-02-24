@@ -1,31 +1,23 @@
 "use client";
-import { useState } from "react"; 
 
-// 处理上传封面图片
-export async function uploadCoverImage(file) {
+// 處理上傳封面圖片
+export async function uploadArticleImage(imageFile) {
   const formData = new FormData();
-  formData.append("file", file);
-  
+  formData.append("coverImage", imageFile);
+
   const response = await fetch("/api/article/create/upload-image", {
     method: "POST",
     body: formData,
   });
-
-  if (!response.ok) {
-    throw new Error("封面图片上传失败");
-  }
-
-  const data = await response.json();
-  return data.filePath;  // 返回上传后的文件路径
+  return response.json();
 }
 
-// 获取文章创建所需的数据（分类、标签等）
+// 獲取文章創建所需的數據（分類、標籤等）
 export async function fetchArticleCreateData() {
   const response = await fetch("/api/article/create-data");
   if (!response.ok) {
-    throw new Error("获取文章创建数据失败");
+    throw new Error("獲取文章創建數據失敗");
   }
-
   return response.json();
 }
 
@@ -33,14 +25,15 @@ export async function fetchArticleCreateData() {
 export async function createArticle(formData) {
   const response = await fetch("/api/article/create", {
     method: "POST",
-    body: formData,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formData),
   });
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.message || "文章创建失败");
+    throw new Error(errorData.message || "文章創建失敗");
   }
 
   const data = await response.json();
-  return data;  // 返回文章创建后的数据（如文章ID）
+  return data; // 返回文章創建後的數據（如文章ID）
 }

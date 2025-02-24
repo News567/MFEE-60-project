@@ -3,12 +3,14 @@ import { pool } from "../../config/mysql.js";
 import articleSidebarRouter from "./sidebar.js"; 
 import articleCreateRouter from "./create.js"; 
 import articleReplyRouter from "./reply.js"; 
+import articleLikeRouter from "./like.js"; // 文章 & 留言按讚
 
 const router = express.Router();
 
 router.use("/sidebar", articleSidebarRouter);
 router.use("/create", articleCreateRouter);
 router.use("/reply", articleReplyRouter);
+router.use("/like", articleLikeRouter);
 
 /** 📝 獲取文章列表 */
 router.get("/", async (req, res) => {

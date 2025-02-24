@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "../components/sidebar";
 import ArticleForm from "../components/articleForm"; // 引入表單組件
 import "../components/articleCreate.css";
+// import { createArticle, uploadArticleImage } from '../api/forum';
 
 export default function ArticleCreate() {
   const router = useRouter();

@@ -27,10 +27,10 @@ import rentFilterRouter from "../routes/rent/filter.js";
 import rentDetailRouter from "../routes/rent/detail.js";
 import rentRecommendedRouter from "../routes/rent/recommended.js";
 import articleRouter from "../routes/article/index.js"; // 文章列表 & 動態文章頁
-import articleCreateRouter from "../routes/article/create.js"; // 取得新建文章所需的分類/標籤 & 新增文章
-import articleSidebarRouter from "../routes/article/sidebar.js"; // 側邊欄篩選數據
-import articleReplyRouter from "../routes/article/reply.js"; // 留言 & 回覆
-import articleLikeRouter from "../routes/article/like.js"; // 文章與留言按讚
+// import articleCreateRouter from "../routes/article/create.js"; // 取得新建文章所需的分類/標籤 & 新增文章
+// import articleSidebarRouter from "../routes/article/sidebar.js"; // 側邊欄篩選數據
+// import articleReplyRouter from "../routes/article/reply.js"; // 留言 & 回覆
+// import articleLikeRouter from "../routes/article/like.js"; // 文章與留言按讚
 import couponRouter from "../routes/coupon/index.js";
 import couponClaimRouter from "../routes/coupon/claim.js";
 import memberRouter from "../routes/member/index.js";
@@ -101,10 +101,10 @@ apiRouter.use("/rent", rentDetailRouter); // 負責 `/api/rent/:id`
 apiRouter.use("/rent", rentRecommendedRouter); // 負責 `/api/rent/:id/recommended`
 // 文章相關路由
 apiRouter.use("/article", articleRouter); // `/api/article` 文章列表 & 文章內容
-apiRouter.use("/article", articleCreateRouter); // `/api/article/create` 新增文章、取得新建文章所需數據
-apiRouter.use("/article", articleSidebarRouter); // `/api/article/sidebar` 側邊欄篩選數據
-apiRouter.use("/article", articleReplyRouter); // `/api/article/reply` 留言 & 回覆
-apiRouter.use("/article", articleLikeRouter); // `/api/article/like` 文章 & 留言按讚
+// apiRouter.use("/article", articleCreateRouter); // `/api/article/create` 新增文章、取得新建文章所需數據
+// apiRouter.use("/article", articleSidebarRouter); // `/api/article/sidebar` 側邊欄篩選數據
+// apiRouter.use("/article", articleReplyRouter); // `/api/article/reply` 留言 & 回覆
+// apiRouter.use("/article", articleLikeRouter); // `/api/article/like` 文章 & 留言按讚
 
 // 優惠券相關路由
 apiRouter.use("/coupon", couponRouter); // 負責 `/api/coupon/index`
