@@ -19,6 +19,10 @@ import groupDetailRouter from "../routes/group/detail.js";
 import groupCreate from "../routes/group/create.js";
 import rentRouter from "../routes/rent/index.js";
 import rentCategoryRouter from "../routes/rent/categories.js";
+import rentBrandCategoryRouter from "../routes/rent/brandcategories.js";
+import rentColorRouter from "../routes/rent/colors.js";
+import rentNewRouter from "../routes/rent/new-arrivals.js";
+import rentDiscountedRouter from "../routes/rent/new-discounted.js";
 import rentFilterRouter from "../routes/rent/filter.js";
 import rentDetailRouter from "../routes/rent/detail.js";
 import rentRecommendedRouter from "../routes/rent/recommended.js";
@@ -79,6 +83,10 @@ apiRouter.use("/group", groupCreate);
 // 租借相關路由
 apiRouter.use("/rent", rentRouter); // 負責 `/api/rent`
 apiRouter.use("/rent", rentCategoryRouter); // 負責 `/api/rent/categories`
+apiRouter.use("/rent", rentBrandCategoryRouter); // 負責 `/api/rent/brandcategories`
+apiRouter.use("/rent", rentColorRouter); // 負責 `/api/rent/colors`
+apiRouter.use("/rent", rentNewRouter); // 負責 `/api/rent/new-arrivals`
+apiRouter.use("/rent", rentDiscountedRouter); // 負責 `/api/rent/new-discounted`
 apiRouter.use("/rent", rentFilterRouter); // 負責 `/api/rent/filter`
 apiRouter.use("/rent", rentDetailRouter); // 負責 `/api/rent/:id`
 apiRouter.use("/rent", rentRecommendedRouter); // 負責 `/api/rent/:id/recommended`
