@@ -14,7 +14,7 @@ export async function uploadArticleImage(imageFile) {
 
 // 獲取文章創建所需的數據（分類、標籤等）
 export async function fetchArticleCreateData() {
-  const response = await fetch("/api/article/create-data");
+  const response = await fetch("/api/article/create/data");
   if (!response.ok) {
     throw new Error("獲取文章創建數據失敗");
   }
