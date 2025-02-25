@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import "./step3.css";
 import CartFlow from "../components/cartFlow";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import CreditCard from "./components/creditCard";
 import { useShip711StoreOpener } from "./ship/_hooks/use-ship-711-store";
 import { nextUrl } from "../../../config";
@@ -13,6 +13,7 @@ import Link from "next/link";
 const API_BASE_URL = "http://localhost:3005/api";
 const Cart2 = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { cartData, completeCheckout } = useCart();
   const [checkoutSteps, setCheckoutSteps] = useState({
@@ -219,6 +220,85 @@ const Cart2 = () => {
     ...cartData.rentals.map((item) => `${item.rental_name} x ${item.quantity}`),
   ];
 
+  //linepay
+  const handleLinePayCheckout = async () => {
+    try {
+      validateOrder();
+  
+      // 1️⃣ **先建立訂單**
+      const orderResponse = await fetch(
+        "http://localhost:3005/api/checkout/complete",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: 1,
+            paymentMethod: "linepay",
+            couponCode: null,
+          }),
+        }
+      );
+  
+      const orderResult = await orderResponse.json();
+      if (!orderResult.success) throw new Error(orderResult.message);
+  
+      // 2️⃣ **取得訂單金額**
+      const amount = orderResult.data.totalAmount;
+      const itemNames = cartData.products.map((p) => p.product_name).join(",");
+  
+      // 3️⃣ **向 `/linepay/reserve` 發送付款請求**
+      const response = await fetch(
+        `http://localhost:3005/api/linepay/reserve?amount=${amount}&items=${encodeURIComponent(
+          itemNames
+        )}`
+      );
+  
+      console.log("LINE Pay Reserve API Response:", response);
+      const result = await response.json();
+      console.log("Parsed result:", result);
+  
+      if (result.status !== "success") throw new Error("LINE Pay 預約失敗");
+  
+      // 4️⃣ **儲存交易 ID 並跳轉付款頁**
+      localStorage.setItem("linePayTransactionId", result.data.transactionId);
+      window.location.href = result.data.paymentUrl;
+    } catch (error) {
+      console.error("LINE Pay 付款失敗:", error);
+      alert(error.message);
+    }
+  };
+  
+
+  useEffect(() => {
+    const confirmLinePay = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const transactionId = urlParams.get("transactionId");
+      if (!transactionId) return;
+
+      const storedTransactionId = localStorage.getItem("linePayTransactionId");
+      if (storedTransactionId !== transactionId) {
+        console.error("交易 ID 不匹配");
+        return;
+      }
+
+      const amount = calculateTotal();
+      const response = await fetch(
+        `http://localhost:3005/api/linepay/confirm?transactionId=${transactionId}&amount=${amount}`
+      );
+
+      const result = await response.json();
+      if (result.success) {
+        alert("付款成功");
+        router.push("/order/success");
+      } else {
+        alert("付款失敗");
+      }
+    };
+
+    confirmLinePay();
+  }, []);
+
+  //ecpay
   const handleEcpayCheckout = async () => {
     try {
       // 基本驗證
@@ -808,7 +888,10 @@ const Cart2 = () => {
                       <i className="bi bi-credit-card me-2"></i>
                       綠界付款
                     </button>
-                    <button className="btn btn-success w-100 mt-3 p-3 fw-bold shadow-lg">
+                    <button
+                      className="btn btn-success w-100 mt-3 p-3 fw-bold shadow-lg"
+                      onClick={handleLinePayCheckout}
+                    >
                       Line Pay
                     </button>
                     <button

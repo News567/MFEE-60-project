@@ -30,7 +30,7 @@ export default function ProductCard({ product }) {
         variantId: product.variant_id, // 直接使用商品 ID
         quantity: 1,
       };
-      console.log("🚀 DEBUG: cartData =", cartData);
+      console.log(" DEBUG: cartData =", cartData);
 
       const success = await addToCart(1, cartData);
       if (success) {
@@ -40,6 +40,21 @@ export default function ProductCard({ product }) {
       console.error("加入購物車失敗:", error);
       alert("加入購物車失敗，請稍後再試");
     }
+  };
+
+  // 顯示價格範圍的函數
+  const renderPriceRange = () => {
+    // 使用 min_price 和 max_price 顯示價格範圍
+    const minPrice = product.min_price || product.price;
+    const maxPrice = product.max_price;
+
+    // 如果最低價格和最高價格相同，只顯示一個價格
+    if (!maxPrice || minPrice === maxPrice) {
+      return `NT$${minPrice}`;
+    }
+
+    // 否則顯示價格範圍
+    return `NT$${minPrice} ~ NT$${maxPrice}`;
   };
 
   return (
@@ -90,7 +105,7 @@ export default function ProductCard({ product }) {
         </div>
         <div className={`d-flex justify-content-center gap-1 my-2`}>
           {product.color && product.color.length > 0 ? (
-            product.color.map((color) => (
+            product.color.map((color, index) => (
               <div
                 key={color.color_id}
                 className={styles.saleCircle}
@@ -111,9 +126,9 @@ export default function ProductCard({ product }) {
             {product.brand_name || "自由品牌"}
           </div>
           <div>{product.name || "商品名稱"}</div>
-          <div className={styles.salePrice}>NT${product.price}</div>
+          <div className={styles.salePrice}>{renderPriceRange()}</div>
           <div className={styles.originalPrice}>
-            NT${product.original_price || (product.price || 0) * 1.5}
+            NT${product.original_price || (product.min_price || 0) * 1.5}
           </div>
         </div>
       </Link>

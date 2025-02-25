@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-import Link from "next/link";
+
 
 export default function EcpayCallback() {
   const searchParams = useSearchParams();

@@ -52,12 +52,18 @@ router.get("/", async (req, res) => {
     const [rows] = await pool.execute(sql, queryParams);
     const totalPages = Math.ceil(totalCount / limit);
 
-    // 使用 helper 函数处理颜色
+    // 使用 helper 函數處理顏色
     const parsedRows = parseProductColors(rows);
+
+    // 確保每個產品的 price 字段都被 min_price 替代（為了向後兼容）
+    const compatibleRows = parsedRows.map(product => ({
+      ...product,
+      price: product.min_price || product.price
+    }));
 
     res.json({
       status: "success",
-      data: parsedRows,
+      data: compatibleRows,
       pagination: {
         totalCount,
         totalPages,

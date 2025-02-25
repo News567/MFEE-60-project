@@ -643,7 +643,7 @@ export default function ProductList() {
   };
 
   const [newProducts, setNewProducts] = useState([]);
-  const [specialProducts, setSpecialProducts] = useState([]);
+
 
   // 獲取新品和特惠商品數據
   useEffect(() => {
@@ -657,13 +657,6 @@ export default function ProductList() {
           setNewProducts(newProductsResponse.data.data);
         }
 
-        // 獲取特惠商品
-        const specialProductsResponse = await axios.get(
-          `${API_BASE_URL}/products/special`
-        );
-        if (specialProductsResponse.data.status === "success") {
-          setSpecialProducts(specialProductsResponse.data.data);
-        }
       } catch (error) {
         console.error("Error fetching sidebar products:", error);
       }
@@ -743,7 +736,6 @@ export default function ProductList() {
                 ))}
               </ul>
             </div>
-
             {/* 品牌名稱 */}
             <div
               className={`${styles.sideCard} ${styles.productClassification} ${
@@ -792,7 +784,6 @@ export default function ProductList() {
                 ))}
               </ul>
             </div>
-
             {/* 已選擇的篩選條件 */}
             <div className={styles.selectedFilters}>
               {showFilters && getSelectedFiltersCount() > 0 && (
@@ -831,14 +822,12 @@ export default function ProductList() {
                 </div>
               )}
             </div>
-
             <button
               className="btn btn-primary w-100 mb-3"
               onClick={applyFilters}
             >
               篩選({getSelectedFiltersCount()}/20)
             </button>
-
             {/* 商品篩選 */}
             <div className={styles.sideCard}>
               <div className={styles.cardTitle}>
@@ -928,12 +917,10 @@ export default function ProductList() {
                 </div>
               </div>
             </div>
-
             {/* 新品上市 */}
             <SidebarProductList title="新品上市" products={newProducts} />
-
-            {/* 特惠商品 */}
-            <SidebarProductList title="特惠商品" products={specialProducts} />
+            {/* 特惠商品
+            <SidebarProductList title="特惠商品" products={specialProducts} /> */}
           </div>
         </div>
 

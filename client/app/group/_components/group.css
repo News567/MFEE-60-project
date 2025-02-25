@@ -8,6 +8,10 @@
     border-radius: 6px; 
     max-width: 100%;
     margin: 0 !important;
+    &:hover{
+        background-color: #ECF8FE;
+        cursor: pointer;
+    }
     .group-name{
         font-size: 18px;
         font-weight: bold;

@@ -306,7 +306,7 @@ router.post("/users/status", checkToken, (req, res) => {
       mail: decoded.mail,
       head: decoded.head,
     },
-    process.env.JWT_SECRET_KEY,
+    process.env.JWT_SECRET,
     { expiresIn: "30m" }
   );
   res.json({

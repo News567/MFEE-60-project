@@ -17,6 +17,8 @@ export default function GroupCard({ group }) {
     //     e.stopPropagation();
     //     addToCart(group);
     // };
+    const now = new Date()
+    console.log(now);
     return (
         <div className="group-card row d-flex justify-content-between align-items-center w-100">
             <div className="col-12 col-sm-6 d-flex avatar">
@@ -103,9 +105,11 @@ export default function GroupCard({ group }) {
                     </div>
                     <div>已揪：0</div>
                 </div>
-                <div className="color-primary">
+                {now < new Date(group.sign_end_date)?(<div className="color-primary">
                     揪團截止:{group.sign_end_date}
-                </div>
+                </div>):(<div className="text-secondary">
+                    揪團截止:{group.sign_end_date} <span className="text-danger">已截止</span>
+                </div>)}
             </div>
         </div>
     );
