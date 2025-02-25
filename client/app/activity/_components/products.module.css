@@ -1,4 +1,4 @@
-/* 变量可以通过CSS变量方式定义 */
+/* 變量可以通過CSS變量方式定義 */
 :root {
   --border-color: rgb(228, 228, 228);
   --text-color: #333;
@@ -197,7 +197,7 @@
   color: var(--primary-color);
 }
 
-/* 价格范围 */
+/* 價格範圍 */
 .priceRange {
   padding: 15px;
 }
@@ -390,7 +390,7 @@
   font-size: 0.9rem;
 }
 
-/* 销售标记 */
+/* 銷售標記 */
 .saleCircle {
   width: 20px;
   height: 20px;
@@ -399,7 +399,7 @@
   cursor: pointer;
 }
 
-/* 布局工具类 */
+/* 布局工具類 */
 .dFlex {
   display: flex;
 }
@@ -408,7 +408,7 @@
   justify-content: center;
 }
 
-/* 商品篩選相关样式 */
+/* 商品篩選相關樣式 */
 .filterSection {
   padding: 15px;
 }
@@ -459,7 +459,7 @@
   transform: scale(1.1);
 }
 
-/* 侧边栏商品样式（新品上市和特惠商品） */
+/*側邊欄商品（新品上市和特惠商品） */
 .sidebarProduct {
   display: flex;
   gap: 12px;
@@ -513,7 +513,7 @@
   font-size: 1rem;
 }
 
-/* 商品卡片链接样式 */
+/* 商品卡片連結樣式 */
 .productLink {
   display: block;
   text-decoration: none;
@@ -529,4 +529,3 @@
   color: inherit;
 }
 
-/* 其他样式可以根据需要继续转换... */

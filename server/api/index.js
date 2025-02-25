@@ -38,6 +38,9 @@ import memberRouter from "../routes/member/index.js";
 import checkoutRouter from "../routes/checkout/index.js";
 //ecpay
 import ecpayRouter from "../routes/ecpay/index.js";
+// linepay
+import linepayRouter from "../routes/linepay/index.js";
+
 // 建立 Express 應用程式
 const app = express();
 // 設定 CORS
@@ -61,24 +64,23 @@ app.get("/", (req, res) => {
 const apiRouter = express.Router();
 app.use("/api", apiRouter);
 // 產品相關路由
-apiRouter.use("/products", productRouter); // 負責 `/api/products`
+apiRouter.use("/products", productRouter);
 // 收藏相關路由
-apiRouter.use("/favorites", favoritesRouter); // 負責 `/api/favorites`
+apiRouter.use("/favorites", favoritesRouter);
 // 購物車相關路由
-apiRouter.use("/cart", cartRouter); // 負責 `/api/cart`
+apiRouter.use("/cart", cartRouter);
 // 分類相關路由
-apiRouter.use("/categories", categoriesRouter); // 負責 `/api/categories`
+apiRouter.use("/categories", categoriesRouter);
 // 品牌相關路由
-apiRouter.use("/brands", brandRouter); // 負責 `/api/brands`
+apiRouter.use("/brands", brandRouter);
 // 訂單相關路由
-apiRouter.use("/checkout", checkoutRouter); // 負責 `/api/checkout`
-
-// 運送相關路由 (暫時使用next.js的api路由)
-// apiRouter.use("/shipment", shipmentRouter); // 負責 `/api/shipment`
+apiRouter.use("/checkout", checkoutRouter);
 
 // ecpay
-apiRouter.use("/ecpay", ecpayRouter); // 負責 `/api/ecpay`
+apiRouter.use("/ecpay", ecpayRouter);
 
+// linepay
+apiRouter.use("/linepay", linepayRouter);
 // 活動相關路由
 apiRouter.use("/activity", activityRouter);
 apiRouter.use("/activity", activityDetailRouter);
