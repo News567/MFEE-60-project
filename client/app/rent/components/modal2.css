@@ -2,21 +2,12 @@
   gap: 10px;
 }
 
+
 .modal-dialog {
-  max-width: 60% !important; /* 設定 Modal 最大寬度 */
+  max-width: 60%; /* 設定 Modal 最大寬度 */
 }
 
-.modal-backdrop {
-  background-color: rgba(0, 0, 0, 0.3) !important; /* 可以根據需要調整透明度 */
-}
 
-.modal-title {
-  font-size: 20px !important;
-}
-
-.modal-content {
-  border: none !important;
-}
 .modal-body .subdetails-titles .modal-product-price {
   margin: 0;
   font-size: 24px;
@@ -122,7 +113,7 @@
     height: auto;
   }
   
-.flatpickr-calendar {
+.calendar-recommended .flatpickr-calendar {
   opacity: 1 !important;
   visibility: visible !important;
   z-index: 9999 !important; /* 強制讓日曆顯示在最上層 */

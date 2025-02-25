@@ -240,12 +240,10 @@ router.post("/add", async (req, res) => {
           });
         }
 
-        const stock = parseInt(rental[0].stock, 10);
+        const stock = rental[0].stock === null ? Infinity : parseInt(rental[0].stock, 10);
         if (isNaN(stock)) {
-          return res.status(500).json({
-            success: false,
-            message: "庫存數據異常",
-          });
+            console.error("庫存數據異常:", rental[0].stock);
+            return res.status(500).json({ success: false, message: "庫存數據異常" });
         }
 
         //檢查此次租賃數量是否超過庫存
@@ -333,6 +331,7 @@ router.post("/add", async (req, res) => {
   } catch (error) {
     console.error("加入購物車失敗:", error);
     res.status(500).json({ success: false, message: "加入購物車失敗" });
+    res.status(400).json({ success: false, message: "404 Error" });
   }
 });
 
