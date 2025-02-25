@@ -249,12 +249,29 @@
 }
 
 .main-details .details-select .product-color .colors .color-box {
-  width: 33px;
-  height: 33px;
+  width: 30px;
+  height: 30px;
   border-radius: 100px;
   display: inline-block;
   margin-right: 8px;
   filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.4));
+  cursor: pointer; 
+  transition: all 0.3s ease;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0.1));
+}
+.main-details .details-select .product-color .colors .color-box:hover {
+  transform: scale(1.1); /* 放大 */
+  border-color: var(--black); /* 邊框變深 */
+  box-shadow: 0 0 10px rgba(200, 200, 200, 0.5) /* 陰影 */
+}
+.main-details .details-select .product-color .colors .color-box.selected {
+  border: 3px solid var(--black); /* 更粗的邊框 */
+  box-shadow: 0 0 15px rgba(200, 200, 200, 0.7); /* 更明顯的陰影 */
+}
+
+
+.main-details .details-select .product-color .colors .color-box:active {
+  transform: scale(0.9);
 }
 
 .no-colors {

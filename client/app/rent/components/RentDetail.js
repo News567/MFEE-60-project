@@ -33,25 +33,14 @@ export default function RentProductDetail() {
   const [loading, setLoading] = useState(true); // 加載狀態
   const [error, setError] = useState(null); // 錯誤狀態
   const { fetchCart } = useCart(); // 從 cartContext 中獲取 fetchCart 方法
-  //   const [product, setProduct] = useState(null);
   const [mainImage, setMainImage] = useState(""); // 商品大張圖片（要做大圖切換
-  //   const [loading, setLoading] = useState(true); // 加載狀態
-  //   const [error, setError] = useState(null); // 錯誤狀態
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0); // 當前顯示的圖片索引
-  //   const [isFavorite, setIsFavorite] = useState(0); // 愛心收藏功能
   const [selectedDates, setSelectedDates] = useState([]); // 讓我知道會員選擇了多少天數（動態計算價格用
   const [recommendedProducts, setRecommendedProducts] = useState([]); // 你可能會喜歡的隨機推薦商品
 
-  //   const [quantity, setQuantity] = useState(1); // 租借數量
   const quantityInputRef = useRef(null);
-  //   const [selectedColor, setSelectedColor] = useState(null); // 選擇的顏色
-  //   const [startDate, setStartDate] = useState(""); // 租借開始日期
-  //   const [endDate, setEndDate] = useState(""); // 租借結束日期
-
-  //   // 加入購物車
-  //   const [currentRental, setCurrentRental] = useState(null); // 儲存當前點擊租借商品資料
 
   const [activeTab, setActiveTab] = useState("description"); // 商品描述區塊切換tab
 
@@ -66,8 +55,6 @@ export default function RentProductDetail() {
   // const [bookingDate, setBookingDate] = useState("");
   // const [rentDateRange, setRentDateRange] = useState([]); // 租借日期
   // const [showModal, setShowModal] = useState(false);
-
-  // const flatpickrRef = useRef(null); // 用來保存 flatpickr 實例
 
   // 從後端獲取商品數據
   useEffect(() => {
@@ -158,6 +145,14 @@ export default function RentProductDetail() {
 
     fetchProduct();
   }, [id]);
+
+  const handleColorClick = (color) => {
+    if (selectedColor === color) {
+      setSelectedColor(null); // 如果已經選中，則取消選擇
+    } else {
+      setSelectedColor(color); // 如果未選中，則更新選中的顏色
+    }
+  };
 
   // 判斷收藏的愛心狀態
   const handleClick = () => {
@@ -642,13 +637,24 @@ export default function RentProductDetail() {
     const formattedStartDate = startDate.toLocaleDateString("en-CA"); // 輸出 YYYY-MM-DD
     const formattedEndDate = endDate.toLocaleDateString("en-CA"); // 輸出 YYYY-MM-DD
 
+    // 檢查商品是否有顏色規格
+    const hasColorSpecifications =
+      product.specifications &&
+      product.specifications.some((spec) => spec.color_rgb);
+
+    // 如果有顏色規格但未選擇顏色，則提示用戶選擇顏色
+    if (hasColorSpecifications && !selectedColor) {
+      alert("請選擇商品顏色！");
+      return;
+    }
+
     const cartData = {
       userId: 1, // (寫死)
       type: "rental", // (寫死)
       rentalId: product.id, // 商品 ID
-      // rentalName: product.name, // 商品名稱
+      rentalName: product.name, // 商品名稱
       quantity: quantity, // 租借數量
-      // color: selectedColor, // 選擇的顏色
+      color: selectedColor, // 選擇的顏色
       startDate: formattedStartDate, // 轉換為 YYYY-MM-DD 格式
       endDate: formattedEndDate, // 轉換為 YYYY-MM-DD 格式
       price: product.price, // 有特價選取特價的價格，沒有的話就是原價 product.price2 ? product.price2 : product.price
@@ -905,8 +911,15 @@ export default function RentProductDetail() {
                             spec.color_rgb && (
                               <span
                                 key={index}
-                                className="color-box"
+                                className={`color-box ${
+                                  selectedColor === spec.color_name
+                                    ? "selected"
+                                    : ""
+                                }`}
                                 style={{ backgroundColor: spec.color_rgb }}
+                                onClick={() =>
+                                  handleColorClick(spec.color_name)
+                                } // 點擊時更新選中顏色
                               ></span>
                             )
                         )}
@@ -1059,10 +1072,6 @@ export default function RentProductDetail() {
                   textDecoration: "none",
                   color: "none",
                 }}
-                onClick={(e) => {
-                  // 阻止 Link 的默認跳轉行為
-                  e.preventDefault();
-                }}
               >
                 <div className="card border-0 h-100">
                   <div className="d-flex justify-content-center align-items-center img-container">
@@ -1133,49 +1142,6 @@ export default function RentProductDetail() {
                             ...
                           </span>
                         )}
-                    </div>
-
-                    {/* Bootstrap Modal */}
-                    <div
-                      className="modal fade"
-                      id="rentDetailModal"
-                      data-bs-backdrop="static"
-                      tabIndex="-1"
-                      aria-labelledby="rentDetailModalLabel"
-                      aria-hidden="true"
-                    >
-                      <div className="modal-dialog modal-dialog-centered modal-custom">
-                        <div className="modal-content">
-                          {/* modal標題 */}
-                          <div className="modal-header">
-                            <h5 className="modal-title">
-                              {selectedProduct?.brand_name || "未知品牌"} -{" "}
-                              {selectedProduct?.name || "租借商品詳情"}
-                            </h5>
-                            <button
-                              type="button"
-                              className="btn-close"
-                              data-bs-dismiss="modal"
-                              aria-label="Close"
-                            ></button>
-                          </div>
-                          {/* modal內容區塊 */}
-
-                          {/* 按鈕區 */}
-                          <div className="modal-footer">
-                            <button
-                              type="button"
-                              className="cancel-button"
-                              data-bs-dismiss="modal"
-                            >
-                              取消租借
-                            </button>
-                            <button type="button" className="confirm-button">
-                              確認租借
-                            </button>
-                          </div>
-                        </div>
-                      </div>
                     </div>
 
                     {/* hover出現收藏 & 加入購物車 */}
