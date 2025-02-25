@@ -13,6 +13,7 @@ import "./modal.css";
 import "../../../public/globals.css";
 import "rc-slider/assets/index.css";
 import RentBrand from "./RentBrand"; // 匯入，處理品牌專區
+import RentCart from './RentCart';
 import { debounce } from "lodash"; // 引入 debounce 解決刷新有參數的介面資料閃動問題
 
 const Flatpickr = dynamic(() => import("flatpickr"), { ssr: false });
@@ -71,7 +72,10 @@ export default function RentList() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [bookingDate, setBookingDate] = useState("");
-  const [rentDateRange, setRentDateRange] = useState([]); // 租借日期
+  const [rentDateRange, setRentDateRange] = useState({
+    startDate: "",
+    endDate: "",
+  }); // 租借日期
 
   // 動態更新網址參數（根據每頁顯示資料數、分頁、排序條件）
   const router = useRouter();
@@ -1103,8 +1107,8 @@ export default function RentList() {
 
     // 清空日期選擇器的值
     const dateRangeInput = document.getElementById("rentDateRange");
-    if (dateRangeInput) {
-      dateRangeInput.value = "";
+    if (dateRangeInput && dateRangeInput._flatpickr) {
+      dateRangeInput._flatpickr.clear();
     }
 
     // 觸發 Bootstrap Modal
@@ -1182,7 +1186,10 @@ export default function RentList() {
           disableMobile: true,
           onClose: (selectedDates) => {
             if (selectedDates.length === 2) {
-              const [startDate, endDate] = selectedDates;
+              const [startDate, endDate] = selectedDates.map(
+                (date) => date.toISOString().split("T")[0]
+              ); // 轉換為 YYYY-MM-DD 格式
+
               setRentDateRange([startDate, endDate]);
               console.log("選擇的日期區間:", startDate, endDate);
             }
@@ -1195,6 +1202,8 @@ export default function RentList() {
             if (calendarContainer) {
               calendarContainer.classList.add("rentlist-flatpickr");
             }
+            // 清空日期選擇器的值
+            dateRangeInput.value = "";
           },
         });
       }
@@ -1208,26 +1217,28 @@ export default function RentList() {
       modalElement.removeEventListener("shown.bs.modal", handleModalShown);
     };
   };
-
-  // 確認租借資訊
   // const handleConfirmRent = () => {
-  //   const rentDate = document.getElementById('rentDate').value;
-  //   const rentQuantity = document.getElementById('rentQuantity').value;
-
-  //   if (!rentDate || !rentQuantity) {
-  //     alert('請填寫完整的租借資訊');
+  //   if (!rentDateRange.startDate || !rentDateRange.endDate) {
+  //     alert("請填寫完整的租借日期");
   //     return;
   //   }
 
-  //   // 將商品 ID、租借日期和數量發送到後端
-  //   addToCart(selectedProductId, rentDate, rentQuantity);
+  //   if (!quantity) {
+  //     alert("請填寫數量");
+  //     return;
+  //   }
 
-  //   // 關閉 Modal
-  //   closeModal();
+  //   // 確保租借資訊正確後，加入購物車
+  //   addToCart(
+  //     selectedProduct.id,
+  //     rentDateRange.startDate,
+  //     rentDateRange.endDate,
+  //     quantity
+  //   );
+  //   closeModal(); // 關閉 Modal
   // };
 
-  // 加入購物車的函數
-  // const addToCart = async (productId, rentDate, rentQuantity) => {
+  // const addToCart = async (productId, startDate, endDate, rentQuantity) => {
   //   try {
   //     const response = await fetch('/add-to-cart', {
   //       method: 'POST',
@@ -1236,11 +1247,12 @@ export default function RentList() {
   //       },
   //       body: JSON.stringify({
   //         productId,
-  //         rentDate,
+  //         startDate,
+  //         endDate,
   //         rentQuantity,
   //       }),
   //     });
-
+  
   //     const data = await response.json();
   //     if (data.success) {
   //       alert('商品已成功加入購物車');
@@ -1252,6 +1264,8 @@ export default function RentList() {
   //     alert('發生錯誤，請稍後再試');
   //   }
   // };
+
+  
 
   // 租借商品列表（動態渲染）
   return (
@@ -1290,28 +1304,7 @@ export default function RentList() {
                           onClick={() => handleCategorySelect(bigCategory)}
                         >
                           {bigCategory.category_big_name}
-                          {/* 小分類選單 */}
-                          {/* {selectedBigCategory ===
-                            bigCategory.category_big_id && (
-                            <div className="small-category-dropdown">
-                              {bigCategory.category_small.map((small) => (
-                                <div
-                                  key={small.id}
-                                  className={`small-category-dropdown-item ${
-                                    selectedSmallCategory === small.id
-                                      ? "selected"
-                                      : ""
-                                  }`}
-                                  onClick={(e) => {
-                                    e.stopPropagation(); // 阻止事件冒泡
-                                    handleSmallCategorySelect(small);
-                                  }}
-                                >
-                                  {small.name}
-                                </div>
-                              ))}
-                            </div>
-                          )} */}
+        
                           <div className="small-category-dropdown">
                             {bigCategory.category_small.map((small) => (
                               <div
@@ -2040,6 +2033,7 @@ export default function RentList() {
                                 id="rentDateRange"
                                 className="form-control"
                                 placeholder="選擇日期區間"
+                                readOnly
                               />
                             </div>
                           </div>
@@ -2058,10 +2052,7 @@ export default function RentList() {
                       >
                         取消租借
                       </button>
-                      <button
-                        type="button"
-                        className="confirm-button"
-                      >
+                      <button type="button" className="confirm-button">
                         確認租借
                       </button>
                     </div>

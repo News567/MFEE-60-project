@@ -11,16 +11,16 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import "./flatpickr.css"; // 我定義的小日曆css
 import "./RentDetail.css";
-import "./modal.css";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./modal2.css"; // 我定義的你可能會喜歡modalcss(跟rentlist同支)
 import "../../../public/globals.css";
 import HeartIcon from "./HeartIcon/HeartIcon";
+import { Modal, Button } from "react-bootstrap"; // 使用 react-bootstrap 的 Modal 避免衝突閃動
 
 const Flatpickr = dynamic(() => import("flatpickr"), { ssr: false });
 
 export default function RentProductDetail() {
   const { id } = useParams(); // 取得動態路由參數
-  // const searchParams = useSearchParams(); // 獲取查詢參數
-  // const productId = searchParams.get("productId"); // 從查詢參數中獲取 productId
 
   const [product, setProduct] = useState(null);
   const [mainImage, setMainImage] = useState(""); // 商品大張圖片（要做大圖切換
@@ -37,11 +37,14 @@ export default function RentProductDetail() {
   const quantityInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState("description"); // 商品描述區塊切換tab
 
-  //跳出modal選擇詳細資訊
-  const [modalVisible, setModalVisible] = useState(false);
+  // 跳出modal選擇詳細資訊
+  const [show, setShow] = useState(false);
+  // const [modalVisible, setModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [bookingDate, setBookingDate] = useState("");
+  // const [bookingDate, setBookingDate] = useState("");
   const [rentDateRange, setRentDateRange] = useState([]); // 租借日期
+
+  const flatpickrRef = useRef(null); // 用來保存 flatpickr 實例
 
   // 從後端獲取商品數據
   useEffect(() => {
@@ -356,60 +359,22 @@ export default function RentProductDetail() {
     );
   };
 
-  if (loading) return <div>商品載入中...</div>;
-  if (error) return <div>錯誤：{error}</div>;
-  if (!product) return <div>未找到商品</div>;
+  // 在 Modal 顯示後初始化 flatpickr
+  useEffect(() => {
+    if (show) {
+      const dateRangeInput = document.getElementById("modalRentDateRange");
 
-  // 這個用來做最多三張小圖
-  const visibleImages = product.images.slice(
-    currentImageIndex,
-    currentImageIndex + 3
-  );
-  // 判斷是否顯示小圖的上一頁和下一頁按鈕
-  const showPrevButton = currentImageIndex > 0;
-  const showNextButton = currentImageIndex + 3 < product.images.length;
-
-  // 點擊圖標時顯示 Modal
-  const handleIconClick = (product, e) => {
-    e.stopPropagation(); // 防止事件冒泡（才不會點到跳轉 rent detail）
-    // setSelectedProduct(product);
-
-    // 重設選擇的商品及相關狀態
-    setSelectedProduct({
-      ...product,
-      quantity: 1, // 重置數量
-    });
-
-    setQuantity(1); // 確保數量輸入框重置
-    setBookingDate(""); // 重置預訂日期
-    setRentDateRange([]); // 重置日期區間
-
-    // 清空日期選擇器的值
-    const dateRangeInput = document.getElementById("rentDateRange");
-    if (dateRangeInput) {
-      dateRangeInput.value = "";
-    }
-
-    // 觸發 Bootstrap Modal
-    const myModal = new bootstrap.Modal(
-      document.getElementById("rentDetailModal")
-    );
-    myModal.show();
-    // 在 modal 顯示後初始化 flatpickr
-    const modalElement = document.getElementById("rentDetailModal");
-
-    const handleModalShown = () => {
-      const dateRangeInput = document.getElementById("rentDateRange");
+      console.log("dateRangeInput:", dateRangeInput); // 確認 input 元素
 
       if (dateRangeInput && !dateRangeInput._flatpickr) {
-        dateRangeInput.classList.add("rentlist-flatpickr");
+        console.log("Initializing flatpickr...");
 
-        const flatpickrInstance = flatpickr(dateRangeInput, {
-          mode: "range", // 設置為日期區間選擇模式
-          dateFormat: "Y年m月d日", // 設置日期格式
-          minDate: "today", // 設置最小日期為今天
+        flatpickrRef.current = flatpickr(dateRangeInput, {
+          mode: "range",
+          dateFormat: "Y年m月d日",
+          minDate: "today",
           locale: {
-            rangeSeparator: " ~ ", // 設置日期區間的分隔符
+            rangeSeparator: " ~ ",
             firstDayOfWeek: 1,
             weekdays: {
               shorthand: [
@@ -465,32 +430,62 @@ export default function RentProductDetail() {
           disableMobile: true,
           onClose: (selectedDates) => {
             if (selectedDates.length === 2) {
-              const [startDate, endDate] = selectedDates;
-              setRentDateRange([startDate, endDate]);
-              console.log("選擇的日期區間:", startDate, endDate);
+              setRentDateRange([selectedDates[0], selectedDates[1]]);
             }
           },
+          // 確保透明度設定為1，並且是顯示的
           onOpen: () => {
-            // 在日曆打開時，將 rentlist-flatpickr 類名添加到日曆容器
-            const calendarContainer = document.querySelector(
-              ".flatpickr-calendar"
-            );
-            if (calendarContainer) {
-              calendarContainer.classList.add("rentlist-flatpickr");
+            const calendarElement = document.querySelector(".flatpickr-calendar");
+            if (calendarElement) {
+              calendarElement.style.opacity = "1";
+              calendarElement.style.visibility = "visible";
             }
-          },
+          }
         });
       }
-    };
+    } else {
+      // 銷毀 flatpickr 實例
+      if (flatpickrRef.current) {
+        flatpickrRef.current.destroy();
+        flatpickrRef.current = null;
+      }
+    }
+  }, [show]);
 
-    // 綁定事件監聽器
-    modalElement.addEventListener("shown.bs.modal", handleModalShown);
+  // 打開 Modal
+  const handleShow = (product, e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-    // 清理事件監聽器
-    return () => {
-      modalElement.removeEventListener("shown.bs.modal", handleModalShown);
-    };
+    setSelectedProduct({
+      ...product,
+      quantity: 1,
+    });
+
+    setQuantity(1);
+    setRentDateRange([]);
+    setShow(true);
   };
+
+  // 關閉 Modal
+  const handleClose = () => {
+    setShow(false);
+    setSelectedProduct(null);
+    setRentDateRange([]);
+  };
+
+  if (loading) return <div>商品載入中...</div>;
+  if (error) return <div>錯誤：{error}</div>;
+  if (!product) return <div>未找到商品</div>;
+
+  // 這個用來做最多三張小圖
+  const visibleImages = product.images.slice(
+    currentImageIndex,
+    currentImageIndex + 3
+  );
+  // 判斷是否顯示小圖的上一頁和下一頁按鈕
+  const showPrevButton = currentImageIndex > 0;
+  const showNextButton = currentImageIndex + 3 < product.images.length;
 
   // 確認租借資訊
   // const handleConfirmRent = () => {
@@ -767,8 +762,8 @@ export default function RentProductDetail() {
                 </div>
                 <div className="booking-date">
                   <p className="booking-title">預訂日期</p>
-                  <div className="booking-calendar d-flex flex-column align-items-center">
-                    <div id="fixed-calendar"></div>
+                  <div className="booking-calendar calendar-detail d-flex flex-column align-items-center">
+                    <div id="fixed-calendar" className=""></div>
                     <div className="d-flex flex-column selected-date-range w-100">
                       <p id="date-range-text" style={{ display: "none" }}></p>
                       <div
@@ -936,6 +931,178 @@ export default function RentProductDetail() {
                         )}
                     </div>
 
+                    {/* Modal */}
+                    <Modal
+                      show={show}
+                      onHide={handleClose}
+                      keyboard={false}
+                      centered
+                      backdrop="static"
+                      className="fade"
+                      aria-labelledby="contained-modal-title-vcenter"
+                    >
+                      <Modal.Header closeButton>
+                        <Modal.Title>
+                          {selectedProduct?.brand || "未知品牌"} -{" "}
+                          {selectedProduct?.name || "租借商品詳情"}
+                        </Modal.Title>
+                      </Modal.Header>
+                      <Modal.Body>
+                        {selectedProduct ? (
+                          <div className="row d-flex flex-row justify-content-center align-items-center">
+                            {/* 商品圖片 */}
+                            <div className="col-md-5">
+                              <Image
+                                src={
+                                  selectedProduct?.img_url ||
+                                  "/image/rent/no-img.png"
+                                }
+                                className="img-fluid"
+                                alt={selectedProduct?.name}
+                                width={360}
+                                height={360}
+                                layout="responsive"
+                                priority
+                                unoptimized
+                              />
+                            </div>
+
+                            {/* 商品資訊 */}
+                            <div className="col-md-7 d-flex flex-column gap-2">
+                              {/* 商品價格 */}
+                              <div className="subdetails-titles d-flex flex-column">
+                                {selectedProduct.price2 ? (
+                                  <>
+                                    <p className="modal-product-price2">
+                                      NT${selectedProduct.price2}/日
+                                    </p>
+                                    <p
+                                      className="modal-product-price"
+                                      style={{
+                                        color: "var(--gray-600-color)",
+                                        fontWeight: "400",
+                                        fontSize: "16px",
+                                        textDecoration: "line-through",
+                                      }}
+                                    >
+                                      NT${selectedProduct.price}/日
+                                    </p>
+                                  </>
+                                ) : (
+                                  <p className="modal-product-price">
+                                    NT${selectedProduct.price}/日
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* 商品顏色 */}
+                              <div className="product-color">
+                                <p className="color-title fw-bold">商品顏色</p>
+                                <div className="colors d-flex flex-row">
+                                  {selectedProduct.color_rgb ? (
+                                    <div className="product-colors d-flex">
+                                      {selectedProduct.color_rgb
+                                        .split(",")
+                                        .map((color, index) => (
+                                          <span
+                                            key={index}
+                                            className="color-box rounded-circle mx-1 border"
+                                            style={{
+                                              backgroundColor: color.trim(),
+                                              width: "20px",
+                                              height: "20px",
+                                              display: "inline-block",
+                                            }}
+                                          ></span>
+                                        ))}
+                                    </div>
+                                  ) : (
+                                    <p className="no-colors">
+                                      本商品暫無其他顏色
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* 商品數量 */}
+                              <div className="product-amount">
+                                <p className="fw-bold amount-title">商品數量</p>
+                                <div className="amounts d-flex align-items-center">
+                                  <Button
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    onClick={() =>
+                                      setQuantity((prev) =>
+                                        prev > 1 ? prev - 1 : prev
+                                      )
+                                    }
+                                  >
+                                    <i className="bi bi-dash"></i>
+                                  </Button>
+                                  <input
+                                    type="text"
+                                    className="form-control text-center mx-2"
+                                    style={{ width: "50px" }}
+                                    value={quantity}
+                                    readOnly
+                                  />
+                                  <Button
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (
+                                        !selectedProduct.stock ||
+                                        quantity < selectedProduct.stock
+                                      ) {
+                                        setQuantity((prev) => prev + 1);
+                                      }
+                                    }}
+                                  >
+                                    <i className="bi bi-plus"></i>
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* 庫存資訊 */}
+                              {selectedProduct.stock &&
+                              selectedProduct.stock > 0 ? (
+                                <p className="product-stock">
+                                  庫存僅剩 {selectedProduct.stock} 件
+                                </p>
+                              ) : (
+                                <p className="stock-available">庫存餘量充足</p>
+                              )}
+
+                              {/* 預訂日期 */}
+                              <div className="booking-date calendar-recommended mt-3">
+                                <p className="fw-bold">預訂日期</p>
+                                <input
+                                  type="text"
+                                  id="modalRentDateRange"
+                                  className="form-control"
+                                  placeholder="選擇日期區間"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <p>租借商品資訊載入中...</p>
+                        )}
+                      </Modal.Body>
+                      <Modal.Footer>
+                        <Button
+                          variant="secondary"
+                          onClick={handleClose}
+                          className="cancel-button"
+                        >
+                          取消租借
+                        </Button>
+                        <Button variant="primary" className="confirm-button">
+                          確認租借
+                        </Button>
+                      </Modal.Footer>
+                    </Modal>
+
                     {/* hover出現收藏 & 加入購物車 */}
                     <div className="icon-container d-flex flex-row">
                       <div className="icon d-flex justify-content-center align-items-center">
@@ -944,8 +1111,9 @@ export default function RentProductDetail() {
                       <div
                         className="icon d-flex justify-content-center align-items-center"
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation(); // 阻止事件冒泡
-                          handleIconClick(product, e); // 觸發 Modal 顯示
+                          handleShow(product, e); // 觸發 Modal 顯示
                         }}
                       >
                         <i className="bi bi-cart"></i>

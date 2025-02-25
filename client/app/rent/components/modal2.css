@@ -1,0 +1,256 @@
+.subdetails-titles {
+  gap: 10px;
+}
+
+.modal-dialog {
+  max-width: 60% !important; /* 設定 Modal 最大寬度 */
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.3) !important; /* 可以根據需要調整透明度 */
+}
+
+.modal-title {
+  font-size: 20px !important;
+}
+
+.modal-content {
+  border: none !important;
+}
+.modal-body .subdetails-titles .modal-product-price {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.modal-body .subdetails-titles .modal-product-price2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.modal-body .product-color {
+  gap: 10px;
+}
+.modal-body .product-color .colors .color-box {
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.4));
+}
+.modal-body .color-title {
+  margin: 0;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.modal-body .no-colors {
+  margin: 0;
+  color: var(--gray-600-color);
+}
+
+.modal-body .amount-title {
+  margin-bottom: 10px;
+}
+.modal-body .product-stock {
+  margin: 0;
+  color: var(--gray-600-color);
+}
+.modal-body .stock-available {
+  margin: 0;
+  color: var(--gray-600-color);
+}
+
+/* 取消按鈕樣式 */
+.cancel-button {
+  background-color: #ff4d4d !important; /* 紅色 */
+  color: #fff !important; /* 白色文字 */
+  border: none !important;
+  border-radius: 8px !important; /* 圓角 */
+  padding: 10px 20px !important; /* 內邊距 */
+  font-size: 16px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease, transform 0.2s ease !important; /* 過渡效果 */
+  margin-right: 10px !important; /* 右邊距 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important; /* 陰影效果 */
+}
+
+.cancel-button:hover {
+  background-color: #e60000 !important; /* 滑鼠懸停時的深紅色 */
+  transform: translateY(-2px) !important; /* 懸停時稍微上移 */
+}
+
+.cancel-button:active {
+  transform: translateY(0) !important; /* 點擊時恢復原位 */
+}
+
+/* 確認按鈕樣式 */
+.confirm-button {
+  background-color: #4caf50 !important; /* 綠色 */
+  color: #fff !important; /* 白色文字 */
+  border: none !important;
+  border-radius: 8px !important; /* 圓角 */
+  padding: 10px 20px !important; /* 內邊距 */
+  font-size: 16px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease, transform 0.2s ease !important; /* 過渡效果 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important; /* 陰影效果 */
+}
+
+.confirm-button:hover {
+  background-color: #45a049 !important; /* 滑鼠懸停時的深綠色 */
+  transform: translateY(-2px) !important; /* 懸停時稍微上移 */
+}
+
+.confirm-button:active {
+  transform: translateY(0) !important; /* 點擊時恢復原位 */
+}
+
+/* 禁用狀態 */
+.confirm-button:disabled,
+.cancel-button:disabled {
+  background-color: #cccccc !important; /* 灰色 */
+  color: #666666 !important; /* 深灰色文字 */
+  cursor: not-allowed !important; /* 禁用游標 */
+  box-shadow: none !important; /* 移除陰影 */
+}
+
+#recommended-calendar {
+    display: block;
+    z-index: 9999;
+    position: absolute;
+    width: 300px;
+    height: auto;
+  }
+  
+.flatpickr-calendar {
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 9999 !important; /* 強制讓日曆顯示在最上層 */
+}
+
+/* 月份樣式 - 專屬於 calendar-recommended */
+.booking-date .booking-calendar.calendar-recommended .flatpickr-month {
+  height: auto;
+  min-height: 50px;
+  font-size: 16px;
+  font-weight: 700;
+  background: var(--tertiary-color); /* 使用不同的顏色 */
+  color: var(--white);
+  display: flex;
+  align-items: center;
+}
+
+.booking-date .booking-calendar.calendar-recommended .flatpickr-current-month {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.booking-date
+  .booking-calendar.calendar-recommended
+  .flatpickr-monthDropdown-months {
+  font-size: 16px;
+  font-weight: 700;
+  background-color: var(--tertiary-color);
+  color: var(--white);
+}
+
+.booking-date
+  .booking-calendar.calendar-recommended
+  .flatpickr-current-month
+  .flatpickr-monthDropdown-months {
+  appearance: none;
+  background-image: none;
+}
+
+/* 修改前後月箭頭顏色 - 專屬於 calendar-recommended */
+.booking-date .booking-calendar.calendar-recommended .flatpickr-prev-month svg,
+.booking-date .booking-calendar.calendar-recommended .flatpickr-next-month svg {
+  fill: var(--white);
+}
+
+/* 週次樣式 - 專屬於 calendar-recommended */
+.booking-date .booking-calendar.calendar-recommended .flatpickr-weekdays {
+  width: 100%;
+  background-color: var(--tertiary-light-color); /* 使用不同的顏色 */
+  display: flex;
+}
+
+.booking-date .booking-calendar.calendar-recommended .flatpickr-weekday {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--black);
+  flex: 1;
+  text-align: center;
+}
+
+.booking-date .booking-calendar.calendar-recommended .flatpickr-day.today {
+  border-radius: 0;
+  border: 0.5px solid var(--tertiary-light-color);
+}
+
+.booking-date .booking-calendar.calendar-recommended .flatpickr-day.selected,
+.booking-date .booking-calendar.calendar-recommended .flatpickr-day.inRange,
+.booking-date .booking-calendar.calendar-recommended .flatpickr-day.startRange,
+.booking-date .booking-calendar.calendar-recommended .flatpickr-day.endRange {
+  border-radius: 0;
+  background: var(--tertiary-color);
+  color: var(--white);
+  border: none;
+}
+
+.booking-date .booking-calendar.calendar-recommended .flatpickr-days {
+  width: 100%;
+}
+
+.booking-date .booking-calendar.calendar-recommended .flatpickr-day {
+  margin: 0;
+  width: calc(100% / 7); /* 7 天均分寬度 */
+  max-width: calc(100% / 7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* 讓選取範圍內的日期緊貼在一起 */
+.booking-date .booking-calendar.calendar-recommended .flatpickr-day.inRange {
+  box-shadow: -5px 0 0 var(--tertiary-color), 5px 0 0 var(--tertiary-color);
+}
+
+.booking-date
+  .booking-calendar.calendar-recommended
+  .flatpickr-day.selected:hover {
+  border-radius: 0;
+  background: var(--tertiary-color);
+  color: var(--white);
+}
+
+/* 改變 hover 時日期的背景 */
+.booking-date .booking-calendar.calendar-recommended .flatpickr-day:hover {
+  background: var(--tertiary-light-color);
+  border-radius: 0;
+  color: var(--white);
+}
+
+/* 選定日期範圍的樣式 */
+.booking-date .booking-calendar.calendar-recommended .selected-date-range {
+  gap: 10px;
+  margin-top: 20px;
+  background-color: rgba(142, 202, 230, 0.5);
+}
+
+.booking-date
+  .booking-calendar.calendar-recommended
+  .selected-date-range
+  #recommended-date-text {
+  margin: 0;
+  color: var(--black);
+  font-weight: 400;
+}
