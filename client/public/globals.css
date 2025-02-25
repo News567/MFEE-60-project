@@ -89,10 +89,16 @@ body .breadcrumb-list {
         color: #000;
     }
 }
+body{
+    display:flex;
+    flex-direction: column;
+    min-height: calc(100vh + 380px)  ; 
+  }
 
 /* footer */
 .footer {
     background-color: var(--primary-color);
+    margin-top: auto;
 }
 .footer-content {
     padding-top: 20px;

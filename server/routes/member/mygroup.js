@@ -6,6 +6,7 @@ router.post("/myGroup", async (req, res) => {
     try {
         // res.json({message:"連接我的揪團成功"})
         const user = req.body.user
+        const status = req.body.status || 0
         console.log(user);
         const groupIdSearchSql = `SELECT groups_id FROM groups_participants WHERE user_id = ${user} `
         const [getGroup] = await pool.execute(groupIdSearchSql)
@@ -28,10 +29,10 @@ router.post("/myGroup", async (req, res) => {
         })
         const groupCondition = groupConditionArray.join(" OR ")
         sql += `OR ${groupCondition}`
-        sql += ` ORDER BY created_at DESC `
-        console.log(sql);
+        sql += ` ORDER BY sign_end_date ASC `
+        // console.log(sql);
         const [rows] = await pool.execute(sql);
-        console.log(rows[0]);
+        console.log(rows);
         res.status(200).json({
             status: "success",
             message: "成功獲取資料",

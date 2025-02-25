@@ -4,7 +4,7 @@ import { FaMapMarkerAlt, FaPhoneAlt, FaRegEnvelope, FaAngleDown  } from "react-i
 export default function Footer() {
     return (
         <>
-            <footer className="footer">
+            <footer className="footer mt-auto">
                 <div className="container footer-content">
                     <div className="row footer-top">
                         <div className="col d-flex justify-content-center d-sm-block">

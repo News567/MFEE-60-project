@@ -7,44 +7,74 @@ import { useAuth } from "@/hooks/use-auth";
 
 
 export default function MemberGroupPage() {
-  // 設定揪團資料
+  // 揪團資料
   const [mygroups, setMyGroups] = useState([]);
+  const [originMyGroups,setOriginMyGroups] = useState([])
+
+  // 前端用的篩選條件
+  const [status,setStatus] = useState(0) //status 0:揪團中 1:已成團 2:已取消
+  // 送後端用的篩選條件
+  const [condition,setCondition] = useState({})
 
   // 獲取會員
   const { user } = useAuth()
-  
+  console.log(user);
+
   // 設定api路徑
   const api = "http://localhost:3005/api";
 
-
-  // 連接後端獲取揪團資料
-  useEffect(() => {
-    if(!user){
+  // 確認是否登入
+  useEffect(()=>{
+    if (!user) {
       alert("請先登入！")
       window.location = "/member/login"
       return
     }
     const userId = user.id
-    const condition = {
-      user:userId
-    }
+    setCondition (
+      {...condition,user: userId}
+    )
+  },[user])
+
+
+  // 連接後端獲取揪團資料
+  useEffect(() => {    
+    console.log(condition);
     const getList = async () => {
       await axios
-        .post((api + "/member/myGroup"),condition)
+        .post((api + "/member/myGroup"), condition)
         .then((res) => {
-          console.log(res.data);
+          console.log(res.data.data);
           setMyGroups(res.data.data);
+          setOriginMyGroups(res.data.data)
         })
         .catch((error) => {
           console.log(error);
         });
     };
     getList();
-  }, []);
+  }, [condition]);
+
+  // 前端篩選是否是user創辦的
+  function doFilterHosted(isHost){
+    //主揪1，非主揪的2，全部3
+    switch(isHost){
+      case 1:
+        setMyGroups(originMyGroups.filter(item => item.user_id == user.id) )
+        break
+      case 2:
+        setMyGroups(originMyGroups.filter(item => item.user_id != user.id))
+        break
+      case 3:
+        setMyGroups(originMyGroups)
+        break
+    }
+  }
+
 
   return (
     <div className={`${styles.content} container`}>
-      <div className={styles.aside}>
+      <div className={`${styles.aside} d-none d-sm-flex`}>
         <div className={styles.listBox}>
           <div className={styles.asideTitle}>
             <h5 style={{ margin: 0 }}>會員中心</h5>
@@ -73,20 +103,54 @@ export default function MemberGroupPage() {
           <h4 style={{ fontWeight: 700, margin: 0 }}>我的揪團</h4>
         </div>
         <div className={styles.sectionTop}>
-          <div className={styles.SThover}>
-            <h6>全部</h6>
+          <div className={`${styles.STdefault} ${styles.active} `}  onClick={
+            (e) => { 
+              const btns = document.querySelectorAll(`.${styles.STdefault}`)
+              btns.forEach((btn)=>{
+                btn.classList.remove(`${styles.active}`)
+              })
+              e.target.classList.add(`${styles.active}`)
+              doFilterHosted(3) }
+          }>
+            所有揪團
           </div>
-          <div className={styles.STdefault}>
-            <h6>已參加</h6>
+          <div className={styles.STdefault} onClick={
+            (e) => { 
+              const btns = document.querySelectorAll(`.${styles.STdefault}`)
+              btns.forEach((btn)=>{
+                btn.classList.remove(`${styles.active}`)
+              })
+              e.target.classList.add(`${styles.active}`) 
+              doFilterHosted(2)}
+          }>參加的揪團
           </div>
-          <div className={styles.STdefault}>
-            <h6>已發起</h6>
+          <div className={styles.STdefault} onClick={
+            (e) => { 
+              const btns = document.querySelectorAll(`.${styles.STdefault}`)
+              btns.forEach((btn)=>{
+                btn.classList.remove(`${styles.active}`)
+              })
+              e.target.classList.add(`${styles.active}`) 
+              doFilterHosted(1)}
+          }>發起的揪團
           </div>
-          <div className={styles.STdefault}>
-            <h6>已結束</h6>
+          <div className={styles.STdefault} onClick={
+            (e) => { 
+              const btns = document.querySelectorAll(`.${styles.STdefault}`)
+              btns.forEach((btn)=>{
+                btn.classList.remove(`${styles.active}`)
+              })
+              e.target.classList.add(`${styles.active}`) }
+          }>已成團
           </div>
-          <div className={styles.STdefault}>
-            <h6>已取消</h6>
+          <div className={styles.STdefault} onClick={
+            (e) => { 
+              const btns = document.querySelectorAll(`.${styles.STdefault}`)
+              btns.forEach((btn)=>{
+                btn.classList.remove(`${styles.active}`)
+              })
+              e.target.classList.add(`${styles.active}`) }
+          }>已取消
           </div>
         </div>
         {mygroups && mygroups.length > 0 ? (mygroups.map((mygroup, i) => {
