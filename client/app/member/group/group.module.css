@@ -149,6 +149,13 @@
   align-items: flex-end;
   gap: 30px;
 }
+.primaryBtn{
+  background-color: #219ebc !important;
+  color: #fff !important;
+}
+.collapseSection{
+  height: 100%;
+}
 .SCcard img {
   width: 6.3rem;
   height: 6.3rem;

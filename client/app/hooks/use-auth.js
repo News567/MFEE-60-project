@@ -96,7 +96,7 @@ export function AuthProvider({ children }) {
     let token = localStorage.getItem(appKey);
     if (!token) return;
     const fetchData = async () => {
-      let API = "http://localhost:3005/api/users/status";
+      let API = "http://localhost:3005/api/member/users/status";
       try {
         const res = await fetch(API, {
           method: "POST",

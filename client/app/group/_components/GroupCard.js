@@ -105,7 +105,7 @@ export default function GroupCard({ group }) {
                     </div>
                     <div>已揪：0</div>
                 </div>
-                {now > new Date(group.sign_end_date)?(<div className="color-primary">
+                {now < new Date(group.sign_end_date)?(<div className="color-primary">
                     揪團截止:{group.sign_end_date}
                 </div>):(<div className="text-secondary">
                     揪團截止:{group.sign_end_date} <span className="text-danger">已截止</span>
