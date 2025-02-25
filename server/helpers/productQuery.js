@@ -1,3 +1,6 @@
+// 在 productQuery.js 文件中，需要修改 SQL 查詢來獲取最高和最低價格
+// 修改 buildProductQuery 函數中的 SQL 查詢部分
+
 export function parseProductColors(products) {
   return products.map((product) => ({
     ...product,
@@ -79,13 +82,14 @@ export function buildProductQuery({
   };
   let orderBy = orderMap[sort] || "p.createdAt DESC";
 
-  // ✅ **保持 GROUP_CONCAT()，但讓後端解析 JSON**
+  // 修改 SQL 查詢，添加 MAX(pv.price) AS max_price
   const sql = `
     SELECT DISTINCT 
       p.*, 
       pv.id AS variant_id,
       b.name AS brand_name,
-      MIN(pv.price) AS price,
+      MIN(pv.price) AS min_price,
+      MAX(pv.price) AS max_price,
       (
         SELECT pi.image_url 
         FROM product_images pi 
