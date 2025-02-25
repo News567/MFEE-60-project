@@ -25,13 +25,6 @@ export default function GroupDetailPage() {
 
     const [userId, setUserId] = useState(user ? user.id : 0)
     console.log(user);
-    // useEffect(() => {
-    //     if (!user) {
-    //         alert("請先登入！")
-    //         window.location.href = "/member/login"
-    //         return
-    //     }
-    // },[])
     // 設定地點選項
     const selectOption = {
         0: [],
@@ -88,7 +81,7 @@ export default function GroupDetailPage() {
                             <img src="#" alt="" />
                         </div>
                         <input type="file" name="file" required />
-                        <div className="text-secondary">檔案上傳限制：3MB</div>
+                        {/* <div className="text-secondary">檔案上傳限制：3MB</div> */}
                     </div>
                     {/* <div className="col-12 col-sm-6 d-flex flex-column gap-3">
                         <div className="fs-22px">上傳其他圖片</div>

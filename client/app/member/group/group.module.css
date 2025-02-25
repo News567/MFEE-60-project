@@ -178,3 +178,17 @@
 .SCtextlf h6{
     color: #219ebc;
 }
+.imgContainer {
+  object-fit: fill;
+  overflow: hidden;
+  height: 394px;
+  width: 100%;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .img {
+      width: 100%;
+      min-height: 100%;
+  }
+}
