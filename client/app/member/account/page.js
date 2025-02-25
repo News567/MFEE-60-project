@@ -7,8 +7,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function Account() {
-  const { token } = useAuth(); // 获取 JWT token
+  const { token, loading } = useAuth(); // 获取 JWT token
   const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !token) {
+      router.replace("/member/login");
+    }
+  }, [token, loading, router]);
+
+
   const [userData, setUserData] = useState({
     id: "",
     name: "",
@@ -20,21 +28,18 @@ export default function Account() {
   const [newPassword, setNewPassword] = useState("");
   const [newGender, setNewGender] = useState("");
 
-  // const [newAvatar, setNewAvatar] = useState(null);
-
   // 获取用户信息
   const fetchUserData = async () => {
     try {
-      const response = await fetch(`/api/member/users/status`, {
+      const res = await fetch(`/api/member/users/status`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      const data = await response.json();
+      const data = await res.json();
       if (data.status === "success") {
         setUserData(data.data); // 设置用户信息
         setNewName(data.data.name);
-
       } else {
         console.error("获取用户数据失败:", data.message);
       }
@@ -54,7 +59,7 @@ export default function Account() {
       if (newGender) formData.append("gender", newGender);
       // if (newAvatar) formData.append("head", newAvatar);
 
-      const response = await fetch(`/api/member/users/${userData.id}`, {
+      const res = await fetch(`/api/member/users/account/${userData.id}`, {
         method: "PUT",
         body: formData,
         headers: {
@@ -62,7 +67,7 @@ export default function Account() {
         },
       });
 
-      const result = await response.json();
+      const result = await res.json();
       alert(result.message);
       if (result.status === "success") {
         fetchUserData(); // 更新成功后重新获取数据
@@ -72,13 +77,11 @@ export default function Account() {
     }
   };
 
-  // 选择文件（头像）
-  // const handleAvatarChange = (e) => {
-  //   setNewAvatar(e.target.files[0]);
-  // };
 
   useEffect(() => {
-    fetchUserData();
+    if (token) {
+      fetchUserData();
+    }
   }, [token]);
 
   return (
@@ -142,7 +145,14 @@ export default function Account() {
                   />
                   <input
                     type="date"
-                    value={newName}
+                    value={newBirth}
+                    className={`${styles.box} ${styles.boxSame}`}
+                    onChange={(e) => setNewBirth(e.target.value)}
+                    placeholder="生日"
+                  />
+                  <input
+                    type="date"
+                    value={newBirth}
                     className={`${styles.box} ${styles.boxSame}`}
                     onChange={(e) => setNewBirth(e.target.value)}
                     placeholder="生日"
@@ -154,45 +164,35 @@ export default function Account() {
                     <p>地址</p>
                   </div>
                   <div className={`form-check-inline ${styles.box4}`}>
-  <div className={styles.boxlist}>
-    <input
-      type="radio"
-      id="male"
-      name="gender"
-      value="male"
-      onChange={(e) => setNewGender(e.target.value)} // 捕獲選擇的性別
-    />
-    <label htmlFor="male" className="form-check-label">男性</label>
-
-    <input
-      type="radio"
-      id="female"
-      name="gender"
-      value="female"
-      onChange={(e) => setNewGender(e.target.value)} // 捕獲選擇的性別
-    />
-    <label htmlFor="female" className="form-check-label">女性</label>
-
-    <input
-      type="radio"
-      id="other"
-      name="gender"
-      value="other"
-      onChange={(e) => setNewGender(e.target.value)} // 捕獲選擇的性別
-    />
-    <label htmlFor="other" className="form-check-label">其他</label>
-  </div>
-</div>
-                  {/* <div className={`form-check-inline ${styles.box4}`}>
                     <div className={styles.boxlist}>
-                      <input type="radio" />
-                      <label className="form-check-label">男性</label>
-                      <input type="radio" />
-                      <label className="form-check-label">女性</label>
-                      <input type="radio" />
-                      <label className="form-check-label">其他</label>
+                      <input
+                        type="radio"
+                        id="male"
+                        name="gender"
+                        value="male"
+                        onChange={(e) => setNewGender(e.target.value)} // 捕獲選擇的性別
+                      />
+                      <label htmlFor="male" className="form-check-label">男性</label>
+
+                      <input
+                        type="radio"
+                        id="female"
+                        name="gender"
+                        value="female"
+                        onChange={(e) => setNewGender(e.target.value)} // 捕獲選擇的性別
+                      />
+                      <label htmlFor="female" className="form-check-label">女性</label>
+
+                      <input
+                        type="radio"
+                        id="other"
+                        name="gender"
+                        value="other"
+                        onChange={(e) => setNewGender(e.target.value)} // 捕獲選擇的性別
+                      />
+                      <label htmlFor="other" className="form-check-label">其他</label>
                     </div>
-                  </div> */}
+                  </div>
                   <div className={`${styles.box2} ${styles.boxSame}`}>
                     <p>緊急連絡人</p>
                   </div>

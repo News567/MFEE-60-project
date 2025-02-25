@@ -105,9 +105,12 @@ export default function Header() {
             <a href="/cart/step1" className="header-cart a">
               <FiShoppingCart />
             </a>
-            <a href="/member/account" className="header-cart a">
+            <Link href="/member/account" className="header-cart a">
               <FaRegUser />
-            </a>
+            </Link>
+            <Link href="/member/logout" className="header-cart a">
+              <FaRegUser />
+            </Link>
           </div>
         </div>
 

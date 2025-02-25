@@ -9,14 +9,28 @@ const AuthContext = createContext(null);
 AuthContext.displayName = "AuthContext";
 
 export function AuthProvider({ children }) {
+
+  const [token, setToken] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem(appKey);
+    }
+    return null;
+  });
+
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  
   const [error, setError] = useState(null);
+
   const router = useRouter();
   const pathname = usePathname();
-  const protectedRoutes = ["/users/:email"];
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem(appKey);
+    if (!storedToken && pathname !== "/member/login") {
+      router.replace("/member/login");
+    }
+  }, [router, pathname]);
 
   // 处理用户登录
   const login = async (email, password) => {
@@ -39,9 +53,11 @@ export function AuthProvider({ children }) {
       const result = await res.json();
       if (result.status !== "success") throw new Error(result.message);
 
-      const token = result.data.token;
-      localStorage.setItem(appKey, token);
-      setUser(jwt.decode(token));
+      const newToken = result.data.token;
+      localStorage.setItem(appKey, newToken);
+      setToken(newToken);
+      const decoded = jwt.decode(newToken);
+      setUser(decoded);
 
       alert("登入成功");
       router.replace("/");
@@ -51,22 +67,44 @@ export function AuthProvider({ children }) {
     }
   };
   // 处理用户登出
+  // const logout = async () => {
+  //   const API = "http://localhost:3005/api/member/users/logout";
+  //   const token = localStorage.getItem(appKey);
+  //   try {
+  //     if (!token) throw new Error("身分認證訊息不存在, 請重新登入");
+  //     const res = await fetch(API, {
+  //       method: "POST",
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+  //     const result = await res.json();
+  //     if (result.status != "success") throw new Error(result.message);
+  //     localStorage.removeItem(appKey);
+  //     setUser(null);
+  //     router.replace("/member/login")
+  //   } catch (err) {
+  //     console.log(err);
+  //     alert(err.message);
+  //   }
+  // };
   const logout = async () => {
     const API = "http://localhost:3005/api/member/users/logout";
-    const token = localStorage.getItem(appKey);
+    const storedToken = localStorage.getItem(appKey);
     try {
-      if (!token) throw new Error("身分認證訊息不存在, 請重新登入");
+      if (!storedToken) throw new Error("身分認證訊息不存在, 請重新登入");
       const res = await fetch(API, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${storedToken}`,
         },
       });
       const result = await res.json();
       if (result.status != "success") throw new Error(result.message);
       localStorage.removeItem(appKey);
+      setToken(null); 
       setUser(null);
-      router.replace("/member/login")
+      router.replace("/member/login");
     } catch (err) {
       console.log(err);
       alert(err.message);
@@ -103,44 +141,45 @@ export function AuthProvider({ children }) {
       };
     }
   };
-  // 在组件加载时检查 token 状态
+  // 當頁面加載時檢查 token 狀態，並更新 user 資訊
   useEffect(() => {
-    const token = localStorage.getItem(appKey);
-
-    if (!token) {
-      if (protectedRoutes.includes(pathname)) {
-        router.replace("/login");
-      }
-      return;
-    }
-
+    const storedToken = localStorage.getItem(appKey);
+    console.log("檢查 token：", storedToken);
+    if (!storedToken) return;
     const fetchData = async () => {
       const API = "http://localhost:3005/api/member/users/status";
       try {
         const res = await fetch(API, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${storedToken}`,
           },
         });
         const result = await res.json();
+        console.log("status API result:", result);
         if (result.status !== "success") throw new Error(result.message);
         localStorage.setItem(appKey, result.data.token);
+        setToken(result.data.token);
         setUser(jwt.decode(result.data.token));
       } catch (err) {
-        console.log(err);
+        console.log("status API error:", err);
         localStorage.removeItem(appKey);
+        setToken(null);
         setUser(null);
-        if (protectedRoutes.includes(pathname)) {
-          router.replace("/member/login"); // 只有 token 失效才跳轉
+        if (pathname !== "/member/login") {
+          router.replace("/member/login");
         }
       }
     };
-    const fetchProfile = async () => {
-      if (!user) return;
+    fetchData();
+  }, [pathname, router]);
 
+  // 當 user 存在時，利用 user.id 去獲取使用者詳細資料
+  useEffect(() => {
+    if (!user) return;
+    const fetchProfile = async () => {
       setLoading(true);
-      const profileAPI = `http://localhost:3005/api/member/users/${user.email}`;
+      const profileAPI = `http://localhost:3005/api/member/users/account/${user.id}`;
       try {
         const res = await fetch(profileAPI, {
           method: "GET",
@@ -159,11 +198,11 @@ export function AuthProvider({ children }) {
       }
     };
 
-    fetchData();
-  }, [pathname, user, router]);
+    fetchProfile();
+  }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register }}>
+    <AuthContext.Provider value={{ user, profile, loading, error, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );

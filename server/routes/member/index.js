@@ -51,158 +51,9 @@ router.get("/users", async (req, res) => {
   }
 });
 
-router.get("/users/search", async (req, res) => {
-  const { q } = req.query;
-  try {
-    if (!q) throw new Error("請提供查詢字串");
-
-    const sql = "SELECT * FROM `users` WHERE account LIKE ?";
-    const [rows] = await pool.execute(sql, [`%${q}%`]);
-
-    res.status(200).json({
-      status: "success",
-      data: rows,
-      message: `搜尋成功, 條件: ${q}`,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(400).json({
-      status: "error",
-      message: err.message ? err.message : "搜尋失敗",
-    });
-  }
-});
-
-router.get("/users/:id", async (req, res) => {
-  const { name, gender } = req.body;
+router.put("/users/:id", checkToken, upload.none(), async (req, res) => {
   const { id } = req.params;
-  try {
-    let updateQuery = "UPDATE users SET name = ?, gender = ? WHERE id = ?";
-    const updateValues = [name, gender, id];
-
-    const sql = "SELECT * FROM `users` WHERE id = ?";
-    const [rows] = await pool.execute(sql, [id]);
-
-    if (rows.length === 0) throw new Error("找不到使用者");
-    await db.query(updateQuery, updateValues);
-    res.status(200).json({
-      status: "success",
-      data: rows[0],
-      message: "用戶資料已更新",
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(404).json({
-      status: "error",
-      message: err.message ? err.message : "搜尋失敗",
-    });
-  }
-});
-
-// router.post("/users/info", checkToken, upload.none(), async (req, res) => {
-//   const {
-//     name,
-//     password,
-//     phone,
-//     birthday,
-//     address,
-//     emergency_contact,
-//     emergency_phone,
-//   } = req.body;
-
-//   if (
-//     !name ||
-//     !password ||
-//     !phone ||
-//     !birthday ||
-//     !address ||
-//     !emergency_contact ||
-//     !emergency_phone
-//   ) {
-//     return res.status(400).json({
-//       status: "error",
-//       message: "請提供至少一個要更新的欄位",
-//     });
-//   }
-
-//   try {
-//     const email = req.decoded.account;
-
-//     const updateFields = [];
-//     const values = [];
-
-//     if (name) {
-//       updateFields.push("`name` = ?");
-//       values.push(name);
-//     }
-
-//     if (password) {
-//       updateFields.push("`password` = ?");
-//       const hashedPassword = await bcrypt.hash(password, 10);
-//       values.push(hashedPassword);
-//     }
-//     if (phone) {
-//       const phoneRegex = /^09\d{8}$/;
-//       if (!phoneRegex.test(phone)) {
-//         return res.status(400).json({
-//           status: "error",
-//           message: "手機號碼格式不正確",
-//         });
-//       }
-//       updateFields.push("`phone` = ?");
-//       values.push(phone);
-//     }
-//     if (birthday) {
-//       updateFields.push("`birthday` = ?");
-//       values.push(birthday);
-//     }
-
-//     if (address) {
-//       updateFields.push("`address` = ?");
-//       values.push(address);
-//     }
-
-//     if (emergency_contact) {
-//       updateFields.push("`emergency_contact` = ?");
-//       values.push(emergency_contact);
-//     }
-//     if (emergency_phone) {
-//       const emergencyPhoneRegex = /^09\d{8}$/;
-//       if (!emergencyPhoneRegex.test(emergency_phone)) {
-//         return res.status(400).json({
-//           status: "error",
-//           message: "緊急聯絡人號碼格式不正確",
-//         });
-//       }
-//       updateFields.push("`emergency_phone` = ?");
-//       values.push(emergency_phone);
-//     }
-
-//     values.push(email);
-
-//     const sql = `UPDATE users SET ${updateFields.join(", ")} WHERE email = ?;`;
-//     const [result] = await pool.execute(sql, values);
-
-//     if (result.affectedRows == 0) {
-//       throw new Error("更新失敗");
-//     }
-
-//     res.status(200).json({
-//       status: "success",
-//       message: `更新使用者成功: ${email}`,
-//     });
-//   } catch (err) {
-//     console.log(err);
-//     res.status(400).json({
-//       status: "error",
-//       message: err.message ? err.message : "修改失敗",
-//     });
-//   }
-// });
-
-router.put("/users/:email", checkToken, upload.none(), async (req, res) => {
-  const { email } = req.params;
-  if (email !== req.decoded.email) {
+  if (parseInt(id) !== req.decoded.id) { 
     return res.status(403).json({
       status: "error",
       message: "沒有修改權限",
@@ -219,7 +70,7 @@ router.put("/users/:email", checkToken, upload.none(), async (req, res) => {
   } = req.body;
 
   try {
-    if (email != req.decoded.email) {
+    if (id != req.decoded.id) {
       throw new Error("沒有修改權限");
     }
 
@@ -264,8 +115,8 @@ router.put("/users/:email", checkToken, upload.none(), async (req, res) => {
       values.push(emergency_phone);
     }
 
-    values.push(email);
-    const sql = `UPDATE users SET ${updateFields.join(", ")} WHERE email = ?;`;
+    values.push(id);
+    const sql = `UPDATE users SET ${updateFields.join(", ")} WHERE id = ?;`;
     const [result] = await pool.execute(sql, values);
 
     if (result.affectedRows == 0) {
@@ -274,7 +125,7 @@ router.put("/users/:email", checkToken, upload.none(), async (req, res) => {
 
     res.status(200).json({
       status: "success",
-      message: `更新使用者成功: ${account}`,
+      message: `更新使用者成功: ${email}`,
     });
   } catch (err) {
     console.log(err);
@@ -285,12 +136,25 @@ router.put("/users/:email", checkToken, upload.none(), async (req, res) => {
   }
 });
 
-router.delete("/users/:id", (req, res) => {
+router.delete("/users/:id", async (req, res) => {
   const { id } = req.params;
-  res.status(200).json({
-    status: "success",
-    message: `刪除特定 ID 的使用者: ${id}`,
-  });
+  try {
+    const sql = "DELETE FROM `users` WHERE id = ?";
+    const [result] = await pool.execute(sql, [id]);
+
+    if (result.affectedRows === 0) throw new Error("刪除失敗，找不到該使用者");
+
+    res.status(200).json({
+      status: "success",
+      message: `成功刪除使用者 ID: ${id}`,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json({
+      status: "error",
+      message: err.message || "刪除失敗",
+    });
+  }
 });
 
 router.post("/users/login", upload.none(), async (req, res) => {
@@ -310,8 +174,8 @@ router.post("/users/login", upload.none(), async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
     // console.log(password, user.password);
-    console.log("輸入密碼:", password);
-    console.log("資料庫密碼:", user.password);
+    // console.log("輸入密碼:", password);
+    // console.log("資料庫密碼:", user.password);
     // console.log("比對結果:", isMatch);
     if (!isMatch) throw new Error("帳號或密碼錯誤");
 
@@ -397,8 +261,8 @@ router.post("/users/status", checkToken, (req, res) => {
   const token = jwt.sign(
     {
       id: decoded.id,
-      name: decoded.name,
-      mail: decoded.mail,
+      email: decoded.email, // 改成這裡
+      name: decoded.name, 
     },
     process.env.JWT_SECRET,
     { expiresIn: "30m" }
@@ -410,18 +274,6 @@ router.post("/users/status", checkToken, (req, res) => {
   });
 });
 
-async function getRandomAvatar() {
-  const api = "https://randomuser.me/api";
-  try {
-    const res = await fetch(api);
-    if (!res.ok) throw new Error("伺服器掛了T_T");
-    const result = await res.json();
-    return result.results[0].picture.large;
-  } catch (err) {
-    console.log("取得隨機照片失敗", err.message);
-    return "https://randomuser.me/api/portraits/men/7.jpg";
-  }
-}
 
 export { checkToken };
 export default router;
