@@ -363,7 +363,7 @@ export default function RentProductDetail() {
   useEffect(() => {
     if (show) {
       const dateRangeInput = document.getElementById("modalRentDateRange");
-
+ 
       console.log("dateRangeInput:", dateRangeInput); // 確認 input 元素
 
       if (dateRangeInput && !dateRangeInput._flatpickr) {
@@ -442,6 +442,7 @@ export default function RentProductDetail() {
             }
           }
         });
+        
       }
     } else {
       // 銷毀 flatpickr 實例
