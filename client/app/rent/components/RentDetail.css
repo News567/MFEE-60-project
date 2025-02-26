@@ -262,10 +262,10 @@
 .main-details .details-select .product-color .colors .color-box:hover {
   transform: scale(1.1); /* 放大 */
   border-color: var(--black); /* 邊框變深 */
-  box-shadow: 0 0 10px rgba(200, 200, 200, 0.5) /* 陰影 */
+  box-shadow: 0 0 10px rgba(200, 200, 200, 0.1) /* 陰影 */
 }
 .main-details .details-select .product-color .colors .color-box.selected {
-  border: 3px solid var(--black); /* 更粗的邊框 */
+  border: 1.5px solid var(--black); /* 更粗的邊框 */
   box-shadow: 0 0 15px rgba(200, 200, 200, 0.7); /* 更明顯的陰影 */
 }
 
