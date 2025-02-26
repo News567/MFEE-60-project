@@ -45,5 +45,10 @@ router.post("/myGroup", async (req, res) => {
         });
     }
 });
+router.delete("/myGroup/:id", async (req, res) => {
+    res.json({
+        message:"有連接到刪除功能"
+    })
+});
 
 export default router;

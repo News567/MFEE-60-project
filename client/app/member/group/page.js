@@ -47,6 +47,7 @@ export default function MemberGroupPage() {
 
 
 
+
   // 設定api路徑
   const api = "http://localhost:3005/api";
 
@@ -86,6 +87,21 @@ export default function MemberGroupPage() {
     getList();
   }, [condition]);
 
+
+
+
+  // 刪除揪團
+  async function doDelete(myGroupId) {
+    try {
+      const deleteGroup = await axios.delete(api + "/member/myGroup/" + myGroupId).then((res)=>{
+        if(res.status == "success"){
+          alert("刪除成功")
+        }
+      })
+    } catch (error) {
+
+    }
+  }
   // 前端篩選是否是user創辦的
   function doFilterHosted(isHost) {
     //主揪1，非主揪的2，全部3
@@ -205,8 +221,12 @@ export default function MemberGroupPage() {
                       onClick={() => {
                         setModalGroup(mygroup)
                       }}>查看揪團詳情</button>
-                    <button className={`btn text-nowrap h-100 ${styles.primaryBtn}`}>修改揪團資訊</button>
-                    <button className={`btn text-nowrap h-100 btn-danger`}>取消揪團</button>
+                    {mygroup.user_id == userId ? (<>
+                      <button className={`btn text-nowrap h-100 ${styles.primaryBtn}`}>修改揪團資訊</button>
+                      <button className={`btn text-nowrap h-100 ${styles.cancelBtn} btn-danger`} onClick={() => doDelete(mygroup.id)}>刪除揪團</button>
+                    </>) : (
+                      <button className={`btn text-nowrap h-100 ${styles.cancelBtn} btn-danger`}>退出揪團</button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -353,10 +373,10 @@ export default function MemberGroupPage() {
                   ) : (<div>載入中</div>)}
 
                 </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" className="btn btn-primary">Save changes</button>
-              </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="button" className="btn btn-primary">Save changes</button>
+                </div>
               </form>
             </div>
           </div>
