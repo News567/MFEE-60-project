@@ -40,6 +40,8 @@ import checkoutRouter from "../routes/checkout/index.js";
 import ecpayRouter from "../routes/ecpay/index.js";
 // linepay
 import linepayRouter from "../routes/linepay/index.js";
+// 訂單
+import orderRouter from "../routes/order/index.js";
 
 // 建立 Express 應用程式
 const app = express();
@@ -81,6 +83,10 @@ apiRouter.use("/ecpay", ecpayRouter);
 
 // linepay
 apiRouter.use("/linepay", linepayRouter);
+
+//order
+apiRouter.use("/order", orderRouter);
+
 // 活動相關路由
 apiRouter.use("/activity", activityRouter);
 apiRouter.use("/activity", activityDetailRouter);
