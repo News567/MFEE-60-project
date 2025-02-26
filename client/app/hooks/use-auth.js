@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const storedToken = localStorage.getItem(appKey);
-    if (!storedToken && pathname !== "/member/login") {
+    if (!storedToken && !["/member/login","/member/register","/member/forgot"]) {
       router.replace("/member/login");
     }
   }, [router, pathname]);
@@ -117,7 +117,10 @@ export function AuthProvider({ children }) {
   };
 
   // 处理用户注册
-  const register = async (email, password) => {
+  const register = async (email, password, password1) => {
+    if (password !== password1) {
+      return { status: "error", message: "密碼不一致，請重新確認" };
+    }
     const API = "http://localhost:3005/api/member/users/register";
 
     try {

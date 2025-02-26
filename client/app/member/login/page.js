@@ -6,7 +6,6 @@ import Link from "next/link";
 
 export default function Login() {
   const [checkingAuth, setCheckingAuth] = useState(true);
-  // const [accountOrEmail, setAccountEmail] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { user, login } = useAuth() || {};
