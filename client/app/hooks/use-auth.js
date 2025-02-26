@@ -10,37 +10,66 @@ AuthContext.displayName = "AuthContext";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // 避免 Hydration Mismatch
   const router = useRouter();
   const pathname = usePathname();
   const protectedRoutes = ["/admin"];
   const loginRoute = "/";
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem(appKey);
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      const fetchData = async () => {
+        const API = "http://localhost:3005/api/member/users/status";
+        try {
+          const res = await fetch(API, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const result = await res.json();
+          if (result.status !== "success") throw new Error(result.message);
+
+          localStorage.setItem(appKey, result.data.token);
+          setUser(jwt.decode(result.data.token));
+        } catch (err) {
+          console.log(err);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchData();
+    }
+  }, []);
+
   const login = async (email, password) => {
     const API = "http://localhost:3005/api/member/users/login";
 
     try {
-      const bodyData = {email, password};
-    
-      console.log("Request Body:", bodyData);
-
       const res = await fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyData),
+        body: JSON.stringify({ email, password }),
       });
 
       if (!res.ok) {
         const errorDetails = await res.json();
-        console.error("Error Details:", errorDetails); 
         throw new Error(errorDetails.message || "Unknown error");
       }
 
       const result = await res.json();
       if (result.status !== "success") throw new Error(result.message);
 
-      const token = result.data.token;
-      localStorage.setItem(appKey, token);
-      setUser(jwt.decode(token));
+      localStorage.setItem(appKey, result.data.token);
+      setUser(jwt.decode(result.data.token));
 
       alert("登入成功");
       router.replace("/");
@@ -51,26 +80,36 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    let API = "http://localhost:3005/api/member/users/logout";
-    let token = localStorage.getItem(appKey);
+    const API = "http://localhost:3005/api/member/users/logout";
+
+    if (typeof window === "undefined") return;
+
+    const token = localStorage.getItem(appKey);
+    if (!token) {
+      alert("身分認證訊息不存在, 請重新登入");
+      return;
+    }
+
     try {
-      if (!token) throw new Error("身分認證訊息不存在, 請重新登入");
       const res = await fetch(API, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
       const result = await res.json();
-      if (result.status != "success") throw new Error(result.message);
-      token = result.data.token;
-      localStorage.setItem(appKey, token);
+      if (result.status !== "success") throw new Error(result.message);
+
+      localStorage.removeItem(appKey);
       setUser(null);
+      router.replace(loginRoute);
     } catch (err) {
       console.log(err);
       alert(err.message);
     }
   };
+
   const register = async (email, password) => {
     const API = "http://localhost:3005/api/member/users/register";
 
@@ -88,34 +127,11 @@ export function AuthProvider({ children }) {
       router.replace(loginRoute);
     } catch (err) {
       console.log(err);
-      alert(err.message); // 顯示錯誤訊息
+      alert(err.message);
     }
   };
 
-  useEffect(() => {
-    let token = localStorage.getItem(appKey);
-    if (!token) return;
-    const fetchData = async () => {
-      let API = "http://localhost:3005/api/users/status";
-      try {
-        const res = await fetch(API, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const result = await res.json();
-        if (result.status != "success") throw new Error(result.message);
-        token = result.data.token;
-        localStorage.setItem(appKey, token);
-        const newUser = jwt.decode(token);
-        setUser(newUser);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchData();
-  }, []);
+  if (isLoading) return <div>載入中...</div>; // 避免 Hydration 錯誤
 
   return (
     <AuthContext.Provider value={{ user, login, logout, register }}>

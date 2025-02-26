@@ -5,24 +5,26 @@ import { useEffect } from "react";
 import { useState } from "react";
 import Link from "next/link";
 import axios from "axios";
+import useToast from "@/hooks/useToast";
 
 export default function GroupDetailPage() {
     const api = "http://localhost:3005/api"
-    // 判斷是否有登入，沒登入就自動跳轉至登入頁
+    // 設定吐司
+    const { showToast } = useToast()
+
     const { user } = useAuth();
-    if(!user){
-        alert("請先登入！")
-        window.location = "/member/login"
-    }
+    useEffect(() => {
+        // 判斷是否有登入，沒登入就自動跳轉至登入頁
+        if (!user) {
+            showToast("請先登入！", { autoClose: 2000 })
+            setTimeout(() => {
+                window.location = "/member/login"
+            }, 2000)
+        }
+    }, [])
+
     const [userId, setUserId] = useState(user ? user.id : 0)
     console.log(user);
-    // useEffect(() => {
-    //     if (!user) {
-    //         alert("請先登入！")
-    //         window.location.href = "/member/login"
-    //         return
-    //     }
-    // },[])
     // 設定地點選項
     const selectOption = {
         0: [],
@@ -53,7 +55,7 @@ export default function GroupDetailPage() {
             const res = await axios.post(api + "/group/create", formData)
             if (res.data.status == "success") {
                 alert("成功創立揪團");
-                window.location=`/group/list/${res.data.groupId}`
+                window.location = `/group/list/${res.data.groupId}`
             } else {
                 alert(res.data.message || "創建失敗");
             }
@@ -79,7 +81,7 @@ export default function GroupDetailPage() {
                             <img src="#" alt="" />
                         </div>
                         <input type="file" name="file" required />
-                        <div className="text-secondary">檔案上傳限制：3MB</div>
+                        {/* <div className="text-secondary">檔案上傳限制：3MB</div> */}
                     </div>
                     {/* <div className="col-12 col-sm-6 d-flex flex-column gap-3">
                         <div className="fs-22px">上傳其他圖片</div>

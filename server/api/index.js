@@ -17,6 +17,7 @@ import groupRouter from "../routes/group/index.js";
 import groupListRouter from "../routes/group/list.js";
 import groupDetailRouter from "../routes/group/detail.js";
 import groupCreate from "../routes/group/create.js";
+import groupJoin from "../routes/group/join.js";
 import rentRouter from "../routes/rent/index.js";
 import rentCategoryRouter from "../routes/rent/categories.js";
 import rentBrandCategoryRouter from "../routes/rent/brandcategories.js";
@@ -34,6 +35,7 @@ import articleRouter from "../routes/article/index.js"; // 文章列表 & 動態
 import couponRouter from "../routes/coupon/index.js";
 import couponClaimRouter from "../routes/coupon/claim.js";
 import memberRouter from "../routes/member/index.js";
+import memberMyGroupRouter from "../routes/member/mygroup.js";
 // import shipmentRouter from "../routes/ship/index.js"; // 運送相關路由
 import checkoutRouter from "../routes/checkout/index.js";
 //ecpay
@@ -96,6 +98,7 @@ apiRouter.use("/group", groupRouter);
 apiRouter.use("/group", groupListRouter);
 apiRouter.use("/group", groupDetailRouter);
 apiRouter.use("/group", groupCreate);
+apiRouter.use("/group", groupJoin);
 
 // 租借相關路由
 apiRouter.use("/rent", rentRouter); // 負責 `/api/rent`
@@ -120,6 +123,8 @@ apiRouter.use("/coupon", couponClaimRouter); // 負責 `/api/coupon/claim`
 
 // 會員相關路由
 apiRouter.use("/member", memberRouter);
+apiRouter.use("/member", memberMyGroupRouter);
+
 
 // 捕捉 404 錯誤
 app.use((req, res, next) => {
