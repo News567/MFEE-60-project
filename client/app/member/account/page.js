@@ -136,13 +136,15 @@ export default function Account() {
                   <p>緊急連絡人電話</p>
                 </div>
                 <div className={styles.IBLcontent}>
-                  <input
+                  <p>
+                    <strong>姓名</strong>
+                    <input
                     type="text"
                     value={newName}
                     className={`${styles.box2} ${styles.boxSame}`}
                     onChange={(e) => setNewName(e.target.value)}
                     placeholder="姓名"
-                  />
+                  /></p>
                   <input
                     type="date"
                     value={newBirth}

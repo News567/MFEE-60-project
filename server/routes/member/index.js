@@ -125,7 +125,7 @@ router.put("/users/:id", checkToken, upload.none(), async (req, res) => {
 
     res.status(200).json({
       status: "success",
-      message: `更新使用者成功: ${email}`,
+      message: `更新使用者成功: ${name}`,
     });
   } catch (err) {
     console.log(err);
