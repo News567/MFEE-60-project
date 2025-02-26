@@ -5,7 +5,7 @@
   margin-bottom: 20px; /* 添加底部间距 */
   display: flex;
   justify-content: space-between; /* 将筛选器和按钮区域分开 */
-  padding: 8px 0 15px 0; /* 添加一些内边距 */
+  padding: 0 15px 15px 0; /* 添加一些内边距 */
   background-color: #fff; /* 设置背景颜色 */
   margin: 0 8px;
 }
@@ -47,32 +47,23 @@
   align-items: flex-start; /* 确保内容从上往下排列 */
   min-height: auto; /* 让容器自动适应高度 */
   text-align: left; /* 避免 inline-block 触发居中 */
-  padding-bottom: 650px; /* 確保底部有足夠的間距 */
+  padding-bottom: 100px; /* 確保底部有足夠的間距 */
 }
 
 .article-list-card {
   display: inline-block;
   width: 48%; /* 让每个卡片占 48%，留一点间距 */
-  margin: 8px 1%; /* 水平间距 */
+  margin: 8px 1% 25px 1%; /* 水平间距 */
   vertical-align: top; /* 避免 inline-block 造成的对齐问题 */
-  height: 25%; /* 让所有卡片高度一致 */
+  height: 300px;
 }
 
 .article-list-card-photo {
-  position: relative; /* 相对定位 */
-  width: 100%; /* 确保图片容器占满父元素 */
-  height: 40%; /* 图片区域占卡片高度的40% */
-  overflow: hidden; /* 隐藏超出部分 */
-}
-
-.article-list-card-photo-img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* 根据长边适配并裁剪 */
-  object-position: center; /* 图片居中 */
+  position: relative;
+  height: 40%;  /* 图片区域占卡片高度的40% */
+  overflow: hidden;  /* 隐藏超出部分 */
+  object-fit: cover;
+  object-position: center;
 }
 
 .article-list-card-text {
@@ -87,6 +78,13 @@
   font-size: 20px;
   font-weight: 700;
   margin: 10px 0;
+}
+
+.article-list-icon {
+  margin-right: 6px; /* 調整數值來改變距離 */
+  display: inline-flex; /* 保持圖標與文字對齊 */
+  align-items: center;
+  font-size: 15px;
 }
 
 .article-list-card-info {
@@ -146,8 +144,7 @@
   background-color: white;
   list-style: none;
   width: 100%;
-  /* padding: 40px 0; */
-  margin-top: 100px;
+  margin-top: 60px;
 }
 
 .page-item {

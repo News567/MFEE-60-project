@@ -1,6 +1,7 @@
-"use client"
-import React, { useEffect, useRef } from "react";
+"use client";
+import React, { useRef } from "react";
 
+// 自定義上傳適配器
 class MyUploadAdapter {
   constructor(loader) {
     this.loader = loader;
@@ -16,15 +17,9 @@ class MyUploadAdapter {
             method: "POST",
             body: formData,
           })
-            .then((response) =>{
-              console.log(response);
-              return response.json()
-            })
+            .then((response) => response.json())
             .then((result) => {
-              console.log(`upload result : ${result.url}`);
-              resolve({
-                default: result.url
-              });
+              resolve({ default: result.url });
             })
             .catch(reject);
         })
@@ -32,40 +27,39 @@ class MyUploadAdapter {
   }
 }
 
-function MyCustomUploadAdapterPlugin( editor ) {
-  editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+// 自定義 CKEditor 插件，讓它支援圖片上傳
+function MyCustomUploadAdapterPlugin(editor) {
+  editor.plugins.get("FileRepository").createUploadAdapter = (loader) => {
     return new MyUploadAdapter(loader);
-};
-};
+  };
+}
 
-const Myeditor = ({ onChange, editorLoaded, name, value }) => {
+const Myeditor = ({ onChange, name, value }) => {
   const editorRef = useRef();
-  const { CKEditor, ClassicEditor } = editorRef.current || {};
-  useEffect(() => {
+  const { CKEditor, ClassicEditor } = editorRef.current || {}; // 這裡會進行動態加載 CKEditor 和 ClassicEditor
+
+  React.useEffect(() => {
     editorRef.current = {
       CKEditor: require("@ckeditor/ckeditor5-react").CKEditor,
-      ClassicEditor: require("@ckeditor/ckeditor5-build-classic")
+      ClassicEditor: require("@ckeditor/ckeditor5-build-classic"), // 使用免費版的 ClassicEditor
     };
   }, []);
 
+  
   return (
     <>
-      {editorLoaded ? (
+      {CKEditor && ClassicEditor ? ( // 確保 CKEditor 和 ClassicEditor 都已經加載完成
         <CKEditor
-          type=""
           name={name}
-          editor={ClassicEditor}
+          editor={ClassicEditor} // 使用 ClassicEditor
           data={value}
-          onChange={(event, editor) => {
-            const data = editor.getData();
-            onChange(data);
-          }}
+          onChange={(event, editor) => onChange(editor.getData())}
           config={{
-            extraPlugins: [ MyCustomUploadAdapterPlugin ],
+            extraPlugins: [MyCustomUploadAdapterPlugin],
           }}
         />
       ) : (
-        <div>Editor loading</div>
+        <div>Editor loading...</div>
       )}
     </>
   );
