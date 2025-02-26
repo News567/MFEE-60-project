@@ -1,9 +1,6 @@
 // pages/CouponClaim.jsx (或對應路徑)
 "use client";
 
-import { useAuth } from "@/hooks/use-auth";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import Breadcrumb from "@/components/Breadcrumb/breadcrumb";
 import CouponClaimList from "./CouponClaimList"; // 同層的 CouponClaimList 元件
 import Carousel from "./Carousel/Carousel";
@@ -11,19 +8,6 @@ import "./CouponClaim.css";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 export default function CouponClaim() {
-  const { user, token } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!user) {
-      router.push("/member/login");
-    }
-  }, [user, router]);
-
-  if (!user) {
-    return <div>載入中...</div>;
-  }
-  
   return (
     <>
       <div>
@@ -63,27 +47,6 @@ export default function CouponClaim() {
               </button>
               <button type="button" className="btn rounded-pill px-3">
                 優惠活動名稱
-              </button>
-              <button type="button" className="btn rounded-pill px-3">
-                優惠活動名稱
-              </button>
-              <button type="button" className="btn rounded-pill px-3">
-                優惠活動名稱
-              </button>
-              <button type="button" className="btn rounded-pill px-3">
-                優惠活動名稱
-              </button>
-              <button type="button" className="btn rounded-pill px-3">
-                優惠活動名稱
-              </button>
-              <button type="button" className="btn rounded-pill px-3">
-                優惠活動名稱
-              </button>
-              <button type="button" className="btn rounded-pill px-3">
-                優惠活動名稱
-              </button>
-              <button type="button" className="btn rounded-pill px-3">
-                優惠活動名稱動
               </button>
             </div>
             <div className="d-flex align-items-center justify-content-center scroll-indicator mt-4">
@@ -125,8 +88,8 @@ export default function CouponClaim() {
               </select>
             </div>
           </div>
-          {/* 導入 CouponClaimList，並傳入會員 ID */}
-          <CouponClaimList userId={user.id} token={token} />
+          {/* 導入 CouponClaimList，不再需要會員 ID 和 Token */}
+          <CouponClaimList />
           {/* 分頁控制區 */}
           <div className="pagination mb-3">
             <div className="pagination-info">顯示 第1-12張 / 共72張 優惠券</div>

@@ -1,0 +1,55 @@
+/* =========================
+   全局樣式
+   -------------------------
+   設定網站的全局樣式，包括字體、背景顏色等
+========================= */
+
+:root {
+  --primary-deep-color: #023047;
+  --primary-color: #219ebc;
+  --primary-light-color: #8ecae6;
+  --secondary-deep-color: #ffb703;
+  --secondary-color: #ffd500;
+  --secondary-light-color: #f1d691;
+  --white-color: #fff;
+  --light-gray-color: #D8D8D8;
+  --cornflower-blue-color: #508BE3;
+  --block-color: #000;
+}
+
+* {
+  font-family: "Noto Sans TC", serif;
+}
+
+/* ===================================================================
+   1. 輪播區域設定 (Carousel Section)
+   =================================================================== */
+
+
+
+/* 輪播指示器容器：絕對定位於底部 */
+.carousel-indicators {
+  position: absolute !important;
+  bottom: 10px !important;
+  /* 確保指示器顯示在正確位置 */
+}
+
+/* 輪播指示器按鈕：圓形、固定尺寸、半透明背景與間距 */
+.carousel-indicators button {
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50% !important;
+  background-color: rgba(255, 255, 255, 0.5) !important;
+  border: none !important;
+  opacity: 1 !important;
+  /* Bootstrap 可能有預設 opacity */
+  margin: 0 5px !important;
+  /* 設定間距 */
+  transition: background-color 0.3s ease !important;
+}
+
+/* 活躍狀態的指示器按鈕，背景顏色改為橘黃色 */
+.carousel-indicators .active {
+  background-color: var(--secondary-color) !important;
+  /* 當前圖片變橘黃色 */
+}

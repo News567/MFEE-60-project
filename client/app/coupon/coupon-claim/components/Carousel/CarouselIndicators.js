@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import "./Carousel.css";
+import "./styles/CarouselIndicators.css";
 
 /*
  * 輪播指示器元件 (CarouselIndicators)

@@ -1,0 +1,71 @@
+/* =========================
+   全局樣式
+   -------------------------
+   設定網站的全局樣式，包括字體、背景顏色等
+========================= */
+
+:root {
+  --primary-deep-color: #023047;
+  --primary-color: #219ebc;
+  --primary-light-color: #8ecae6;
+  --secondary-deep-color: #ffb703;
+  --secondary-color: #ffd500;
+  --secondary-light-color: #f1d691;
+  --white-color: #fff;
+  --light-gray-color: #D8D8D8;
+  --cornflower-blue-color: #508BE3;
+  --block-color: #000;
+}
+
+* {
+  font-family: "Noto Sans TC", serif;
+}
+
+/* ===================================================================
+   1. 輪播區域設定 (Carousel Section)
+   =================================================================== */
+
+
+/* 自訂輪播控制按鈕設定：圓形、置中、半透明背景 */
+.custom-carousel-btn {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  /* 半透明黑色背景 */
+  border-radius: 50% !important;
+  /* 變成圓形 */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 10 !important;
+  transition: background-color 0.3s ease !important;
+}
+
+.custom-carousel-btn i{
+  font-size: 1.25rem !important;
+}
+
+/* 左右控制按鈕位置 */
+.carousel-control-prev {
+  left: 15px !important;
+}
+
+.carousel-control-next {
+  right: 15px !important;
+}
+
+/* 輪播按鈕 hover 效果：背景變為較深的橘黃色 */
+.custom-carousel-btn:hover {
+  background-color: var(--secondary-color) !important;
+  /* 橘黃色 */
+}
+
+/* 輪播控制按鈕內圖示設定 */
+.custom-carousel-icon {
+  font-size: 18px !important;
+  color: white !important;
+}

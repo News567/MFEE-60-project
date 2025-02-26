@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import "./Carousel.css";
+import "./styles/CarouselControls.css";
 
 
 /*

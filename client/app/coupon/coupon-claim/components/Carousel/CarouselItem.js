@@ -2,7 +2,6 @@
 
 import React from "react";
 import Image from "next/image";
-import "./Carousel.css";
 
 /*
  * 單一輪播項目元件 (CarouselItem)
