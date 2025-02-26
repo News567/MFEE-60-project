@@ -29,6 +29,7 @@
     "next": "^15.1.6",
     "next-auth": "^4.24.11",
     "rc-slider": "^11.1.8",
+    "node-fetch": "^3.3.2",
     "react": "^19.0.0",
     "react-calendar": "^5.1.0",
     "react-countdown": "^2.3.6",

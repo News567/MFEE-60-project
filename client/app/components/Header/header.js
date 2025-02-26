@@ -113,7 +113,9 @@ export default function Header() {
               <FaRegUser />
             </Link>
             )}
-
+            <Link href="/member/logout" className="header-cart a">
+              <FaRegUser />
+            </Link>
           </div>
         </div>
 
