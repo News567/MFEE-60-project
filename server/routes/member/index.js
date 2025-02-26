@@ -81,27 +81,35 @@ router.put("/users/:id", checkToken, upload.none(), async (req, res) => {
     });
   }
   const {
-    newName,
-    newPassword,
-    newPhone,
-    newBirth,
+    name,
+    password,
+    phone,
+    gender,
+    birthday,
     address,
-    emergencyContact,
-    emergencyPhone,
+    emergency_contact,
+    emergency_phone,
   } = req.body;
 
   try {
     const updateFields = [];
     const values = [];
+    const genderMapping = {
+      male: 1,
+      female: 2,
+      other: 3,
+    };
+    const genderValue = genderMapping[gender] || 0;
 
     const fields = [
-      { key: "name", value: newName },
-      { key: "password", value: newPassword, hash: true },
-      { key: "phone", value: newPhone, regex: /^09\d{8}$/, errorMsg: "手機號碼格式不正確" },
-      { key: "birthday", value: newBirth },
+      { key: "name", value: name },
+      { key: "password", value: password, hash: true },
+      { key: "phone", value: phone, regex: /^09\d{8}$/, errorMsg: "手機號碼格式不正確" },
+      { key: "gender", value: genderValue },
+      { key: "birthday", value: birthday },
       { key: "address", value: address },
-      { key: "emergency_contact", value: emergencyContact },
-      { key: "emergency_phone", value: emergencyPhone, regex: /^09\d{8}$/, errorMsg: "手機號碼格式不正確" },
+      { key: "emergency_contact", value: emergency_contact },
+      { key: "emergency_phone", value: emergency_phone, regex: /^09\d{8}$/, errorMsg: "手機號碼格式不正確" },
     ];
 
     for (const field of fields) {
@@ -141,7 +149,7 @@ router.put("/users/:id", checkToken, upload.none(), async (req, res) => {
 
     res.status(200).json({
       status: "success",
-      message: `更新使用者成功: ${newName || "使用者"}`,
+      message: `更新個人資料成功`,
     });
   } catch (err) {
     console.log(err);

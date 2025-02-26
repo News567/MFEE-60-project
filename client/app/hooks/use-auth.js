@@ -9,20 +9,26 @@ const AuthContext = createContext(null);
 AuthContext.displayName = "AuthContext";
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem(appKey);
-    }
-    return null;
-  });
+  // user 的三個狀態
+  // null: 沒有登入
+  // -1: 載入中
+  // {email: achu@test.com}: 登入
 
-  const [user, setUser] = useState(null);
+  // const [token, setToken] = useState(() => {
+  //   if (typeof window !== "undefined") {
+  //     return localStorage.getItem(appKey);
+  //   }
+  //   return null;
+  // });
+
+  const [user, setUser] = useState(-1);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const router = useRouter();
   const pathname = usePathname();
+  const protectedRoutes = ["/admin"];
 
   useEffect(() => {
     const storedToken = localStorage.getItem(appKey);
@@ -36,29 +42,25 @@ export function AuthProvider({ children }) {
     const API = "http://localhost:3005/api/member/users/login";
 
     try {
-      const bodyData = { email, password };
       const res = await fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyData),
+        body: JSON.stringify({ email, password }),
       });
 
-      if (!res.ok) {
-        const errorDetails = await res.json();
-        console.error("Error Details:", errorDetails);
-        throw new Error(errorDetails.message || "Unknown error");
-      }
-
       const result = await res.json();
+      console.log(result);
       if (result.status !== "success") throw new Error(result.message);
-
-      const newToken = result.data.token;
-      localStorage.setItem(appKey, newToken);
-      setToken(newToken);
-      const decoded = jwt.decode(newToken);
-      setUser(decoded);
-
-      alert("登入成功");
+      const token = result.data.token;
+      const newUser = jwt.decode(token);
+      setUser(newUser);
+      localStorage.setItem(appKey, token);
+      // const newToken = result.data.token;
+      // localStorage.setItem(appKey, newToken);
+      // setToken(newToken);
+      // const decoded = jwt.decode(newToken);
+      // setUser(decoded);
+      // alert("登入成功");
       router.replace("/");
     } catch (err) {
       console.log(err);
@@ -89,25 +91,27 @@ export function AuthProvider({ children }) {
   // };
   const logout = async () => {
     const API = "http://localhost:3005/api/member/users/logout";
-    const storedToken = localStorage.getItem(appKey);
+    const token = localStorage.getItem(appKey);
     try {
-      if (!storedToken) throw new Error("身分認證訊息不存在, 請重新登入");
+      if (!token) throw new Error("身分認證訊息不存在, 請重新登入");
       const res = await fetch(API, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${storedToken}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       const result = await res.json();
       if (result.status != "success") throw new Error(result.message);
       localStorage.removeItem(appKey);
-      setToken(null); 
+      // setToken(null);
       setUser(null);
-      setError(null); 
+      // setError(null);
       router.replace("/");
     } catch (err) {
       console.log(err);
       alert(err.message);
+      localStorage.removeItem(appKey); // 登出失敗改為移除 localStorage 中的登入 token
+      setUser(null); // 使用者設為 null
     }
   };
 
@@ -122,10 +126,10 @@ export function AuthProvider({ children }) {
         body: JSON.stringify({ email, password }),
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "註冊失敗，請稍後再試");
-      }
+      // if (!res.ok) {
+      //   const errorData = await res.json();
+      //   throw new Error(errorData.message || "註冊失敗，請稍後再試");
+      // }
 
       const result = await res.json();
       if (result.status !== "success") {
@@ -141,11 +145,54 @@ export function AuthProvider({ children }) {
       };
     }
   };
-  
+
 
   // 獲取使用者個人資料
   useEffect(() => {
-    if (!user || !user.id) return;
+    console.log({ user, pathname });
+    if (user == -1) return;
+    if (!user && protectedRoutes.includes(pathname)) {
+      alert("請先登入");
+      router.replace(loginRoute);
+    }
+  }, [pathname, user]);
+
+  useEffect(()=>{
+    let token = localStorage.getItem(appKey);
+    if(!token){
+      setUser(null); // 確保未登入時使用是 null      
+      return;
+    }
+    const fetchData = async () => {
+      let API = "http://localhost:3005/api/member/users/status";
+      try{
+        const res = await fetch(API, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const result = await res.json();
+        if(result.status != "success") throw new Error(result.message);
+        token = result.data.token;
+        localStorage.setItem(appKey, token);
+        const newUser = jwt.decode(token);
+        setUser(newUser)
+      }catch(err){
+        console.log(err);
+        localStorage.removeItem(appKey); // 判斷狀態失敗改為移除 localStorage 中的登入 token
+      }
+    };
+    fetchData();
+  }, []);
+
+
+  useEffect(() => {
+    let token = localStorage.getItem(appKey);
+    if(!token){
+      setUser(null); // 確保未登入時使用是 null      
+      return;
+    }
     const fetchProfile = async () => {
       setLoading(true);
       const profileAPI = `http://localhost:3005/api/member/users/${user.id}`;
@@ -153,7 +200,7 @@ export function AuthProvider({ children }) {
         const res = await fetch(profileAPI, {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem(appKey)}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         const result = await res.json();
@@ -168,10 +215,10 @@ export function AuthProvider({ children }) {
     };
 
     fetchProfile();
-  }, [user]);
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ token, setToken, user, setUser, profile, loading, error, login, logout, register }}>
+    <AuthContext.Provider value={{ user, setUser, profile, loading, error, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );

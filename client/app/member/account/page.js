@@ -8,24 +8,28 @@ import { useRouter } from "next/navigation";
 import jwt from "jsonwebtoken";
 
 export default function Account() {
-  const { token, setToken, setUser } = useAuth();
+  const { setUser } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
-  // 用戶數據狀態
+
   const [userData, setUserData] = useState({
     id: "",
     name: "",
     email: "",
     birthday: "",
     gender: "",
+    password: "",
+    address: "",
+    emergency_contact: "",
+    emergency_phone: "",
   });
 
-  const [newName, setNewName] = useState("");
-  const [newBirth, setNewBirth] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [newGender, setNewGender] = useState("");
-  const [newPhone, setNewPhone] = useState("");
+  const [name, setNewName] = useState("");
+  const [birthday, setNewBirth] = useState("");
+  const [password, setNewPassword] = useState("");
+  const [gender, setNewGender] = useState("");
+  const [phone, setNewPhone] = useState("");
   const [address, setAddress] = useState("");
   const [emergencyContact, setEC] = useState("");
   const [emergencyPhone, setEP] = useState("");
@@ -51,7 +55,6 @@ export default function Account() {
         if (result.status !== "success") throw new Error(result.message);
 
         localStorage.setItem("loginWithToken", result.data.token);
-        setToken(result.data.token);
         const decodedUser = jwt.decode(result.data.token);
         setUser(decodedUser);
 
@@ -70,12 +73,12 @@ export default function Account() {
           setAddress(address);
           setEC(emergencyContact);
           setEP(emergencyPhone);
+          setNewPassword(password);
         }
 
       } catch (err) {
         console.error("用戶狀態獲取失敗:", err);
         localStorage.removeItem("loginWithToken");
-        setToken(null);
         setUser(null);
         router.replace("/member/login");
       } finally {
@@ -84,7 +87,7 @@ export default function Account() {
     };
 
     fetchData();
-  }, [router, setToken, setUser]);
+  }, [router, setUser]);
 
   // 更新用戶信息
   const handleUpdateUser = async (e) => {
@@ -93,11 +96,11 @@ export default function Account() {
       const formData = new FormData();
 
       const userUpdates = new Map([
-        ["name", newName],
-        ["birthday", newBirth],
-        ["password", newPassword],
-        ["gender", newGender],
-        ["phone", newPhone],
+        ["name", name],
+        ["birthday", birthday],
+        ["password", password],
+        ["gender", gender],
+        ["phone", phone],
         ["address", address],
         ["emergency_contact", emergencyContact],
         ["emergency_phone", emergencyPhone],
@@ -109,11 +112,13 @@ export default function Account() {
         }
       });
 
+      const storedToken = localStorage.getItem("loginWithToken");
+
       const res = await fetch(`http://localhost:3005/api/member/users/${userData.id}`, {
         method: "PUT",
         body: formData,
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${storedToken}`,
         },
       });
 
@@ -189,20 +194,20 @@ export default function Account() {
 
                   <input
                     type="text"
-                    value={newName}
+                    value={name}
                     className={`${styles.box2} ${styles.boxSame}`}
                     onChange={(e) => setNewName(e.target.value)}
                     placeholder="姓名" />
                   <input
                     type="date"
-                    value={newBirth}
+                    value={birthday}
                     className={`${styles.box} ${styles.boxSame}`}
                     onChange={(e) => setNewBirth(e.target.value)}
                     placeholder="生日"
                   />
                   <input
                     type="tel"
-                    value={newPhone}
+                    value={phone}
                     className={`${styles.box1} ${styles.boxSame}`}
                     onChange={(e) => setNewPhone(e.target.value)}
                     placeholder="手機號碼"
@@ -221,7 +226,7 @@ export default function Account() {
                         id="male"
                         name="gender"
                         value="male"
-                        onChange={(e) => setNewGender(e.target.value)} // 捕獲選擇的性別
+                        onChange={(e) => setNewGender(e.target.value)} 
                       />
                       <label htmlFor="male" className="form-check-label">男性</label>
 
@@ -230,7 +235,7 @@ export default function Account() {
                         id="female"
                         name="gender"
                         value="female"
-                        onChange={(e) => setNewGender(e.target.value)} // 捕獲選擇的性別
+                        onChange={(e) => setNewGender(e.target.value)} 
                       />
                       <label htmlFor="female" className="form-check-label">女性</label>
 
@@ -239,7 +244,7 @@ export default function Account() {
                         id="other"
                         name="gender"
                         value="other"
-                        onChange={(e) => setNewGender(e.target.value)} // 捕獲選擇的性別
+                        onChange={(e) => setNewGender(e.target.value)} 
                       />
                       <label htmlFor="other" className="form-check-label">其他</label>
                     </div>
@@ -260,7 +265,7 @@ export default function Account() {
                   />
                   <input
                     type="password"
-                    value={newPassword}
+                    value={password}
                     className={`${styles.box1} ${styles.boxSame}`}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="密碼"
