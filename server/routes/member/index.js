@@ -51,90 +51,107 @@ router.get("/users", async (req, res) => {
   }
 });
 
+router.get("/users/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const sql = "SELECT id, name, email, birthday, phone, address, emergency_contact, emergency_phone FROM `users` WHERE id = ?";
+    const [rows] = await pool.execute(sql, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ status: "error", message: "找不到該使用者" });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: rows[0],
+      message: "成功獲取使用者資料",
+    });
+  } catch (err) {
+    console.error("獲取使用者失敗:", err);
+    res.status(500).json({ status: "error", message: "伺服器錯誤" });
+  }
+});
+
 router.put("/users/:id", checkToken, upload.none(), async (req, res) => {
   const { id } = req.params;
-  if (parseInt(id) !== req.decoded.id) { 
+  if (parseInt(id) !== req.decoded.id) {
     return res.status(403).json({
       status: "error",
       message: "沒有修改權限",
     });
   }
   const {
-    name,
-    password,
-    phone,
-    birthday,
+    newName,
+    newPassword,
+    newPhone,
+    newBirth,
     address,
-    emergency_contact,
-    emergency_phone,
+    emergencyContact,
+    emergencyPhone,
   } = req.body;
 
   try {
-    if (id != req.decoded.id) {
-      throw new Error("沒有修改權限");
-    }
-
     const updateFields = [];
     const values = [];
 
-    if (name) {
-      updateFields.push("`name` = ?");
-      values.push(name);
-    }
-    if (password) {
-      updateFields.push("`password` = ?");
-      const hashedPassword = await bcrypt.hash(password, 10);
-      values.push(hashedPassword);
-    }
-    if (phone) {
-      const phoneRegex = /^09\d{8}$/;
-      if (!phoneRegex.test(phone)) {
-        return res.status(400).json({
-          status: "error",
-          message: "手機號碼格式不正確",
-        });
+    const fields = [
+      { key: "name", value: newName },
+      { key: "password", value: newPassword, hash: true },
+      { key: "phone", value: newPhone, regex: /^09\d{8}$/, errorMsg: "手機號碼格式不正確" },
+      { key: "birthday", value: newBirth },
+      { key: "address", value: address },
+      { key: "emergency_contact", value: emergencyContact },
+      { key: "emergency_phone", value: emergencyPhone, regex: /^09\d{8}$/, errorMsg: "手機號碼格式不正確" },
+    ];
+
+    for (const field of fields) {
+      if (field.value) {
+        if (field.regex && !field.regex.test(field.value)) {
+          return res.status(400).json({
+            status: "error",
+            message: field.errorMsg,
+          });
+        }
+        updateFields.push("`" + field.key + "` = ?");
+        if (field.hash) {
+          const hashed = await bcrypt.hash(field.value, 10);
+          values.push(hashed);
+        } else {
+          values.push(field.value);
+        }
       }
-      updateFields.push("`phone` = ?");
-      values.push(phone);
     }
-    if (birthday) {
-      updateFields.push("`birthday` = ?");
-      values.push(birthday);
-    }
-    if (address) {
-      updateFields.push("`address` = ?");
-      values.push(address);
-    }
-    if (emergency_contact) {
-      updateFields.push("`emergency_contact` = ?");
-      values.push(emergency_contact);
+    updateFields.push("`updated_at` = NOW()");
+    // 若沒有任何欄位需要更新，直接回傳
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        status: "error",
+        message: "沒有任何欄位需要更新",
+      });
     }
 
-    if (emergency_phone) {
-      updateFields.push("`emergency_phone` = ?");
-      values.push(emergency_phone);
-    }
-
+    // 最後將 id 加入作為條件
     values.push(id);
     const sql = `UPDATE users SET ${updateFields.join(", ")} WHERE id = ?;`;
     const [result] = await pool.execute(sql, values);
 
-    if (result.affectedRows == 0) {
+    if (result.affectedRows === 0) {
       throw new Error("更新失敗");
     }
 
     res.status(200).json({
       status: "success",
-      message: `更新使用者成功: ${name}`,
+      message: `更新使用者成功: ${newName || "使用者"}`,
     });
   } catch (err) {
     console.log(err);
     res.status(400).json({
       status: "error",
-      message: err.message ? err.message : "修改失敗",
+      message: err.message || "修改失敗",
     });
   }
 });
+
 
 router.delete("/users/:id", async (req, res) => {
   const { id } = req.params;
@@ -262,7 +279,7 @@ router.post("/users/status", checkToken, (req, res) => {
     {
       id: decoded.id,
       email: decoded.email, // 改成這裡
-      name: decoded.name, 
+      name: decoded.name,
     },
     process.env.JWT_SECRET,
     { expiresIn: "30m" }

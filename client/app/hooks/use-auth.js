@@ -9,7 +9,6 @@ const AuthContext = createContext(null);
 AuthContext.displayName = "AuthContext";
 
 export function AuthProvider({ children }) {
-
   const [token, setToken] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem(appKey);
@@ -32,7 +31,7 @@ export function AuthProvider({ children }) {
     }
   }, [router, pathname]);
 
-  // 处理用户登录
+  // 處理用戶登入
   const login = async (email, password) => {
     const API = "http://localhost:3005/api/member/users/login";
 
@@ -104,7 +103,8 @@ export function AuthProvider({ children }) {
       localStorage.removeItem(appKey);
       setToken(null); 
       setUser(null);
-      router.replace("/member/login");
+      setError(null); 
+      router.replace("/");
     } catch (err) {
       console.log(err);
       alert(err.message);
@@ -141,45 +141,14 @@ export function AuthProvider({ children }) {
       };
     }
   };
-  // 當頁面加載時檢查 token 狀態，並更新 user 資訊
-  useEffect(() => {
-    const storedToken = localStorage.getItem(appKey);
-    console.log("檢查 token：", storedToken);
-    if (!storedToken) return;
-    const fetchData = async () => {
-      const API = "http://localhost:3005/api/member/users/status";
-      try {
-        const res = await fetch(API, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${storedToken}`,
-          },
-        });
-        const result = await res.json();
-        console.log("status API result:", result);
-        if (result.status !== "success") throw new Error(result.message);
-        localStorage.setItem(appKey, result.data.token);
-        setToken(result.data.token);
-        setUser(jwt.decode(result.data.token));
-      } catch (err) {
-        console.log("status API error:", err);
-        localStorage.removeItem(appKey);
-        setToken(null);
-        setUser(null);
-        if (pathname !== "/member/login") {
-          router.replace("/member/login");
-        }
-      }
-    };
-    fetchData();
-  }, [pathname, router]);
+  
 
-  // 當 user 存在時，利用 user.id 去獲取使用者詳細資料
+  // 獲取使用者個人資料
   useEffect(() => {
-    if (!user) return;
+    if (!user || !user.id) return;
     const fetchProfile = async () => {
       setLoading(true);
-      const profileAPI = `http://localhost:3005/api/member/users/account/${user.id}`;
+      const profileAPI = `http://localhost:3005/api/member/users/${user.id}`;
       try {
         const res = await fetch(profileAPI, {
           method: "GET",
@@ -202,7 +171,7 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, error, login, logout, register }}>
+    <AuthContext.Provider value={{ token, setToken, user, setUser, profile, loading, error, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );
