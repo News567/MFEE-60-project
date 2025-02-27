@@ -12,7 +12,6 @@ export default function Account() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
-
   const [userData, setUserData] = useState({
     id: "",
     name: "",
@@ -23,6 +22,7 @@ export default function Account() {
     address: "",
     emergency_contact: "",
     emergency_phone: "",
+    img: "",
   });
 
   const [name, setNewName] = useState("");
@@ -34,7 +34,6 @@ export default function Account() {
   const [emergencyContact, setEC] = useState("");
   const [emergencyPhone, setEP] = useState("");
 
-
   // 進入頁面時檢查 token 並獲取用戶數據
   useEffect(() => {
     const storedToken = localStorage.getItem("loginWithToken");
@@ -42,13 +41,22 @@ export default function Account() {
       router.replace("/member/login");
       return;
     }
+    if (!userData.id) return; // 確保有 `userId` 再執行
+
+    const storedAvatar = localStorage.getItem(`user_avatar_${userData.id}`);
+    if (storedAvatar) {
+      setUserData((prev) => ({ ...prev, img: storedAvatar }));
+    }
 
     const fetchData = async () => {
       try {
-        const res = await fetch("http://localhost:3005/api/member/users/status", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${storedToken}` },
-        });
+        const res = await fetch(
+          "http://localhost:3005/api/member/users/status",
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${storedToken}` },
+          }
+        );
 
         const result = await res.json();
         console.log("status API result:", result);
@@ -59,12 +67,23 @@ export default function Account() {
         setUser(decodedUser);
 
         // 從 API 獲取完整的用戶資料
-        const userRes = await fetch(`http://localhost:3005/api/member/users/${decodedUser.id}`, {
-          headers: { Authorization: `Bearer ${storedToken}` },
-        });
+        const userRes = await fetch(
+          `http://localhost:3005/api/member/users/${decodedUser.id}`,
+          {
+            headers: { Authorization: `Bearer ${storedToken}` },
+          }
+        );
         const userDataResult = await userRes.json();
         if (userDataResult.status === "success") {
-          const { name = "", birthday = "", gender = "", phone = "", address = "", emergencyContact = "", emergencyPhone = "", } = userDataResult.data;
+          const {
+            name = "",
+            birthday = "",
+            gender = "",
+            phone = "",
+            address = "",
+            emergencyContact = "",
+            emergencyPhone = "",
+          } = userDataResult.data;
           setUserData(userDataResult.data);
           setNewName(name);
           setNewBirth(birthday);
@@ -75,7 +94,6 @@ export default function Account() {
           setEP(emergencyPhone);
           setNewPassword(password);
         }
-
       } catch (err) {
         console.error("用戶狀態獲取失敗:", err);
         localStorage.removeItem("loginWithToken");
@@ -87,12 +105,13 @@ export default function Account() {
     };
 
     fetchData();
-  }, [router, setUser]);
+  }, [router, setUser, userData.id]);
 
   // 更新用戶信息
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     try {
+      setLoading(true);
       const formData = new FormData();
 
       const userUpdates = new Map([
@@ -114,13 +133,16 @@ export default function Account() {
 
       const storedToken = localStorage.getItem("loginWithToken");
 
-      const res = await fetch(`http://localhost:3005/api/member/users/${userData.id}`, {
-        method: "PUT",
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${storedToken}`,
-        },
-      });
+      const res = await fetch(
+        `http://localhost:3005/api/member/users/${userData.id}`,
+        {
+          method: "PUT",
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+          },
+        }
+      );
 
       const result = await res.json();
       alert(result.message);
@@ -135,6 +157,57 @@ export default function Account() {
       console.error("更新用户信息失败:", error);
     }
   };
+
+  const handleUploadImg = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const userId = userData.id;
+    if (!userId) {
+      alert("無法獲取用戶 ID，請重新登入");
+      return;
+    }
+    // 確保圖片存入 `client/public/img/member/{userId}/0.png`
+  const imgPath = `/img/member/${userId}/0.png`;
+
+  // 產生圖片的 URL，讓前端立即顯示
+  const imageUrl = URL.createObjectURL(file);
+  setUserData((prev) => ({ ...prev, img: imageUrl }));
+
+  // 存到 localStorage 避免重新整理後圖片消失
+  localStorage.setItem(`user_avatar_${userId}`, imgPath);
+
+  // 清理 URL 來避免記憶體洩漏
+  setTimeout(() => URL.revokeObjectURL(imageUrl), 5000);
+
+    // 存到 localStorage 或 IndexedDB，避免重新整理後圖片消失
+    localStorage.setItem(`user_avatar_${userId}`, imageUrl);
+    // try {
+    //   const formData = new FormData();
+    //   formData.append("img", file);
+
+    //   const storedToken = localStorage.getItem("loginWithToken");
+
+    //   const res = await fetch(
+    //     "http://localhost:3005/api/member/users/upload-img",
+    //     {
+    //       method: "POST",
+    //       body: formData,
+    //       headers: { Authorization: `Bearer ${storedToken}` },
+    //     }
+    //   );
+
+    //   const result = await res.json();
+    //   if (result.status === "success") {
+    //     setUserData((prev) => ({ ...prev, img: result.img }));
+    //   } else {
+    //     alert("上傳失敗：" + result.message);
+    //   }
+    // } catch (error) {
+    //   console.error("頭像上傳錯誤:", error);
+    // }
+  };
+
   if (loading) return <p>加載中...</p>;
 
   return (
@@ -191,13 +264,13 @@ export default function Account() {
                   <p>密碼</p>
                 </div>
                 <div className={styles.IBLcontent}>
-
                   <input
                     type="text"
                     value={name}
                     className={`${styles.box2} ${styles.boxSame}`}
                     onChange={(e) => setNewName(e.target.value)}
-                    placeholder="姓名" />
+                    placeholder="姓名"
+                  />
                   <input
                     type="date"
                     value={birthday}
@@ -226,27 +299,33 @@ export default function Account() {
                         id="male"
                         name="gender"
                         value="male"
-                        onChange={(e) => setNewGender(e.target.value)} 
+                        onChange={(e) => setNewGender(e.target.value)}
                       />
-                      <label htmlFor="male" className="form-check-label">男性</label>
+                      <label htmlFor="male" className="form-check-label">
+                        男性
+                      </label>
 
                       <input
                         type="radio"
                         id="female"
                         name="gender"
                         value="female"
-                        onChange={(e) => setNewGender(e.target.value)} 
+                        onChange={(e) => setNewGender(e.target.value)}
                       />
-                      <label htmlFor="female" className="form-check-label">女性</label>
+                      <label htmlFor="female" className="form-check-label">
+                        女性
+                      </label>
 
                       <input
                         type="radio"
                         id="other"
                         name="gender"
                         value="other"
-                        onChange={(e) => setNewGender(e.target.value)} 
+                        onChange={(e) => setNewGender(e.target.value)}
                       />
-                      <label htmlFor="other" className="form-check-label">其他</label>
+                      <label htmlFor="other" className="form-check-label">
+                        其他
+                      </label>
                     </div>
                   </div>
                   <input
@@ -273,21 +352,32 @@ export default function Account() {
                 </div>
               </div>
               <div className={`${styles.IBbtn}`}>
-                <div className={`${styles.hvbtn}`} onClick={handleUpdateUser}>變更</div>
+                <div className={`${styles.hvbtn}`} onClick={handleUpdateUser}>
+                  變更
+                </div>
                 <div className={`${styles.dfbtn}`}>取消</div>
               </div>
             </div>
+            {/* 分隔線 */}
             <div className={styles.line2}></div>
-
+            {/* 右邊格子 */}
             <div className={styles.infoBox2}>
               <div className={styles.iflist2}>
-                <div className={styles.circle}></div>
-                <div className={styles.ifcontent}>
-                  <p>user1</p>
-                  <p>OO等級 - 88/100</p>
-                  <p>user1@test.com</p>
-                  <div className={styles.dfbtn2}>選擇圖片</div>
+                <div className={styles.circle}>
+                  <img src={userData.img || "/img/default.png"} alt="頭像" />
                 </div>
+                <p>level</p>
+                <p>{userData.email}</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleUploadImg}
+                  id="avatarUpload"
+                  hidden
+                />
+                <label htmlFor="avatarUpload" className={styles.dfbtn2}>
+                  選擇圖片
+                </label>
               </div>
             </div>
           </div>

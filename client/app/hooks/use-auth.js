@@ -65,6 +65,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.log(err);
       alert(err.message);
+      router.replace("/member/register");
     }
   };
   // 处理用户登出
@@ -127,13 +128,8 @@ export function AuthProvider({ children }) {
       const res = await fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, password1 }),
       });
-
-      // if (!res.ok) {
-      //   const errorData = await res.json();
-      //   throw new Error(errorData.message || "註冊失敗，請稍後再試");
-      // }
 
       const result = await res.json();
       if (result.status !== "success") {
@@ -141,12 +137,14 @@ export function AuthProvider({ children }) {
       }
 
       return { status: "success", message: result.message || "註冊成功" };
-    } catch (err) {
-      console.log(err);
-      return {
-        status: "error",
-        message: err.message || "註冊失敗，請稍後再試",
-      };
+    } catch (error) {
+      console.error("註冊錯誤:", error);
+      // 顯示錯誤訊息以便偵錯
+      alert(error.message || "註冊失敗，請稍後再試");
+      // 如果錯誤訊息中包含 '409' 或 'Email 已存在'，就跳轉到 login 頁面
+      if (error.message && (error.message.includes("409") || error.message.includes("已存在"))) {
+        router.push("/member/login");
+      }
     }
   };
 

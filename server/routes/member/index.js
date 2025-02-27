@@ -8,10 +8,15 @@ import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { pool } from "../../config/mysql.js";
-import fetch from 'node-fetch';
+import path from "path";
+import fs from "fs/promises";
+import { fileURLToPath } from "url";
 
 dotenv.config();
-const upload = multer();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const whiteList = ["http://localhost:3301", "http://localhost:3000"];
 const corsOptions = {
   credentials: true,
@@ -23,6 +28,22 @@ const corsOptions = {
     }
   },
 };
+
+const storage = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    try {
+      const userFolderPath = path.join(__dirname, "../../public/img/member", req.user.id.toString());
+      await fs.mkdir(userFolderPath, { recursive: true });
+      cb(null, userFolderPath);
+    } catch (error) {
+      cb(error);
+    }
+  },
+  filename: (req, file, cb) => {
+    cb(null, "0.png");
+  },
+});
+const upload = multer({ storage });
 
 const router = express.Router();
 router.use(cors(corsOptions));
@@ -54,11 +75,14 @@ router.get("/users", async (req, res) => {
 router.get("/users/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const sql = "SELECT id, name, email, birthday, phone, address, emergency_contact, emergency_phone FROM `users` WHERE id = ?";
+    const sql =
+      "SELECT id, name, email, birthday, phone, address, emergency_contact, emergency_phone, img FROM `users` WHERE id = ?";
     const [rows] = await pool.execute(sql, [id]);
 
     if (rows.length === 0) {
-      return res.status(404).json({ status: "error", message: "找不到該使用者" });
+      return res
+        .status(404)
+        .json({ status: "error", message: "找不到該使用者" });
     }
 
     res.status(200).json({
@@ -104,12 +128,22 @@ router.put("/users/:id", checkToken, upload.none(), async (req, res) => {
     const fields = [
       { key: "name", value: name },
       { key: "password", value: password, hash: true },
-      { key: "phone", value: phone, regex: /^09\d{8}$/, errorMsg: "手機號碼格式不正確" },
+      {
+        key: "phone",
+        value: phone,
+        regex: /^09\d{8}$/,
+        errorMsg: "手機號碼格式不正確",
+      },
       { key: "gender", value: genderValue },
       { key: "birthday", value: birthday },
       { key: "address", value: address },
       { key: "emergency_contact", value: emergency_contact },
-      { key: "emergency_phone", value: emergency_phone, regex: /^09\d{8}$/, errorMsg: "手機號碼格式不正確" },
+      {
+        key: "emergency_phone",
+        value: emergency_phone,
+        regex: /^09\d{8}$/,
+        errorMsg: "手機號碼格式不正確",
+      },
     ];
 
     for (const field of fields) {
@@ -160,6 +194,67 @@ router.put("/users/:id", checkToken, upload.none(), async (req, res) => {
   }
 });
 
+router.post("/users/register", async (req, res) => {
+  const { email, password } = req.body;
+  const createAt = new Date();
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "請提供Email或密碼" });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "請提供有效的 Email" });
+  }
+
+  try {
+    const checkSql = "SELECT * FROM `users` WHERE email = ?";
+    const [existingUser] = await pool.execute(checkSql, [email]);
+    console.log(existingUser);
+    if (existingUser.length > 0) {
+      return res
+        .status(409)
+        .json({ status: "exists", message: "Email 已存在" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const sql =
+      "INSERT INTO `users` (`email`, `password`, `img`, `created_at`) VALUES (?, ?, ?, ?)";
+      const imgPath = "/img/default.png";   
+    const [result] = await pool.execute(sql, [
+      email,
+      hashedPassword,
+      imgPath,
+      createAt,
+    ]);
+
+    res
+      .status(201)
+      .json({ status: "success", message: "註冊成功", userId: result.insertId, img: imgPath });
+  } catch (error) {
+    console.error("註冊錯誤:", error);
+    res.status(500).json({ status: "error", message: "註冊失敗" });
+  }
+});
+
+router.post("/users/upload-img", upload.single("img"), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    if (!userId) {
+      return res.status(401).json({ status: "error", message: "未授權的請求" });
+    }
+    // 前端存圖片，後端只存 URL
+    const imgPath = `/img/member/${userId}/0.png`;
+
+    // 更新資料庫 `img` 欄位
+    await pool.execute("UPDATE users SET img = ? WHERE id = ?", [imgPath, userId]);
+
+    res.json({ status: "success", message: "頭像更新成功", img: imgPath });
+  } catch (error) {
+    console.error("❌ 頭像更新失敗:", error);
+    res.status(500).json({ status: "error", message: "頭像更新失敗", error: error.message });
+  }
+});
 
 router.delete("/users/:id", async (req, res) => {
   const { id } = req.params;
@@ -244,42 +339,9 @@ router.post("/users/logout", checkToken, (req, res) => {
   });
 });
 
-router.post("/users/register", async (req, res) => {
-  const { email, password } = req.body;
-  const createAt = new Date();
 
-  if (!email || !password) {
-    return res.status(400).json({ message: "請提供Email或密碼" });
-  }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({ message: "請提供有效的 Email" });
-  }
 
-  try {
-    const checkSql = "SELECT * FROM `users` WHERE email = ?";
-    const [existingUser] = await pool.execute(checkSql, [email]);
-    console.log(existingUser);
-    if (existingUser.length > 0) {
-      return res
-        .status(409)
-        .json({ status: "exists", message: "帳號或 Email 已存在" });
-    }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const sql =
-      "INSERT INTO `users` (`email`, `password`, `created_at`) VALUES (?, ?, ?)";
-    const [result] = await pool.execute(sql, [email, hashedPassword, createAt]);
-
-    res.status(201).json({
-      message: "註冊成功",
-      userId: result.insertId,
-    });
-  } catch (err) {
-    console.error("插入資料時發生錯誤:", err);
-    res.status(500).json({ message: "Database error", error: err });
-  }
-});
 
 router.post("/users/status", checkToken, (req, res) => {
   const { decoded } = req;
@@ -299,6 +361,6 @@ router.post("/users/status", checkToken, (req, res) => {
   });
 });
 
-
+export { upload };
 export { checkToken };
 export default router;

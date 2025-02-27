@@ -31,22 +31,24 @@ export default function Register() {
       alert("請再次輸入密碼");
       return;
     }
+    // console.log("password:", password, "password1:", password1);
+
     setLoading(true);
 
     try {
-      const response = await register(email, password);
-
-      if (response?.status === "success") {
-        alert("註冊成功，請登入！");
-        router.push("/member/login");
-      } else if (response?.status === "exists") {
+      const response = await register(email, password, password1);
+      console.log("register response:", response);
+      alert("註冊成功，請登入！");
+      router.push("/member/login");
+    } catch (error) {
+      console.error("註冊錯誤:", error);
+      // 如果錯誤訊息中包含 'Email 已存在'
+      if (error.message && error.message.includes("Email 已存在")) {
         alert("此 Email 已被註冊，請直接登入！");
         router.push("/member/login");
       } else {
-        alert(response?.message || "註冊失敗，請稍後再試");
+        alert("註冊失敗，請稍後再試");
       }
-    } catch (error) {
-      console.error("註冊錯誤:", error);
     } finally {
       setLoading(false);
     }
