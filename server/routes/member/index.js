@@ -239,22 +239,31 @@ router.post("/users/register", async (req, res) => {
 
 router.post("/users/upload-img", upload.single("img"), async (req, res) => {
   try {
-    const userId = req.user.id;
-    if (!userId) {
-      return res.status(401).json({ status: "error", message: "未授權的請求" });
+    const { userId, image } = req.body;
+    if (!userId || !image) {
+      return res.status(400).json({ status: "error", message: "缺少 userId 或圖片" });
     }
-    // 前端存圖片，後端只存 URL
-    const imgPath = `/img/member/${userId}/0.png`;
 
-    // 更新資料庫 `img` 欄位
+    const userFolderPath = path.join(process.cwd(), "client/public/img/member", userId.toString());
+    await fs.mkdir(userFolderPath, { recursive: true });
+
+ // 解析 Base64 圖片，並存成 `1.png`
+    const imageBuffer = Buffer.from(image, "base64");
+    const imagePath = path.join(userFolderPath, "1.png");
+    await fs.writeFile(imagePath, imageBuffer);
+
+
+    // 存入資料庫
+    const imgPath = `/img/member/${userId}/1.png`;
     await pool.execute("UPDATE users SET img = ? WHERE id = ?", [imgPath, userId]);
 
-    res.json({ status: "success", message: "頭像更新成功", img: imgPath });
+    res.json({ status: "success", message: "頭像上傳成功", img: imgPath });
   } catch (error) {
-    console.error("❌ 頭像更新失敗:", error);
-    res.status(500).json({ status: "error", message: "頭像更新失敗", error: error.message });
+    console.error("❌ 頭像存儲失敗:", error);
+    res.status(500).json({ status: "error", message: "頭像存儲失敗", error: error.message });
   }
 });
+
 
 router.delete("/users/:id", async (req, res) => {
   const { id } = req.params;

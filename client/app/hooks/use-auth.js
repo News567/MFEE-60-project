@@ -22,7 +22,17 @@ export function AuthProvider({ children }) {
   // });
 
   const [user, setUser] = useState(-1);
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState({
+    id: "",
+    name: "",
+    email: "",
+    birthday: "",
+    gender: "",
+    address: "",
+    emergency_contact: "",
+    emergency_phone: "",
+    img: "/img/default.png",
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -32,7 +42,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const storedToken = localStorage.getItem(appKey);
-    if (!storedToken && !["/member/login","/member/register","/member/forgot"]) {
+    if (!storedToken && !["/member/login", "/member/register", "/member/forgot"]) {
       router.replace("/member/login");
     }
   }, [router, pathname]);
@@ -159,15 +169,15 @@ export function AuthProvider({ children }) {
     }
   }, [pathname, user]);
 
-  useEffect(()=>{
+  useEffect(() => {
     let token = localStorage.getItem(appKey);
-    if(!token){
+    if (!token) {
       setUser(null); // 確保未登入時使用是 null      
       return;
     }
     const fetchData = async () => {
       let API = "http://localhost:3005/api/member/users/status";
-      try{
+      try {
         const res = await fetch(API, {
           method: "POST",
           headers: {
@@ -175,12 +185,12 @@ export function AuthProvider({ children }) {
           }
         });
         const result = await res.json();
-        if(result.status != "success") throw new Error(result.message);
+        if (result.status != "success") throw new Error(result.message);
         token = result.data.token;
         localStorage.setItem(appKey, token);
         const newUser = jwt.decode(token);
         setUser(newUser)
-      }catch(err){
+      } catch (err) {
         console.log(err);
         localStorage.removeItem(appKey); // 判斷狀態失敗改為移除 localStorage 中的登入 token
       }
@@ -190,27 +200,50 @@ export function AuthProvider({ children }) {
 
 
   useEffect(() => {
-    let token = localStorage.getItem(appKey);
-    if(!token){
-      setUser(null); // 確保未登入時使用是 null      
+    const storedToken = localStorage.getItem(appKey);
+    if (!storedToken) {
+      setUser(null);
+      setLoading(false);
       return;
     }
+
+    // const decodedUser = jwt.decode(storedToken);
+    // console.log("🔍 解碼 Token:", decodedUser);
+
+    // if (!decodedUser || !decodedUser.id) {
+    //   console.error("❌ 無法取得使用者 ID");
+    //   localStorage.removeItem(appKey);
+    //   setUser(null);
+    //   setLoading(false);
+    //   return;
+    // }
+    // setUser(decodedUser);
+
     const fetchProfile = async () => {
-      setLoading(true);
-      const profileAPI = `http://localhost:3005/api/member/users/${user.id}`;
       try {
+        const profileAPI = `http://localhost:3005/api/member/users/${user.id}`;
         const res = await fetch(profileAPI, {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${localStorage.getItem("loginWithToken")}` },
         });
+
         const result = await res.json();
         if (result.status !== "success") throw new Error(result.message);
+        console.log("🔍 使用者資料:", result.data);
         setProfile(result.data);
       } catch (err) {
-        setError(err.message);
-        setProfile(null);
+        console.error("❌ 取得使用者資料失敗:", err.message);
+        setProfile({
+          id: "",
+          name: "",
+          email: "",
+          birthday: "",
+          gender: "",
+          address: "",
+          emergency_contact: "",
+          emergency_phone: "",
+          img: "/img/default.png",
+        });
       } finally {
         setLoading(false);
       }
