@@ -45,10 +45,10 @@ export default function User() {
           {user ? (
             <>
               <MenuItem onClick={handleClose}>
-                <Link href="/member/favorites">我的收藏</Link>
+                <Link href="/member/favorite">我的收藏</Link>
               </MenuItem>
               <MenuItem onClick={handleClose}>
-                <Link href="/coupons">優惠券</Link>
+                <Link href="/coupon">優惠券</Link>
               </MenuItem>
               <MenuItem onClick={handleClose}>
                 <Link href="/member/group">我的團購</Link>
@@ -62,7 +62,7 @@ export default function User() {
                 }}
                 style={{ color: "red" }}
               >
-              <Link href="/member/logout">
+              <Link href="/member/logout" className="text-reset">
                 登出
               </Link>
               </MenuItem>
