@@ -26,8 +26,10 @@ router.get("/:id", async (req, res) => {
     ri.stock, ri.created_at, ri.update_at, ri.deposit, ri.is_like,
     rcs.name AS category_small, rcb.name AS category_big,
     ri.rent_category_small_id,  -- 添加 rent_category_small_id
-    rb.id AS brand_id,  -- 取得品牌 ID
-    rb.name AS brand_name,  -- 取得品牌名稱
+    rb.id AS brand_id,  
+    rb.name AS brand_name,  
+    rb.description AS brand_description,
+    rb.imgUrl AS brand_img_url,
     GROUP_CONCAT(DISTINCT rc.name ORDER BY rc.id ASC) AS color_name,  -- 顏色名稱
     GROUP_CONCAT(DISTINCT rc.rgb ORDER BY rc.id ASC) AS color_rgb  -- 顏色 RGB 值
       FROM rent_item ri

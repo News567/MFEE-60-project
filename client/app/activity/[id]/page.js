@@ -8,6 +8,7 @@ import { useCart } from "@/hooks/cartContext";
 import { useRouter } from "next/router";
 import { useAuth } from "@/hooks/use-auth";
 
+
 // import icons
 import {
     FaRegHeart,
@@ -166,8 +167,6 @@ export default function Home() {
             alert("加入購物車失敗，請稍後再試");
         }
     };
-
-    // 最後把這個handleAddToCart綁定到加入購物車按鈕上
 
     // 設定燈箱
     const MyGallery = () => (
@@ -871,7 +870,11 @@ export default function Home() {
                                                                 >
                                                                     加入購物車
                                                                 </button>
-                                                                <button type="button"
+                                                                <button onClick={()=>{
+                                                                    if(user){
+                                                                    window.location = "/cart"
+                                                                    }
+                                                                }}
                                                                     className={`btn ${styles.btn} ${styles.btnPrimaryColor} ${styles.projectBtn}`}>
                                                                     立即訂購
                                                                 </button>

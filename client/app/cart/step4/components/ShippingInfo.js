@@ -1,4 +1,6 @@
 export default function ShippingInfo({ shipping }) {
+  if (!shipping) return <div className="text-muted">無配送資訊</div>;
+
   return (
     <div className="shipping-info">
       <div className="row">
@@ -11,7 +13,7 @@ export default function ShippingInfo({ shipping }) {
         <div className="col-md-6">
           <div className="info-group">
             <label className="text-muted">預計出貨</label>
-            <div>{shipping.estimatedDelivery}</div>
+            <div>{shipping.estimatedDelivery || "尚未出貨"}</div>
           </div>
         </div>
         <div className="col-12 mt-3">

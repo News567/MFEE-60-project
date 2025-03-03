@@ -31,7 +31,12 @@ const Cart2 = () => {
   const [shippingMethod, setShippingMethod] = useState("homeDelivery");
 
   const shippingChange = (e) => {
-    setShippingMethod(e.target.value);
+    const method = e.target.value;
+    setShippingMethod(method);
+    setShippingInfo((prev) => ({
+      ...prev,
+      method,
+    }));
   };
   // console.log(shippingMethod);
 
@@ -92,11 +97,17 @@ const Cart2 = () => {
     address: "",
     storeName: "",
     storeAddress: "",
+    method: "",
   });
 
   // 處理表單輸入變化
-  const handleShippingInfoChange = (e) => {};
-
+  const handleShippingInfoChange = (e) => {
+    const { name, value } = e.target;
+    setShippingInfo((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
   // 修改宅配表單
   const HomeDeliveryForm = () => (
     <div className="mt-3">
@@ -118,6 +129,8 @@ const Cart2 = () => {
             className="form-control"
             placeholder="收件人姓名"
             name="name"
+            value={shippingInfo.name}
+            onChange={handleShippingInfoChange}
           />
         </div>
         <div className="col-6">
@@ -126,10 +139,17 @@ const Cart2 = () => {
             className="form-control"
             placeholder="手機號碼"
             name="phone"
+            value={shippingInfo.phone}
+            onChange={handleShippingInfoChange}
           />
         </div>
         <div className="col-12">
-          <select className="form-select mb-2" name="city">
+          <select
+            className="form-select mb-2"
+            name="city"
+            value={shippingInfo.city}
+            onChange={handleShippingInfoChange}
+          >
             <option value="">選擇縣市</option>
             <option value="台北市">台北市</option>
             <option value="新北市">新北市</option>
@@ -145,6 +165,8 @@ const Cart2 = () => {
             className="form-control"
             placeholder="詳細地址"
             name="address"
+            value={shippingInfo.address}
+            onChange={handleShippingInfoChange}
           />
         </div>
       </div>
@@ -171,10 +193,20 @@ const Cart2 = () => {
             type="text"
             className="form-control"
             placeholder="收件人姓名"
+            name="name"
+            value={shippingInfo.name}
+            onChange={handleShippingInfoChange}
           />
         </div>
         <div className="col-6">
-          <input type="tel" className="form-control" placeholder="手機號碼" />
+          <input
+            type="tel"
+            className="form-control"
+            placeholder="手機號碼"
+            name="phone"
+            value={shippingInfo.phone}
+            onChange={handleShippingInfoChange}
+          />
         </div>
         <div className="col-12">
           <button
@@ -208,7 +240,6 @@ const Cart2 = () => {
       </div>
     </div>
   );
-
   // 處理商品名稱
   const itemNames = [
     ...cartData.products.map(
@@ -224,7 +255,35 @@ const Cart2 = () => {
   const handleLinePayCheckout = async () => {
     try {
       validateOrder();
-  
+
+      // 獲取活動旅客資料
+      const activityTravelers = JSON.parse(
+        localStorage.getItem("activityTravelers") || "{}"
+      );
+
+      // 獲取表單數據
+      let shippingData = null;
+      if (checkoutSteps.needsShippingInfo) {
+        if (shippingMethod === "homeDelivery") {
+          shippingData = {
+            name: shippingInfo.name,
+            phone: shippingInfo.phone,
+            city: shippingInfo.city,
+            address: shippingInfo.address,
+            method: "homeDelivery",
+          };
+        } else {
+          shippingData = {
+            name: shippingInfo.name,
+            phone: shippingInfo.phone,
+            storeId: store711.id || "",
+            storeName: store711.storename,
+            storeAddress: store711.storeaddress,
+            method: "storePickup",
+          };
+        }
+      }
+
       // 1️⃣ **先建立訂單**
       const orderResponse = await fetch(
         "http://localhost:3005/api/checkout/complete",
@@ -235,30 +294,33 @@ const Cart2 = () => {
             userId: 1,
             paymentMethod: "linepay",
             couponCode: null,
+            activityTravelers: Object.values(activityTravelers).flat(),
+            shippingInfo: checkoutSteps.needsShippingInfo ? shippingData : null,
           }),
         }
       );
-  
+
       const orderResult = await orderResponse.json();
-      if (!orderResult.success) throw new Error(orderResult.message);
-  
+      // if (!orderResult.success) throw new Error(orderResult.message);
+      localStorage.setItem("lastOrderId", orderResult.data.orderId);
+
       // 2️⃣ **取得訂單金額**
       const amount = orderResult.data.totalAmount;
       const itemNames = cartData.products.map((p) => p.product_name).join(",");
-  
+
       // 3️⃣ **向 `/linepay/reserve` 發送付款請求**
       const response = await fetch(
         `http://localhost:3005/api/linepay/reserve?amount=${amount}&items=${encodeURIComponent(
           itemNames
         )}`
       );
-  
+
       console.log("LINE Pay Reserve API Response:", response);
       const result = await response.json();
       console.log("Parsed result:", result);
-  
+
       if (result.status !== "success") throw new Error("LINE Pay 預約失敗");
-  
+
       // 4️⃣ **儲存交易 ID 並跳轉付款頁**
       localStorage.setItem("linePayTransactionId", result.data.transactionId);
       window.location.href = result.data.paymentUrl;
@@ -267,84 +329,91 @@ const Cart2 = () => {
       alert(error.message);
     }
   };
-  
 
   useEffect(() => {
     const confirmLinePay = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const transactionId = urlParams.get("transactionId");
       if (!transactionId) return;
-
+  
       const storedTransactionId = localStorage.getItem("linePayTransactionId");
       if (storedTransactionId !== transactionId) {
-        console.error("交易 ID 不匹配");
+        console.error("❌ 交易 ID 不匹配");
         return;
       }
-
-      const amount = calculateTotal();
-      const response = await fetch(
-        `http://localhost:3005/api/linepay/confirm?transactionId=${transactionId}&amount=${amount}`
-      );
-
-      const result = await response.json();
-      if (result.success) {
-        alert("付款成功");
-        router.push("/order/success");
-      } else {
-        alert("付款失敗");
+  
+      console.log("🟢 確認付款中，交易 ID:", transactionId);
+      
+      try {
+        const amount = calculateTotal();
+        const response = await fetch(
+          `http://localhost:3005/api/linepay/confirm?transactionId=${transactionId}&amount=${amount}`
+        );
+  
+        const result = await response.json();
+        console.log("🟢 LINE Pay 確認結果:", result);
+  
+        if (result.success) {
+          console.log("✅ 付款成功，重新獲取訂單資訊...");
+          
+          // 1️⃣ **重新請求最新訂單資訊**
+          const lastOrderId = localStorage.getItem("lastOrderId");
+          if (!lastOrderId) {
+            console.error("❌ 找不到 lastOrderId，無法更新訂單狀態！");
+            return;
+          }
+  
+          const orderResponse = await axios.get(
+            `http://localhost:3005/api/order/${lastOrderId}`
+          );
+  
+          const updatedOrder = orderResponse.data.data;
+          console.log("🟢 更新後的訂單資訊:", updatedOrder);
+  
+          // 2️⃣ **更新狀態**
+          if (updatedOrder.orderInfo.orderStatus === "paid") {
+            alert("付款成功，訂單狀態已更新！");
+          } else {
+            alert("付款成功，但訂單狀態未更新，請聯絡客服！");
+          }
+  
+          // 3️⃣ **確保 `orderStatus` 不會卡在 `pending`**
+          router.push("/order/success");
+        } else {
+          alert("付款失敗");
+        }
+      } catch (error) {
+        console.error("❌ 確認付款時發生錯誤:", error);
       }
     };
-
+  
     confirmLinePay();
   }, []);
+  
 
   //ecpay
   const handleEcpayCheckout = async () => {
     try {
-      // 基本驗證
-      validateOrder();
-
       // 獲取表單數據
-      let shippingData = {};
+      let shippingData = null;
       if (checkoutSteps.needsShippingInfo) {
         if (shippingMethod === "homeDelivery") {
-          // 獲取宅配表單數據
-          const nameInput = document.querySelector('input[name="name"]');
-          const phoneInput = document.querySelector('input[name="phone"]');
-          const citySelect = document.querySelector('select[name="city"]');
-          const addressInput = document.querySelector('input[name="address"]');
-
           shippingData = {
-            name: nameInput.value,
-            phone: phoneInput.value,
-            city: citySelect.value,
-            address: addressInput.value,
+            name: shippingInfo.name,
+            phone: shippingInfo.phone,
+            city: shippingInfo.city,
+            address: shippingInfo.address,
             method: "homeDelivery",
           };
         } else {
-          // 獲取超商取貨數據
           shippingData = {
-            name: document.querySelector(
-              '.form-control[placeholder="收件人姓名"]'
-            ).value,
-            phone: document.querySelector(
-              '.form-control[placeholder="手機號碼"]'
-            ).value,
+            name: shippingInfo.name,
+            phone: shippingInfo.phone,
+            storeId: store711.id || "",
             storeName: store711.storename,
             storeAddress: store711.storeaddress,
-            method: "convenience_store",
-            address: store711.storeaddress || "",
-            city: "", // 超商不需要城市資訊
+            method: "storePickup",
           };
-
-          // 驗證超商資料
-          if (
-            !shippingData.name ||
-            !shippingData.phone ||
-            !store711.storename
-          ) {
-            throw new Error("請填寫完整的取貨資訊並選擇門市");
-          }
         }
       }
 
@@ -378,6 +447,7 @@ const Cart2 = () => {
         throw new Error(orderResult.message || "建立訂單失敗");
       }
 
+      localStorage.setItem("lastOrderId", orderResult.data.id);
       // 清除暫存的旅客資料
       localStorage.removeItem("activityTravelers");
 

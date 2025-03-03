@@ -5,6 +5,9 @@ import logger from "morgan";
 import cookieParser from "cookie-parser";
 import path from "path";
 import createError from "http-errors";
+
+
+
 // 路由模組
 import productRouter from "../routes/products/index.js";
 import favoritesRouter from "../routes/favorites/index.js";
@@ -17,6 +20,7 @@ import groupRouter from "../routes/group/index.js";
 import groupListRouter from "../routes/group/list.js";
 import groupDetailRouter from "../routes/group/detail.js";
 import groupCreate from "../routes/group/create.js";
+import groupJoin from "../routes/group/join.js";
 import rentRouter from "../routes/rent/index.js";
 import rentCategoryRouter from "../routes/rent/categories.js";
 import rentBrandCategoryRouter from "../routes/rent/brandcategories.js";
@@ -24,8 +28,10 @@ import rentColorRouter from "../routes/rent/colors.js";
 import rentNewRouter from "../routes/rent/new-arrivals.js";
 import rentDiscountedRouter from "../routes/rent/new-discounted.js";
 import rentFilterRouter from "../routes/rent/filter.js";
+import rentSearchRouter from "../routes/rent/search.js";
 import rentDetailRouter from "../routes/rent/detail.js";
 import rentRecommendedRouter from "../routes/rent/recommended.js";
+import rentIdColorRouter from "../routes/rent/idcolors.js";
 import articleRouter from "../routes/article/index.js"; // 文章列表 & 動態文章頁
 // import articleCreateRouter from "../routes/article/create.js"; // 取得新建文章所需的分類/標籤 & 新增文章
 // import articleSidebarRouter from "../routes/article/sidebar.js"; // 側邊欄篩選數據
@@ -34,12 +40,15 @@ import articleRouter from "../routes/article/index.js"; // 文章列表 & 動態
 import couponRouter from "../routes/coupon/index.js";
 import couponClaimRouter from "../routes/coupon/claim.js";
 import memberRouter from "../routes/member/index.js";
+import memberMyGroupRouter from "../routes/member/mygroup.js";
 // import shipmentRouter from "../routes/ship/index.js"; // 運送相關路由
 import checkoutRouter from "../routes/checkout/index.js";
 //ecpay
 import ecpayRouter from "../routes/ecpay/index.js";
 // linepay
 import linepayRouter from "../routes/linepay/index.js";
+// 訂單
+import orderRouter from "../routes/order/index.js";
 
 // 建立 Express 應用程式
 const app = express();
@@ -55,7 +64,7 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(process.cwd(), "../public")));
+app.use("/img", express.static('public/img'));
 // 測試 API
 app.get("/", (req, res) => {
   res.json({ message: "Express server is running" });
@@ -81,6 +90,10 @@ apiRouter.use("/ecpay", ecpayRouter);
 
 // linepay
 apiRouter.use("/linepay", linepayRouter);
+
+//order
+apiRouter.use("/order", orderRouter);
+
 // 活動相關路由
 apiRouter.use("/activity", activityRouter);
 apiRouter.use("/activity", activityDetailRouter);
@@ -90,6 +103,7 @@ apiRouter.use("/group", groupRouter);
 apiRouter.use("/group", groupListRouter);
 apiRouter.use("/group", groupDetailRouter);
 apiRouter.use("/group", groupCreate);
+apiRouter.use("/group", groupJoin);
 
 // 租借相關路由
 apiRouter.use("/rent", rentRouter); // 負責 `/api/rent`
@@ -99,8 +113,10 @@ apiRouter.use("/rent", rentColorRouter); // 負責 `/api/rent/colors`
 apiRouter.use("/rent", rentNewRouter); // 負責 `/api/rent/new-arrivals`
 apiRouter.use("/rent", rentDiscountedRouter); // 負責 `/api/rent/new-discounted`
 apiRouter.use("/rent", rentFilterRouter); // 負責 `/api/rent/filter`
+apiRouter.use("/rent", rentSearchRouter); // 負責 `/api/rent/search`
 apiRouter.use("/rent", rentDetailRouter); // 負責 `/api/rent/:id`
 apiRouter.use("/rent", rentRecommendedRouter); // 負責 `/api/rent/:id/recommended`
+apiRouter.use("/rent", rentIdColorRouter); // 負責 `/api/rent/:id/colors`
 // 文章相關路由
 apiRouter.use("/article", articleRouter); // `/api/article` 文章列表 & 文章內容
 // apiRouter.use("/article", articleCreateRouter); // `/api/article/create` 新增文章、取得新建文章所需數據
@@ -114,6 +130,9 @@ apiRouter.use("/coupon", couponClaimRouter); // 負責 `/api/coupon/claim`
 
 // 會員相關路由
 apiRouter.use("/member", memberRouter);
+
+apiRouter.use("/member", memberMyGroupRouter);
+
 
 // 捕捉 404 錯誤
 app.use((req, res, next) => {
