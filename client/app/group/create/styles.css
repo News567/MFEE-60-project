@@ -1,0 +1,42 @@
+
+aside {
+    width: 276px;
+    background-color: #ccc;
+    flex-shrink: 0;
+}
+
+
+.color-secondary{
+    color: var(--secondary-color);
+}
+.fs-22px{
+    font-size: 22px;
+}
+.mb-15px{
+    margin-bottom: 15px;
+}
+
+.group-create{
+    padding: 0 15px 40px 15px;
+    gap: 40px;
+    .img-container{
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        overflow: hidden;
+        background-color: #5b5b5b;
+        .img{
+            width: 100%;
+        }
+    }
+}
+.btn-primary-deep{
+    background-color: #023047 !important;
+    color: #fff !important;
+}
+
+@media (max-width:576px){
+    .row-first{
+        margin-bottom: 40px;
+    }
+}

@@ -84,7 +84,7 @@ const otpMailHtml = (otpToken, secret) => `<!DOCTYPE html>
 
     <div class="container">
         <div class="header">
-            <img src="${serverConfig.nextUrl}/kawaii_next.png" alt="Company Logo" width="150"> 
+            <img src="" alt="Company Logo" width="150"> 
             <h1 style="color: #ffffff;">重設登入密碼的一次性驗証碼(OTP)</h1>
         </div>
         <div class="content">
@@ -92,7 +92,7 @@ const otpMailHtml = (otpToken, secret) => `<!DOCTYPE html>
             <p>您的一次性驗証碼(OTP code)如下:</p>
             <div class="otp-code">${otpToken}</div>
             <p>請在您目前的重設登入密碼頁面中的"一次性驗証碼"輸入框進行輸入。或是從以下的連結連入頁面:</p>
-            <p><a href="${serverConfig.nextUrl}/user/forget-password-2p/reset?secret=${secret}" target="_blank">重設登入密碼頁面連結</a></p>
+            <p><a href="${serverConfig.nextUrl}/admin/reset?secret=${secret}" target="_blank">重設登入密碼頁面連結</a></p>
             <p>請注意驗証碼將於寄送後5分鐘後到期，如有任何問題請洽網站客服人員。</p>
         </div>
         <div class="footer">
@@ -112,7 +112,7 @@ ${otpToken}
 
 或是點選以下連結:
 
-<http://localhost:3000/user/forget-password-2p/reset?secret=${secret}>
+<http://localhost:3000/admin/reset?secret=${secret}>
     
 請注意驗証碼將於寄送後5分鐘後到期，如有任何問題請洽網站客服人員:
 
