@@ -698,8 +698,8 @@ export default function ProductList() {
                                 </div>
                             </div>
 
-                            {/* 活動日期選擇 */}
-                            <div className={styles.sideCard}>
+                            {/* TODO: p2 活動日期選擇 */}
+                            {/* <div className={styles.sideCard}>
                                 <div className={styles.cardTitle}>
                                     <h5 className="d-flex gap-2 align-items-center">
                                         <FaRegCalendar />
@@ -709,7 +709,7 @@ export default function ProductList() {
                                 <div className="">
                                     <Calendar />
                                 </div>
-                            </div>
+                            </div> */}
 
                             <button className="btn btn-primary w-100 mb-3">
                                 套用篩選
@@ -909,7 +909,7 @@ export default function ProductList() {
                                         綜合
                                     </button>
                                 </li>
-                                <li>
+                                {/* <li>
                                     <button
                                         className="dropdown-item"
                                         onClick={() =>
@@ -917,7 +917,7 @@ export default function ProductList() {
                                         }>
                                         最新上架
                                     </button>
-                                </li>
+                                </li> */}
                                 <li>
                                     <button
                                         className="dropdown-item"
@@ -936,7 +936,7 @@ export default function ProductList() {
                                         價格：由高到低
                                     </button>
                                 </li>
-                                <li>
+                                {/* <li>
                                     <button
                                         className="dropdown-item"
                                         onClick={() =>
@@ -944,7 +944,7 @@ export default function ProductList() {
                                         }>
                                         商品評分最高
                                     </button>
-                                </li>
+                                </li> */}
                             </ul>
                         </div>
                     </div>

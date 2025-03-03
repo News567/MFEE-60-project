@@ -80,8 +80,8 @@ export default function MemberGroupPage() {
         .post((api + "/member/myGroup"), condition)
         .then((res) => {
           console.log(res.data.data);
-          setMyGroups(res.data.data)
           setOriginMyGroups(res.data.data)
+          setMyGroups(res.data.data.filter(item => item.user_id != user.id))
         })
         .catch((error) => {
           console.log(error);
@@ -102,6 +102,19 @@ export default function MemberGroupPage() {
       })
     } catch (error) {
 
+    }
+  }
+  // 退出揪團
+  async function doQuitGroup(myGroupId) {
+    alert("是否確認要退出此揪團？此操作無法復原！")
+    try {
+      await axios.delete(`${api}/member/myGroup/${myGroupId}?userId=${user.id}`).then((res)=>{
+        if(res.status == "success"){
+          alert("已退出此項揪團！")
+        }
+      })
+    } catch (error) {
+      console.log(error); 
     }
   }
   // 前端篩選是否是user創辦的
@@ -126,8 +139,15 @@ export default function MemberGroupPage() {
     console.log(modalGroup);
   }
 
-  const checkStatus = ()=>{
+  // 篩選成團或取消，1成團2取消
+  const checkStatus = (e)=>{
+    switch(e){
+      case 1:
         setMyGroups(originMyGroups.filter(item => item.status == 1))
+        break
+      case 2:
+        setMyGroups(originMyGroups.filter(item => item.status == 2))
+    }
   }
 
 
@@ -165,7 +185,7 @@ export default function MemberGroupPage() {
           <h4 style={{ fontWeight: 700, margin: 0 }}>我的揪團</h4>
         </div>
         <div className={styles.sectionTop}>
-          <div className={`${styles.STdefault} ${styles.active} `} onClick={
+          {/* <div className={`${styles.STdefault} ${styles.active} `} onClick={
             (e) => {
               const btns = document.querySelectorAll(`.${styles.STdefault}`)
               btns.forEach((btn) => {
@@ -176,8 +196,8 @@ export default function MemberGroupPage() {
             }
           }>
             所有揪團
-          </div>
-          <div className={styles.STdefault} onClick={
+          </div> */}
+          <div className={`${styles.STdefault} ${styles.active} `} onClick={
             (e) => {
               const btns = document.querySelectorAll(`.${styles.STdefault}`)
               btns.forEach((btn) => {
@@ -206,7 +226,7 @@ export default function MemberGroupPage() {
                 btn.classList.remove(`${styles.active}`)
               })
               e.target.classList.add(`${styles.active}`)
-              checkStatus()
+              checkStatus(1)
             }
           }>已成團
           </div>
@@ -217,6 +237,7 @@ export default function MemberGroupPage() {
                 btn.classList.remove(`${styles.active}`)
               })
               e.target.classList.add(`${styles.active}`)
+              checkStatus(2)
             }
           }>已取消
           </div>
@@ -232,24 +253,24 @@ export default function MemberGroupPage() {
                 </a>
                 <div className={`collapse collapse-horizontal`} id={`collapseExample${i}`} data-bs-parent="#groupCards">
                   <div className="d-flex gap-2 h-100 flex-column justify-content-between ${styles.collapseSection}">
-                    <button className={`btn text-nowrap h-100 ${styles.primaryBtn} ${styles.operateBtn}`} data-bs-toggle="modal" data-bs-target="#groupModal"
+                    <button className={`btn text-nowrap h-100 ${styles.primaryBtn} ${styles.operateBtn}`} data-bs-toggle="modal" data-bs-target="#checkGroupModal"
                       >查看揪團詳情</button>
                     {mygroup.user_id == user.id ? (<>
-                      <button className={`btn text-nowrap h-100 ${styles.primaryBtn}`}>修改揪團資訊</button>
+                      <button className={`btn text-nowrap h-100 ${styles.primaryBtn}`}  data-bs-toggle="modal" data-bs-target="#groupModal">修改揪團資訊</button>
                       <button className={`btn text-nowrap h-100 ${styles.cancelBtn} btn-danger`} onClick={() => doCancel(mygroup.id)}>取消揪團</button>
                     </>) : (
-                      <button className={`btn text-nowrap h-100 ${styles.cancelBtn} btn-danger`}>退出揪團</button>
+                      <button className={`btn text-nowrap h-100 ${styles.cancelBtn} btn-danger`} onClick={()=> doQuitGroup(mygroup.id)}>退出揪團</button>
                     )}
                   </div>
                 </div>
               </div>
             )
           })) : (<div className="text-center">目前沒有揪團</div>)}
-          <div className={styles.cancel}>已取消的揪團</div>
+          {/* <div className={styles.cancel}>已取消的揪團</div> */}
         </div>
 
-        {/* 檢視詳細揪團資料的modal */}
-        <div className="modal fade" id="groupModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" key={modalGroup ? modalGroup.id : 'default'}>
+        {/* 修改揪團資料的modal */}
+        <div className="modal fade" id="groupModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" key={modalGroup ? modalGroup.id+modalGroup.id : 'default1'}>
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
@@ -267,7 +288,9 @@ export default function MemberGroupPage() {
                       <div className={styles.imgContainer}>
                         <img className={styles.img} src={`/image/group/${modalGroup.group_img}`} alt="" />
                       </div>
+                      {modalGroup && user.id && modalGroup.user_id == user.id ? (
                       <input type="file" name="file" required />
+                      ):(<></>)}
                       <div>
                         <div className="fs-22px mb-15px">
                           揪團標題
@@ -278,7 +301,7 @@ export default function MemberGroupPage() {
                         <div className="fs-22px mb-15px">
                           揪團性別
                         </div>
-                        <select className="form-select" name="gender" id="" defaultValue={modalGroup.gender} readOnly>
+                        <select className="form-select" name="gender" id="" defaultValue={modalGroup.gender} disabled>
                           <option value="default" disabled>
                             請選擇揪團性別
                           </option>
@@ -385,6 +408,29 @@ export default function MemberGroupPage() {
                         />
                       </div>
                     </>
+                  ) : (<div>載入中</div>)}
+
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="button" className="btn btn-primary">Save changes</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+        </div>
+        {/* 檢視揪團資料的modal */}
+        <div className="modal fade" id="checkGroupModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" key={modalGroup ? modalGroup.id : 'default2'}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title" id="exampleModalLabel">揪團詳情</h5>
+                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form className="group-create d-flex flex-column w-100">
+                <div className="modal-body">
+                  {modalGroup ? (<></>
                   ) : (<div>載入中</div>)}
 
                 </div>

@@ -19,7 +19,7 @@ export default function GroupDetailPage() {
     if (!user) {
       showToast("請先登入！", { autoClose: 2000 });
       setTimeout(() => {
-        window.location = "/admin/login";
+        window.location = "/member/login";
       }, 2000);
     }
   }, []);
@@ -49,6 +49,16 @@ export default function GroupDetailPage() {
   const now = new Date().toISOString().split("T")[0]
   // 限定截止日期必須在活動日期前
   const [endDate,setEndDate] = useState(null)
+  // 設定預覽圖片
+  const [uploadImg,setUploadImg] = useState(null)
+  const doImagePreview = (e) => {
+    const selectedFile = e.target.files[0];
+    console.log(selectedFile)
+    if (selectedFile) {
+      setUploadImg(URL.createObjectURL(selectedFile)); // 產生預覽圖片
+    }
+  };
+
 
   const doUpload = async (e) => {
     try {
@@ -84,9 +94,13 @@ export default function GroupDetailPage() {
               上傳首圖 <span className="color-secondary">*</span>
             </div>
             <div className="img-container">
+            {uploadImg?(
+              <img src={uploadImg} alt="" />
+            ):(
               <img src="#" alt="" />
+            )}
             </div>
-            <input type="file" name="file" required />
+            <input type="file" name="file" onChange={(e)=>{doImagePreview(e)}} required />
             {/* <div className="text-secondary">檔案上傳限制：3MB</div> */}
           </div>
           {/* <div className="col-12 col-sm-6 d-flex flex-column gap-3">

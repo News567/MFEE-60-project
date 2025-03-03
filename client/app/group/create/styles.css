@@ -25,6 +25,8 @@ aside {
         object-fit: cover;
         overflow: hidden;
         background-color: #5b5b5b;
+        display: flex;
+        justify-content: center;
         .img{
             width: 100%;
         }

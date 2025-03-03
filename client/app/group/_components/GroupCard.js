@@ -53,21 +53,21 @@ export default function GroupCard({ group }) {
                             case 2:
                                 return (
                                     <div className="d-flex align-items-center ">
-                                        <ReactSVG src="/image/group/free.svg"/>
+                                        <ReactSVG src="/image/group/free.svg" />
                                         <span className="ms-1">自由潛水</span>
                                     </div>
                                 );
                             case 3:
                                 return (
                                     <div className="d-flex align-items-center ">
-                                        <ReactSVG src="/image/group/aqualung-diving-svgrepo-com.svg"/>
+                                        <ReactSVG src="/image/group/aqualung-diving-svgrepo-com.svg" />
                                         <span className="ms-1">水肺潛水</span>
                                     </div>
                                 );
-                                case 4:
-                                return(
+                            case 4:
+                                return (
                                     <div className="d-flex align-items-center ">
-                                    <i className="icon bi bi-people-fill" />
+                                        <i className="icon bi bi-people-fill" />
                                         <span className="ms-1">其他</span>
                                     </div>
                                 )
@@ -92,7 +92,7 @@ export default function GroupCard({ group }) {
                     <div>
                         <i className="bi bi-person color-primary" />{" "}
                         {(() => {
-                            {/* console.log("123"); */}
+                            {/* console.log("123"); */ }
                             switch (group.gender) {
                                 case 1:
                                     return "不限性別";
@@ -103,11 +103,14 @@ export default function GroupCard({ group }) {
                             }
                         })()}
                     </div>
-                    <div>已揪：{group.participant_number}/{group.max_number}</div>
+
+                    {group.participant_number == group.max_number ? (
+                        <div className="color-primary">已成團</div>
+                    ) : (<div>已揪：{group.participant_number}/{group.max_number}</div>)}
                 </div>
-                {now < new Date(group.sign_end_date)?(<div className="color-primary">
+                {now < new Date(group.sign_end_date) ? (<div className="color-primary">
                     揪團截止:{group.sign_end_date}
-                </div>):(<div className="text-secondary">
+                </div>) : (<div className="text-secondary">
                     揪團截止:{group.sign_end_date} <span className="text-danger">已截止</span>
                 </div>)}
             </div>
