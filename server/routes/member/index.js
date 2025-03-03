@@ -353,11 +353,19 @@ router.post("/users/login", upload.none(), async (req, res) => {
 });
 
 router.post("/users/logout", checkToken, (req, res) => {
-  res.clearCookie("token"); // 如果你的 token 是存在 cookie，這樣可以清除它
-  res.json({
-    status: "success",
-    message: "登出成功",
-  });
+  try {
+      res.clearCookie("token"); // 清除 token（如果存放於 cookie）
+      res.json({
+          status: "success",
+          message: "登出成功",
+      });
+  } catch (error) {
+      console.error("登出錯誤:", error);
+      res.status(500).json({
+          status: "error",
+          message: "伺服器錯誤，登出失敗",
+      });
+  }
 });
 
 

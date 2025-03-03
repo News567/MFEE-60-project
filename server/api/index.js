@@ -5,10 +5,8 @@ import logger from "morgan";
 import cookieParser from "cookie-parser";
 import path from "path";
 import createError from "http-errors";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
 
 // 路由模組
 import productRouter from "../routes/products/index.js";
@@ -64,7 +62,7 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(process.cwd(), "../public")));
+app.use("/img", express.static('public/img'));
 // 測試 API
 app.get("/", (req, res) => {
   res.json({ message: "Express server is running" });
@@ -128,8 +126,7 @@ apiRouter.use("/coupon", couponClaimRouter); // 負責 `/api/coupon/claim`
 
 // 會員相關路由
 apiRouter.use("/member", memberRouter);
-app.use("/img", express.static(path.join(process.cwd(), "server/public/img")));
-// app.use("/img", express.static(path.join(process.cwd(), "server/public/img")));
+
 apiRouter.use("/member", memberMyGroupRouter);
 
 
