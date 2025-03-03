@@ -42,7 +42,10 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const storedToken = localStorage.getItem(appKey);
-    if (!storedToken && !["/member/login", "/member/register", "/member/forgot"]) {
+    if (
+      !storedToken &&
+      !["/member/login", "/member/register", "/member/forgot"]
+    ) {
       router.replace("/member/login");
     }
   }, [router, pathname]);
@@ -101,31 +104,12 @@ export function AuthProvider({ children }) {
   //   }
   // };
   const logout = async () => {
-    const API = "http://localhost:3005/api/member/users/logout";
-    const token = localStorage.getItem(appKey);
-    try {
-      if (!token) throw new Error("身分認證訊息不存在, 請重新登入");
-      const res = await fetch(API, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    localStorage.removeItem("token"); // 移除 localStorage 的 token
+        sessionStorage.removeItem("token"); // 若 token 存在 sessionStorage 也要移除
+        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"; // 清除 cookie 的 token
 
-      const result = await res.json();
-      if (result.status != "success") throw new Error(result.message);
-      localStorage.removeItem(appKey);
-      // setToken(null);
-      setUser(null);
-      // setError(null);
-      router.replace("/");
-    } catch (err) {
-      console.log(err);
-      alert(err.message);
-      localStorage.removeItem(appKey); // 登出失敗改為移除 localStorage 中的登入 token
-      setUser(null); // 使用者設為 null
-    }
-  };
+        router.push("/"); // 重新導向登入頁面
+    };
 
   // 处理用户注册
   const register = async (email, password, password1) => {
@@ -152,79 +136,74 @@ export function AuthProvider({ children }) {
       // 顯示錯誤訊息以便偵錯
       alert(error.message || "註冊失敗，請稍後再試");
       // 如果錯誤訊息中包含 '409' 或 'Email 已存在'，就跳轉到 login 頁面
-      if (error.message && (error.message.includes("409") || error.message.includes("已存在"))) {
+      if (
+        error.message &&
+        (error.message.includes("409") || error.message.includes("已存在"))
+      ) {
         router.push("/member/login");
       }
     }
   };
 
-
   // 獲取使用者個人資料
   useEffect(() => {
-    console.log({ user, pathname });
-    if (user == -1) return;
-    if (!user && protectedRoutes.includes(pathname)) {
-      alert("請先登入");
-      router.replace(loginRoute);
-    }
-  }, [pathname, user]);
-
-  useEffect(() => {
-    let token = localStorage.getItem(appKey);
+    const token = localStorage.getItem(appKey);
     if (!token) {
-      setUser(null); // 確保未登入時使用是 null      
-      return;
-    }
-    const fetchData = async () => {
-      let API = "http://localhost:3005/api/member/users/status";
-      try {
-        const res = await fetch(API, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        const result = await res.json();
-        if (result.status != "success") throw new Error(result.message);
-        token = result.data.token;
-        localStorage.setItem(appKey, token);
-        const newUser = jwt.decode(token);
-        setUser(newUser)
-      } catch (err) {
-        console.log(err);
-        localStorage.removeItem(appKey); // 判斷狀態失敗改為移除 localStorage 中的登入 token
-      }
-    };
-    fetchData();
-  }, []);
-
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem(appKey);
-    if (!storedToken) {
       setUser(null);
       setLoading(false);
       return;
     }
 
-    // const decodedUser = jwt.decode(storedToken);
-    // console.log("🔍 解碼 Token:", decodedUser);
+    const fetchData = async () => {
+      try {
+        const res = await fetch(
+          "http://localhost:3005/api/member/users/status",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-    // if (!decodedUser || !decodedUser.id) {
-    //   console.error("❌ 無法取得使用者 ID");
-    //   localStorage.removeItem(appKey);
-    //   setUser(null);
-    //   setLoading(false);
-    //   return;
-    // }
-    // setUser(decodedUser);
+        const result = await res.json();
+        if (result.status !== "success") throw new Error(result.message);
+
+        localStorage.setItem(appKey, result.data.token);
+        const newUser = jwt.decode(result.data.token);
+        console.log("✅ 使用者登入成功:", newUser);
+        setUser(newUser);
+      } catch (err) {
+        console.error("❌ 取得用戶狀態失敗:", err);
+        localStorage.removeItem(appKey);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (!user ||user === -1 || !user.id) return;
+    const storedToken = localStorage.getItem("loginWithToken");
+
+    if (!storedToken) {
+      setUser(null);
+      setLoading(false); // ✅ 避免無限 `loading`
+      return;
+    }
+    
 
     const fetchProfile = async () => {
       try {
         const profileAPI = `http://localhost:3005/api/member/users/${user.id}`;
         const res = await fetch(profileAPI, {
           method: "GET",
-          headers: { Authorization: `Bearer ${localStorage.getItem("loginWithToken")}` },
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+          },
         });
 
         const result = await res.json();
@@ -244,16 +223,28 @@ export function AuthProvider({ children }) {
           emergency_phone: "",
           img: "/img/default.png",
         });
+        
       } finally {
         setLoading(false);
       }
     };
 
     fetchProfile();
-  }, []);
+  }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, profile, loading, error, login, logout, register }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        profile,
+        loading,
+        error,
+        login,
+        logout,
+        register,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -262,7 +253,7 @@ export function AuthProvider({ children }) {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error("useAuth 必須在 AuthProvider 內使用");
   }
   return context;
 };

@@ -9,7 +9,7 @@ import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { pool } from "../../config/mysql.js";
 import path from "path";
-import fs from "fs/promises";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 dotenv.config();
@@ -30,20 +30,37 @@ const corsOptions = {
 };
 
 const storage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    try {
-      const userFolderPath = path.join(__dirname, "../../public/img/member", req.user.id.toString());
-      await fs.mkdir(userFolderPath, { recursive: true });
-      cb(null, userFolderPath);
-    } catch (error) {
-      cb(error);
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, "../../public/img/member"); // **這樣會存到伺服器內**
+    
+    // **確保資料夾存在**
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
     }
+    
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
-    cb(null, "0.png");
+    cb(null, uuidv4() + path.extname(file.originalname));
   },
 });
-const upload = multer({ storage });
+
+// **正確初始化 `multer`**
+const upload = multer({ 
+  storage, 
+  limits: { fileSize: 2 * 1024 * 1024 }, 
+  fileFilter: (req, file, cb) => {
+    const fileTypes = /jpeg|jpg|png|webp/;
+    const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = fileTypes.test(file.mimetype);
+    if (extname && mimetype) {
+      return cb(null, true);
+    } else {
+      return cb(new Error("❌ 只允許上傳 JPEG、JPG、PNG、GIF 格式的圖片"));
+    }
+  }
+});
+
 
 const router = express.Router();
 router.use(cors(corsOptions));
@@ -76,7 +93,7 @@ router.get("/users/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const sql =
-      "SELECT id, name, email, birthday, phone, address, emergency_contact, emergency_phone, img FROM `users` WHERE id = ?";
+      "SELECT id, name, email, birthday, gender, phone, address, emergency_contact, emergency_phone, img FROM `users` WHERE id = ?";
     const [rows] = await pool.execute(sql, [id]);
 
     if (rows.length === 0) {
@@ -84,6 +101,14 @@ router.get("/users/:id", async (req, res) => {
         .status(404)
         .json({ status: "error", message: "找不到該使用者" });
     }
+    const genderReverseMapping = {
+      1: "male",
+      2: "female",
+      3: "other",
+    };
+    rows[0].gender = genderReverseMapping[rows[0].gender] || "";
+
+    console.log("後端返回的 user 資料:", rows[0]);
 
     res.status(200).json({
       status: "success",
@@ -96,7 +121,7 @@ router.get("/users/:id", async (req, res) => {
   }
 });
 
-router.put("/users/:id", checkToken, upload.none(), async (req, res) => {
+router.put("/users/:id", checkToken, async (req, res) => {
   const { id } = req.params;
   if (parseInt(id) !== req.decoded.id) {
     return res.status(403).json({
@@ -145,7 +170,6 @@ router.put("/users/:id", checkToken, upload.none(), async (req, res) => {
         errorMsg: "手機號碼格式不正確",
       },
     ];
-
     for (const field of fields) {
       if (field.value) {
         if (field.regex && !field.regex.test(field.value)) {
@@ -237,32 +261,29 @@ router.post("/users/register", async (req, res) => {
   }
 });
 
-router.post("/users/upload-img", upload.single("img"), async (req, res) => {
+router.post("/users/upload", upload.single("avatar"), async (req, res) => {
   try {
-    const { userId, image } = req.body;
-    if (!userId || !image) {
-      return res.status(400).json({ status: "error", message: "缺少 userId 或圖片" });
+    if (!req.file) {
+      return res.status(400).json({ message: "❌ 請選擇一張圖片" });
     }
 
-    const userFolderPath = path.join(process.cwd(), "client/public/img/member", userId.toString());
-    await fs.mkdir(userFolderPath, { recursive: true });
+    const imagePath = `/img/member/${req.file.filename}`;
+    console.log("📸 上傳成功，圖片路徑:", imagePath);
 
- // 解析 Base64 圖片，並存成 `1.png`
-    const imageBuffer = Buffer.from(image, "base64");
-    const imagePath = path.join(userFolderPath, "1.png");
-    await fs.writeFile(imagePath, imageBuffer);
+    const sql = "UPDATE users SET img = ? WHERE id = ?";
+    await pool.execute(sql, [imagePath, req.body.userId]);
 
-
-    // 存入資料庫
-    const imgPath = `/img/member/${userId}/1.png`;
-    await pool.execute("UPDATE users SET img = ? WHERE id = ?", [imgPath, userId]);
-
-    res.json({ status: "success", message: "頭像上傳成功", img: imgPath });
-  } catch (error) {
-    console.error("❌ 頭像存儲失敗:", error);
-    res.status(500).json({ status: "error", message: "頭像存儲失敗", error: error.message });
+    res.json({
+      status: "success",
+      message: "✅ 圖片上傳成功！",
+      img: imagePath,
+    });
+  } catch (err) {
+    console.error("❌ 圖片存儲失敗:", err);
+    res.status(500).json({ message: "❌ 圖片存儲失敗" });
   }
 });
+
 
 
 router.delete("/users/:id", async (req, res) => {
@@ -332,24 +353,12 @@ router.post("/users/login", upload.none(), async (req, res) => {
 });
 
 router.post("/users/logout", checkToken, (req, res) => {
-  // const token = jwt.sign(
-  //   {
-  //     account: "",
-  //     mail: "",
-  //     head: "",
-  //   },
-  //   secretKey,
-  //   { expiresIn: "-10s" }
-  // );
+  res.clearCookie("token"); // 如果你的 token 是存在 cookie，這樣可以清除它
   res.json({
     status: "success",
-    // data: { token },
     message: "登出成功",
   });
 });
-
-
-
 
 
 router.post("/users/status", checkToken, (req, res) => {

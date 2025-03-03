@@ -189,13 +189,13 @@
   justify-content: center;
   align-items: center;
   border-radius: 50px;
-  border: 1px solid var(--gray-600, #898989);
-  color: #a3a3a3;
+  background-color: rgba(163, 163, 163, 0.2);
+  color: #6c6b6b;
   cursor: pointer; /* 讓 label 像按鈕一樣可點擊 */
   transition: background-color 0.3s ease;
 }
 .dfbtn:hover {
-  background-color: rgba(163, 163, 163, 0.2); /* 滑鼠懸停時變淡 */
+  background-color: var(--secondary-color,#ffd500); /* 滑鼠懸停時變淡 */
 }
 .line2 {
   width: 2px;
