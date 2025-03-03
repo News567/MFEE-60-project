@@ -14,13 +14,6 @@ export function AuthProvider({ children }) {
   // -1: 載入中
   // {email: achu@test.com}: 登入
 
-  // const [token, setToken] = useState(() => {
-  //   if (typeof window !== "undefined") {
-  //     return localStorage.getItem(appKey);
-  //   }
-  //   return null;
-  // });
-
   const [user, setUser] = useState(-1);
   const [profile, setProfile] = useState({
     id: "",
@@ -104,12 +97,33 @@ export function AuthProvider({ children }) {
   //   }
   // };
   const logout = async () => {
-    localStorage.removeItem("token"); // 移除 localStorage 的 token
-        sessionStorage.removeItem("token"); // 若 token 存在 sessionStorage 也要移除
-        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"; // 清除 cookie 的 token
+    let API = "http://localhost:3005/api/member/users/logout";
+    let token = localStorage.getItem(appKey);
 
-        router.push("/"); // 重新導向登入頁面
-    };
+    try {
+        if (!token) throw new Error("身分認證訊息不存在, 請重新登入");
+
+        const res = await fetch(API, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        const result = await res.json();
+        if (result.status !== "success") throw new Error(result.message);
+
+        console.log("✅ 成功登出:", result.message);
+    } catch (err) {
+        console.error("❌ 登出錯誤:", err);
+        alert(err.message);
+    }
+
+    // 無論 API 成功或失敗，都應該清除 localStorage
+    localStorage.removeItem(appKey);
+    setUser(null);
+    router.push("/");
+};
 
   // 处理用户注册
   const register = async (email, password, password1) => {
@@ -186,7 +200,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (!user ||user === -1 || !user.id) return;
+    if (!user || user === -1 || !user.id) return;
     const storedToken = localStorage.getItem("loginWithToken");
 
     if (!storedToken) {
@@ -194,7 +208,7 @@ export function AuthProvider({ children }) {
       setLoading(false); // ✅ 避免無限 `loading`
       return;
     }
-    
+
 
     const fetchProfile = async () => {
       try {
@@ -223,7 +237,7 @@ export function AuthProvider({ children }) {
           emergency_phone: "",
           img: "/img/default.png",
         });
-        
+
       } finally {
         setLoading(false);
       }
