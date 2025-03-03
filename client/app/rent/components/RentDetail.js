@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation"; // 修正匯入路徑 //獲取 url 當中的 id
-// import { jwtDecode } from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 import axios from "axios";
 import dynamic from "next/dynamic"; // 動態導入，動態加載 flatpickr，從而避免伺服器端渲染時的問題
@@ -27,6 +27,7 @@ const Flatpickr = dynamic(() => import("flatpickr"), { ssr: false });
 const API_BASE_URL = "http://localhost:3005/api";
 
 export default function RentProductDetail() {
+  const { cartData, addToCart, fetchCart } = useCart();
   const router = useRouter();
   const redirectToLogin = () => {
     router.push("/login"); // 跳轉到登錄頁面
@@ -70,7 +71,7 @@ export default function RentProductDetail() {
   // const [isFavorite, setIsFavorite] = useState(0); // 愛心收藏功能
   const [loading, setLoading] = useState(true); // 加載狀態
   const [error, setError] = useState(null); // 錯誤狀態
-  const { fetchCart } = useCart(); // 從 cartContext 中獲取 fetchCart 方法
+  // const { fetchCart } = useCart(); // 從 cartContext 中獲取 fetchCart 方法
   const [mainImage, setMainImage] = useState(""); // 商品大張圖片（要做大圖切換
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -197,6 +198,7 @@ export default function RentProductDetail() {
       setSelectedColor(colorName); // 如果未選中，則更新選中的顏色
     }
   };
+  
 
   // 根據是否有特價動態調整價格樣式
   useEffect(() => {
@@ -716,46 +718,56 @@ export default function RentProductDetail() {
     // 前面token那邊已經有獲取會員 ID
 
     const cartData = {
-      userId: parseInt(userId, 10), // 從 localStorage 中獲取的會員 ID，並轉換為數字
+      // userId: parseInt(userId, 10), // 從 localStorage 中獲取的會員 ID，並轉換為數字
       // userId: userId
       type: "rental", // (寫死)
       rentalId: product.id, // 商品 ID
-      rentalName: product.name, // 商品名稱
-      rentalBrand: product.brand_name, // 商品的品牌名稱
+      // rentalName: product.name, // 商品名稱
+      // rentalBrand: product.brand_name, // 商品的品牌名稱
       quantity: quantity, // 租借數量
       color: selectedColor, // 選擇的顏色名稱
       colorRGB: selectedColorRGB, // 選擇的顏色 RGB 值
       startDate: formattedStartDate, // 轉換為 YYYY-MM-DD 格式
       endDate: formattedEndDate, // 轉換為 YYYY-MM-DD 格式
-      price: product.price, // 有特價選取特價的價格，沒有的話就是原價  product.price2 ? product.price2 : product.price
+      price: product.price2 ? product.price2 : product.price, // 有特價選取特價的價格，沒有的話就是原價  product.price2 ? product.price2 : product.price
     };
 
     console.log("傳遞的租借購物車資料:", cartData); // 檢查資料格式
+    // 使用 CartContext 的 addToCart 方法
+    const success = await addToCart(userId, cartItem);
 
-    try {
-      const response = await axios.post(`${API_BASE_URL}/cart/add`, cartData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      console.log("API Response:", response.data); // 調試訊息：檢查 API 回應
-
-      if (response.data.success) {
-        alert("成功加入購物車！");
-        return true; // 成功加入購物車，觸發動畫
-      } else {
-        alert(response.data.message || "加入購物車失敗");
-        return false; // 不觸發動畫
-      }
-    } catch (error) {
-      console.error("加入購物車失敗:", error);
-      if (error.response) {
-        console.error("後端錯誤訊息:", error.response.data);
-      }
-      alert("加入購物車失敗，請稍後再試");
-      return false; // 不觸發動畫
+    if (success) {
+      alert("成功加入購物車！");
+      return true;
+    } else {
+      alert("加入購物車失敗");
+      return false;
     }
+
+    // try {
+    //   const response = await axios.post(`${API_BASE_URL}/cart/add`, cartData, {
+    //     headers: {
+    //       Authorization: `Bearer ${token}`,
+    //     },
+    //   });
+
+    //   console.log("API Response:", response.data); // 調試訊息：檢查 API 回應
+
+    //   if (response.data.success) {
+    //     alert("成功加入購物車！");
+    //     return true; // 成功加入購物車，觸發動畫
+    //   } else {
+    //     alert(response.data.message || "加入購物車失敗");
+    //     return false; // 不觸發動畫
+    //   }
+    // } catch (error) {
+    //   console.error("加入購物車失敗:", error);
+    //   if (error.response) {
+    //     console.error("後端錯誤訊息:", error.response.data);
+    //   }
+    //   alert("加入購物車失敗，請稍後再試");
+    //   return false; // 不觸發動畫
+    // }
   };
 
   if (loading) return <div>商品載入中...</div>;
