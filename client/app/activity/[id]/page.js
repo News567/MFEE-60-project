@@ -6,7 +6,7 @@ import styles from "./detail.module.css";
 import "./Calendar.css";
 import { useCart } from "@/hooks/cartContext";
 import { useRouter } from "next/router";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 
 // import icons
 import {

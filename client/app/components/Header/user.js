@@ -3,7 +3,7 @@ import { useState } from "react";
 import { FaRegUser } from "react-icons/fa";
 import { Menu, MenuItem, IconButton } from "@mui/material";
 import Link from "next/link";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function User() {
   const { user, logout } = useAuth();
@@ -27,7 +27,7 @@ export default function User() {
           <FaRegUser />
         </IconButton>
       ) : (
-        <Link href="/admin/login" className="header-cart a">
+        <Link href="/member/login" className="header-cart a">
           <FaRegUser />
         </Link>
       )}
@@ -45,16 +45,16 @@ export default function User() {
           {user ? (
             <>
               <MenuItem onClick={handleClose}>
-                <Link href="/admin/favorites">我的收藏</Link>
+                <Link href="/member/favorites">我的收藏</Link>
               </MenuItem>
               <MenuItem onClick={handleClose}>
-                <Link href="/admin/coupons">優惠券</Link>
+                <Link href="/coupons">優惠券</Link>
               </MenuItem>
               <MenuItem onClick={handleClose}>
-                <Link href="/admin/group">我的團購</Link>
+                <Link href="/member/group">我的團購</Link>
               </MenuItem>
               <MenuItem onClick={handleClose}>
-                <Link href="/admin/account">帳戶設定</Link>
+                <Link href="/member/account">帳戶設定</Link>
               </MenuItem>
               <MenuItem
                 onClick={() => {
@@ -68,7 +68,7 @@ export default function User() {
             </>
           ) : (
             <MenuItem onClick={handleClose}>
-              <Link href="/admin/login">登入</Link>
+              <Link href="/member/login">登入</Link>
             </MenuItem>
           )}
         </div>

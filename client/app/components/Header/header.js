@@ -361,12 +361,12 @@ export default function Header() {
             <h5 className="px-3 pt-4 py-2 text-secondary">帳戶</h5>
             <ul className="m-0 px-4 list-unstyled">
               <li className="px-3 py-2">
-                <Link className="a text-reset" href="/admin/login">
+                <Link className="a text-reset" href="/member/login">
                   登入
                 </Link>
               </li>
               <li className="px-3 pt-2 pb-4">
-                <Link className="a text-reset" href="/admin/register">
+                <Link className="a text-reset" href="/member/register">
                   註冊
                 </Link>
               </li>

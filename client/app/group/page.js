@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import "./styles.css";
 import Link from "next/link";
 import axios from "axios";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 export default function GroupHomePage() {
   // 檢查登入狀態用
   const { user } = useAuth();

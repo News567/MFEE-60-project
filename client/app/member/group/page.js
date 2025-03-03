@@ -3,7 +3,7 @@ import styles from "./group.module.css";
 import GroupCard from "@/group/_components/GroupCard";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 
 
@@ -77,7 +77,7 @@ export default function MemberGroupPage() {
     if (!condition.user) return
     const getList = async () => {
       await axios
-        .post((api + "/admin/myGroup"), condition)
+        .post((api + "/member/myGroup"), condition)
         .then((res) => {
           console.log(res.data.data);
           setMyGroups(res.data.data)

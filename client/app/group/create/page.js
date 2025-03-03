@@ -1,6 +1,6 @@
 "use client";
 import "./styles.css";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useEffect } from "react";
 import { useState } from "react";
 import Link from "next/link";

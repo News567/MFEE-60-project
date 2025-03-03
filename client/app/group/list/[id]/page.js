@@ -9,7 +9,7 @@ import styles from "../products.module.css";
 import { FaRegCalendar } from "react-icons/fa";
 import Calendar from "react-calendar";
 import "./Calendar.css";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function GroupDetailPage() {
   const [count, setCount] = useState(0);
