@@ -1,9 +1,10 @@
-import React, { useRef, useEffect, useState } from "react"; // 確保 useRef 已經導入
+// client/app/article/components/editMyeditor.jsx
+"use client";
+import React, { useRef, useEffect, useState } from "react";
 
 class MyUploadAdapter {
-  constructor(loader, articleId) {
+  constructor(loader) {
     this.loader = loader;
-    this.articleId = articleId; // 傳遞文章 ID
   }
 
   upload() {
@@ -31,15 +32,15 @@ class MyUploadAdapter {
   }
 }
 
-function MyCustomUploadAdapterPlugin(editor, articleId) {
+function MyCustomUploadAdapterPlugin(editor) {
   editor.plugins.get("FileRepository").createUploadAdapter = (loader) => {
-    return new MyUploadAdapter(loader, articleId);
+    return new MyUploadAdapter(loader);
   };
 }
 
-const Myeditor = ({ onChange, name, value, articleId }) => {
-  const editorRef = useRef(); // 初始化 useRef
-  const [editorLoaded, setEditorLoaded] = useState(false); // 用於檢查 CKEditor 是否加載完成
+const EditMyeditor = ({ value, onChange }) => {
+  const editorRef = useRef();
+  const [editorLoaded, setEditorLoaded] = useState(false);
   const { CKEditor, ClassicEditor } = editorRef.current || {};
 
   useEffect(() => {
@@ -49,7 +50,7 @@ const Myeditor = ({ onChange, name, value, articleId }) => {
         CKEditor: mod.CKEditor,
         ClassicEditor: require("@ckeditor/ckeditor5-build-classic"),
       };
-      setEditorLoaded(true); // 設置加載完成狀態
+      setEditorLoaded(true);
     });
   }, []);
 
@@ -57,15 +58,11 @@ const Myeditor = ({ onChange, name, value, articleId }) => {
     <>
       {editorLoaded ? (
         <CKEditor
-          name={name}
           editor={ClassicEditor}
           data={value}
           onChange={(event, editor) => onChange(editor.getData())}
           config={{
-            extraPlugins: [MyCustomUploadAdapterPlugin], // 確保插件已註冊
-            uploadAdapter: (loader) => {
-              return new MyUploadAdapter(loader, articleId); // 確保上傳適配器已配置
-            },
+            extraPlugins: [MyCustomUploadAdapterPlugin],
           }}
         />
       ) : (
@@ -75,4 +72,4 @@ const Myeditor = ({ onChange, name, value, articleId }) => {
   );
 };
 
-export default Myeditor;
+export default EditMyeditor;

@@ -46,17 +46,32 @@
   object-position: center; /* 圖片居中顯示 */
 }
 
-.article-content-area {
+/* .article-content-area {
   margin: 20px 0;
+} */
+.article-content-area {
+  max-width: 100%; /* 限制容器最大寬度 */
+  margin: 20px 0; /* 可選：增加上下間距 */
+  overflow: hidden; /* 隱藏超出容器的部分 */
 }
+
+.article-content-area img {
+  max-width: 100%; /* 限制圖片最大寬度為容器的 100% */
+  height: auto; /* 高度自動調整，保持圖片比例 */
+  display: block; /* 確保圖片不會有額外的空白間距 */
+  margin: 10px 0; /* 可選：增加上下間距 */
+}
+
 .tag-area {
-  padding: 3rem 20px 20px 0;
+  /* padding: 3rem 20px 20px 0; */
+
   border-bottom: 1px solid #ddd; /* 可視需求添加邊框 */
+
 }
 .tag-area .tag {
   display: inline-block;
   padding: 0.5em 1em; /* 增加 padding，避免文字擠在邊框裡 */
-  margin: 0 0 0 10px;
+  margin: 20px 10px 30px 0 ;
   border: 1px solid rgba(0, 0, 0, 0.25); /* 外框顏色 */
   border-radius: 20px; /* 讓外框變成橢圓形 */
   color: rgba(0, 0, 0, 0.5); /* 文字顏色 */
@@ -288,7 +303,6 @@
   margin: 20px 0;
 }
 
-
 /* 父容器設置 */
 .related-article-area {
   display: grid;
@@ -328,7 +342,6 @@
   flex-direction: column;
   justify-content: space-between;
   height: 50%; /* 使文字區域佔卡片的另一半高度 */
-
 }
 
 /* 卡片標題與內容 */
@@ -340,7 +353,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-
 }
 
 .related-card .card-content {
@@ -348,9 +360,10 @@
   font-size: 14px;
   font-weight: 400;
   margin-top: 8px;
-  flex-grow: 1;
+  line-height: 1.4; /* 設置行高 */
+  max-height: 2.8em; /* 限制高度（2 行） */
   overflow: hidden;
-  text-overflow: ellipsis; /* 顯示省略號 */
+  text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2; /* 最多顯示兩行 */

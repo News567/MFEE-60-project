@@ -1,5 +1,48 @@
+/* article-controls */
+.article-controls {
+  width: 100%;
+  height: 60px;
+  margin-bottom: 20px; /* 添加底部间距 */
+  display: flex;
+  justify-content: space-between; /* 将筛选器和按钮区域分开 */
+  align-items: center; /* 垂直居中 */
+  padding: 0 15px 15px 0; /* 添加一些内边距 */
+  background-color: #fff; /* 设置背景颜色 */
+  margin: 0 8px;
+}
+.article-controls-btn {
+  display: flex;
+  justify-content: flex-end; /* 将按钮区域置于右侧 */
+  gap: 10px; /* 按钮之间的间距 */
+  
+}
+
+.article-controls-btn .btn-icon {
+  margin-right: 10px;
+}
+.article-controls-btn .btn {
+  width: 120px;
+  height: 40px;
+  display: inline-flex; /* 讓按鈕成為彈性盒元素 */
+  align-items: center; /* 垂直居中对齐内容 */
+  padding: 8px 19px;
+  background-color: #029cad;
+  color: #fff;
+  text-align: center;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.article-controls-btn .btn:hover {
+  background-color: #02818b; /* 滑鼠懸停時改變背景顏色 */
+  color: #fff;
+}
+
 .create-form {
   padding: 32px;
+  margin-bottom: 30px;
   border-top: 6px solid#219ebc;
   border-right: 2px solid #219ebc;
   border-bottom: 2px solid #219ebc;
@@ -54,8 +97,9 @@
   object-fit: cover; /* 確保圖片覆蓋整個區域 */
 }
 
-
 .create-title {
+  flex: 1; /* 讓標題佔滿剩餘空間 */
+  text-align: left; /* 左對齊標題 */
   color: #000;
   font-family: "Noto Sans TC";
   font-size: 24px;
