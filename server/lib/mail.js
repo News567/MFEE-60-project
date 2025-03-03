@@ -22,14 +22,14 @@ const gmail = {
 }
 
 // 使用 https://ethereal.email/
-const ethereal = {
-  host,
-  port: 587,
-  auth: {
-    user,
-    pass,
-  },
-}
+// const ethereal = {
+//   host,
+//   port: 587,
+//   auth: {
+//     user,
+//     pass,
+//   },
+// }
 
 // 定義所有email的寄送伺服器位置
 const transport = provider === 'gmail' ? gmail : ethereal
@@ -131,6 +131,369 @@ export const sendOtpMail = async (to, otpToken, secret = '') => {
     subject: '重設登入密碼的一次性驗証碼(OTP)',
     text: otpMailText(otpToken, secret),
     html: otpMailHtml(otpToken, secret),
+  }
+
+  // 呼叫transport函式
+  const transporter = nodemailer.createTransport(transport)
+
+  // 寄送email
+  try {
+    const info = await transporter.sendMail(mailOptions)
+    if (isDev) console.log('Message sent: ', info.messageId)
+  } catch (err) {
+    console.log(err)
+    throw new Error('無法寄送email')
+  }
+}
+
+// 揪團成功，告知揪團參加者
+const sendJoinGroupSuccessHTML = (groupName, date, link)=>`<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>揪團成團通知</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f6f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #007BFF;
+            padding: 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .content {
+            padding: 20px;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #777777;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>您所參加的揪團開團成功！</h1>
+        </div>
+        <div class="content">
+            <p>親愛的潛水愛好者，您好：</p>
+            <p>恭喜您！您所報名的揪團 <strong>${groupName}</strong> 已成功成立！</p>
+            <p>活動時間：<strong>${date}</strong></p>
+            <p>請點擊以下連結查看詳細資訊：</p>
+            <p><a href="${link}" target="_blank">查看活動詳情</a></p>
+            <p>DiveIn全體敬祝您與其他團員們共度美好的潛水時光！</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2025 DiveIn.</p>
+        </div>
+    </div>
+
+</body>
+</html>`;
+
+// 電子郵件文字訊息樣版
+const sendJoinGroupSuccessText = (groupName, date, link) => `親愛的潛水愛好者 您好：
+恭喜您！您所報名的揪團${groupName}已成功成立！活動時間：${date}，請點擊以下連結查看詳細資訊：${link}，DiveIn全體敬祝您與其他團員們共度美好的潛水時光！`
+
+
+// 寄送參加的揪團成功成團的通知信件
+export const sendJoinGroupSuccessMail = async (to, groupName, date,link) => {
+  // 寄送email
+  const mailOptions = {
+    // 這裡要改寄送人
+    from: user, // sender address
+    to: to, // list of receivers
+    subject: `參與的揪團活動${groupName}成立通知`,
+    text: sendJoinGroupSuccessText(groupName, date, link),
+    html: sendJoinGroupSuccessHTML(groupName, date, link),
+  }
+
+  // 呼叫transport函式
+  const transporter = nodemailer.createTransport(transport)
+
+  // 寄送email
+  try {
+    const info = await transporter.sendMail(mailOptions)
+    if (isDev) console.log('Message sent: ', info.messageId)
+  } catch (err) {
+    console.log(err)
+    throw new Error('無法寄送email')
+  }
+}
+
+
+// 成團後告知團主
+const sendHostGroupSuccessHTML = (groupName, date, link)=>`<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>揪團成團通知</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f6f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #007BFF;
+            padding: 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .content {
+            padding: 20px;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #777777;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>您所舉辦的揪團順利成團！</h1>
+        </div>
+        <div class="content">
+            <p>親愛的潛水愛好者，您好：</p>
+            <p>恭喜您！您所舉辦的揪團 <strong>${groupName}</strong> 已成功集齊人數成立！</p>
+            <p>活動時間：<strong>${date}</strong></p>
+            <p>請點擊以下連結查看詳細資訊：</p>
+            <p><a href="${link}" target="_blank">查看活動詳情</a></p>
+            <p>DiveIn全體敬祝您與其他團員們共度美好的潛水時光！</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2025 DiveIn.</p>
+        </div>
+    </div>
+
+</body>
+</html>`;
+
+// 電子郵件文字訊息樣版
+const sendHostGroupSuccessText = (groupName, date, link) => `親愛的潛水愛好者 您好：
+恭喜您！您所報名的揪團${groupName}已成功成立！活動時間：${date}，請點擊以下連結查看詳細資訊：${link}，DiveIn全體敬祝您與其他團員們共度美好的潛水時光！`
+
+
+// 寄送參加的揪團成功成團的通知信件
+export const sendHostGroupSuccessMail = async (to, groupName, date,link) => {
+  // 寄送email
+  const mailOptions = {
+    // 這裡要改寄送人
+    from: user, // sender address
+    to: to, // list of receivers
+    subject: `創立的揪團活動${groupName}成立通知`,
+    text: sendHostGroupSuccessText(groupName, date, link),
+    html: sendHostGroupSuccessHTML(groupName, date, link)
+  }
+
+  // 呼叫transport函式
+  const transporter = nodemailer.createTransport(transport)
+
+  // 寄送email
+  try {
+    const info = await transporter.sendMail(mailOptions)
+    if (isDev) console.log('Message sent: ', info.messageId)
+  } catch (err) {
+    console.log(err)
+    throw new Error('無法寄送email')
+  }
+}
+
+// 團主取消揪團後傳送給參加者
+const sendJoinGroupCancelHTML = (groupName, date)=>`<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>參加的揪團活動已被取消</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f6f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #007BFF;
+            padding: 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .content {
+            padding: 20px;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #777777;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>您所參加的揪團已取消！</h1>
+        </div>
+        <div class="content">
+            <p>親愛的潛水愛好者，您好：</p>
+            <p>很遺憾地通知您，您所參加的原定於${date}舉行的揪團 <strong>${groupName}</strong> 已被取消！</p>
+            <p>如有任何疑問，請與我們聯絡。</p>
+            <p>DiveIn 敬上</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2025 DiveIn.</p>
+        </div>
+    </div>
+
+</body>
+</html>`;
+
+// 參加的揪團電子郵件文字訊息樣版
+const sendJoinGroupCancelText = (groupName, date) => `親愛的潛水愛好者 您好：
+很遺憾地通知您，您所參加的原定於${date}舉行的揪團${groupName}已被取消！如有任何疑問，請與我們聯絡。DiveIn敬上。`
+
+
+// 寄送參加的揪團取消的通知信件
+export const sendJoinGroupCancelMail = async (to, groupName, date) => {
+    console.log("寄送參加的揪團取消的通知信件");
+  // 寄送email
+  const mailOptions = {
+    // 這裡要改寄送人
+    from: user, // sender address
+    to: to, // list of receivers
+    subject: `參加的揪團活動${groupName}取消通知`,
+    text: sendJoinGroupCancelText(groupName, date),
+    html: sendJoinGroupCancelHTML(groupName, date)
+  }
+
+  // 呼叫transport函式
+  const transporter = nodemailer.createTransport(transport)
+
+  // 寄送email
+  try {
+    const info = await transporter.sendMail(mailOptions)
+    if (isDev) console.log('Message sent: ', info.messageId)
+  } catch (err) {
+    console.log(err)
+    throw new Error('無法寄送email')
+  }
+}
+
+// 揪團超過報名日期自動取消後傳送給團主
+const sendHostGroupCancelHTML = (groupName, date)=>`<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>創立的揪團因人數不足已自動取消</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f6f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #007BFF;
+            padding: 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .content {
+            padding: 20px;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #777777;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>您所創立的揪團已取消！</h1>
+        </div>
+        <div class="content">
+            <p>親愛的潛水愛好者，您好：</p>
+            <p>很遺憾地通知您，您所創立的原定於${date}舉行的揪團 <strong>${groupName}</strong> 因參加人數不足已被取消！</p>
+            <p>如有任何疑問，請與我們聯絡。</p>
+            <p>DiveIn 敬上</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2025 DiveIn.</p>
+        </div>
+    </div>
+
+</body>
+</html>`;
+
+// 主辦的揪團取消電子郵件文字訊息樣版
+const sendHostGroupCancelText = (groupName, date) => `親愛的潛水愛好者 您好：
+很遺憾地通知您，您所創立的原定於${date}舉行的揪團${groupName}因參加人數不足已被取消！如有任何疑問，請與我們聯絡。DiveIn敬上。`
+
+
+// 寄送主辦的揪團取消的通知信件
+export const sendHostGroupCancelMail = async (to, groupName, date) => {
+    console.log("寄送主辦的揪團取消的通知信件");
+  // 寄送email
+  const mailOptions = {
+    // 這裡要改寄送人
+    from: user, // sender address
+    to: to, // list of receivers
+    subject: `創立的揪團活動${groupName}已遭取消`,
+    text: sendHostGroupCancelText(groupName, date),
+    html: sendHostGroupCancelHTML(groupName, date)
   }
 
   // 呼叫transport函式

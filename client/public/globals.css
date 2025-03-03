@@ -194,3 +194,40 @@ body{
         }
     }
 }
+
+/* swiper設定 */
+.swiper-button-prev,
+.swiper-button-next {
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* 半透明黑色背景 */
+    border-radius: 50%;
+    /* 變成圓形 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    transition: background-color 0.3s ease;
+    &:hover{
+    background-color: #ffa500 !important;
+    }
+    &::after{
+        font-size: 12px;
+    }
+}
+
+/* Swiper 分頁指示點 */
+.swiper-pagination-bullet {
+  background-color: white !important;
+  width: 12px;
+  height: 12px;
+}
+
+.swiper-pagination-bullet-active {
+    background-color: #ffa500 !important;
+}
