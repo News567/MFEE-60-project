@@ -41,7 +41,7 @@
 
 .main-details .main-image {
   width: 100%;
-  aspect-ratio: 1; /* 保持正方形比例（高與寬相等） */
+  aspect-ratio: 1/1; /* 保持正方形比例（高與寬相等） */
   overflow: hidden; /* 隱藏超出部分 */
 }
 .main-details .main-image Image {
@@ -59,19 +59,43 @@
   cursor: pointer;
   overflow: hidden;
 }
+
+/* 小圖容器設定 */
 .main-details .small-images > div {
   position: relative;
+  flex: 0 0 23%; /* 不放大/不縮小 + 基礎寬度 */
+  aspect-ratio: 1/1; /* 強制正方形比例 */
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-shrink: 0; /* 防止圖片縮小 */
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+/* 行動裝置適配 */
+@media (max-width: 768px) {
+  .main-details .small-images > div {
+    flex-basis: 30%; /* 手機上顯示更大些 */
+  }
 }
 
+/* 圖片填充設定 */
 .main-details .small-images Image {
+  position: absolute;
   width: 100%;
   max-width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; /* 保持比例覆蓋容器 */
+  transition: transform 0.3s ease;
+}
+
+/* 懸浮互動效果 */
+.main-details .small-images > div:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-3px);
+}
+
+.main-details .small-images > div:hover Image {
+  transform: scale(1.05);
 }
 
 /* 設置空白元素的樣式 */
@@ -132,14 +156,17 @@
   font-weight: 700;
 }
 
-.main-details .rent-rules .rules-content {
+.main-details .rent-rules .rules-content{
   color: var(--gray-600-color);
   font-size: 14px;
   font-weight: 400;
   list-style-type: decimal;
   list-style-position: inside;
-  padding: 0px 0px 0px 30px;
+  padding: 0px 0px 0px 20px;
   border-left: 3px solid var(--gray-200-color);
+}
+.main-details .rent-rules .rules-content li{
+  font-size: 14px;
 }
 
 .main-details .rent-rules .rules-content li {
@@ -148,7 +175,7 @@
 }
 
 .main-details .details-text {
-  gap: 5px;
+  gap: 10px;
 }
 
 .main-details .details-titles {
@@ -158,26 +185,31 @@
 .main-details .details-titles .product-brand {
   margin: 0;
   color: var(--gray-600-color);
-  /* font-size: 24px; */
+  font-size: 14px;
   font-weight: 700;
 }
-/* .main-details .details-titles .product-name-fav {
+
+.main-details .details-titles .product-name-fav {
   position: relative;
-} */
+}
 
 .main-details .details-titles .product-name-fav .heart-icon {
-  font-size: 24;
+  font-size: 28;
   color: var(--black);
   cursor: pointer;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 /* hover的時候的效果 */
-.main-details .details-titles .product-name-fav .heart-icon:hover {
+/* .main-details .details-titles .product-name-fav .heart-icon .bi:hover {
+  color: var(--secondary-color);
+} */
+
+/* fill的時候的效果 */
+.main-details .details-titles .product-name-fav .heart-icon .bi {
   color: var(--primary-color);
 }
-/* fill的時候的效果 */
-.main-details .details-titles .product-name-fav .heart-icon.filled {
+.heart-icon.filled .bi {
   color: var(--primary-color);
 }
 
@@ -251,32 +283,37 @@
 .main-details .details-select .product-color .colors .color-box {
   width: 30px;
   height: 30px;
-  border-radius: 100px;
+  border-radius: 50%;
   display: inline-block;
   margin-right: 8px;
   filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.4));
-  cursor: pointer; 
+  cursor: pointer;
   transition: all 0.3s ease;
-  background: linear-gradient(45deg, rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0.1));
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.3),
+    rgba(0, 0, 0, 0.1)
+  );
 }
 .main-details .details-select .product-color .colors .color-box:hover {
   transform: scale(1.1); /* 放大 */
   border-color: var(--black); /* 邊框變深 */
-  box-shadow: 0 0 10px rgba(200, 200, 200, 0.1) /* 陰影 */
+  box-shadow: 0 0 10px rgba(200, 200, 200, 0.1); /* 陰影 */
 }
 .main-details .details-select .product-color .colors .color-box.selected {
   border: 1.5px solid var(--black); /* 更粗的邊框 */
   box-shadow: 0 0 15px rgba(200, 200, 200, 0.7); /* 更明顯的陰影 */
 }
 
-
 .main-details .details-select .product-color .colors .color-box:active {
   transform: scale(0.9);
 }
 
 .no-colors {
+  margin: 0;
   color: var(--gray-600-color);
   font-style: italic;
+  font-size: 14px;
 }
 
 .main-details .product-amount .amount-title {
@@ -288,12 +325,17 @@
   padding: 14px 9px 14px 0px;
 }
 
-.main-details .product-amount .amounts .quantity-btn {
+.main-details .product-amount .amounts .btn-outline-secondary {
   font-size: 12px;
   color: var(--gray-600-color);
   background-color: var(--white);
   border: 0.5px solid var(--gray-100-color);
   padding: 9px 14px;
+}
+.main-details .product-amount .amounts .btn-outline-secondary:hover {
+  color: var(--white);
+  background-color: var(--primary-color);
+  border: 1px solid var(--white);
 }
 
 .main-details .product-amount .amounts .minus {
@@ -327,35 +369,78 @@
 }
 
 .main-details .product-btns .mybtn {
-  border-radius: 50px;
-  padding: 10px 0;
+  border-radius: 30px;
+  padding: 10px 20px;
   border: none;
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--white);
+  background: linear-gradient(150deg, var(--secondary-color), #ff7f50);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.main-details .product-btns .btn-cart {
+.main-details .product-btns .mybtn:hover {
+  background: linear-gradient(150deg, #ff7f50, var(--secondary-color));
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+.main-details .product-btns .mybtn:active {
+  transform: scale(0.95);
+}
+
+/* .main-details .product-btns .btn-cart {
   background-color: var(--secondary-color);
-}
+} */
 
-.main-details .product-btns .btn-buy {
+/* .main-details .product-btns .btn-buy {
   background-color: var(--primary-color);
   color: var(--white);
-}
+} */
 
 .under-details {
-  gap: 20px;
+  gap: 1px;
   margin: 20px 0;
   padding: 15px;
-  border: 1px solid var(--gray-300-color);
 }
 
 .tab-buttons {
-  gap: 25px;
+  margin-left: 0;
+  margin-bottom: -2px;
+  gap: 20px;
 }
 
 .tab-button {
-  border: 0;
-  background-color: transparent;
+  background: var(--white);
+  border: 1px solid var(--gray-100-color);
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: bold;
+  /* z-index: 2;  */
 }
+
+/* 頁籤按鈕 - 滑鼠懸停 */
+.tab-button:hover {
+  background: var(--primary-light-color);
+  transform: translateY(-1px); 
+}
+
+/* 頁籤按鈕 - 選中狀態 */
+.tab-button.active {
+  background: var(--primary-color);
+  color: var(--white);
+  margin-bottom: -1px;
+  z-index: 3;
+}
+
+/* 選中狀態下，hover 不影響樣式 */
+.tab-button.active:hover {
+  background: var(--primary-color);
+  transform: none;
+}
+
 .tab-button .under-details-title {
   margin: 0;
   display: inline-block;
@@ -364,7 +449,6 @@
   font-weight: 700;
   padding: 9px 12px;
   text-align: center;
-  background-color: var(--gray-50-color);
 }
 
 .under-detail .under-details-content {
@@ -373,7 +457,9 @@
   font-size: 14px;
   font-weight: 400;
   text-align: left;
+  line-height: 2;
   padding: 15px;
+  border-top: 2px solid var(--gray-100-color);
 }
 .under-comments .under-comments-content {
   margin: 0;
@@ -382,11 +468,92 @@
   font-weight: 400;
   text-align: left;
   padding: 15px;
+  border-top: 2px solid var(--gray-100-color);
+}
+
+.user-reviews {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.reviews-title {
+  text-align: center;
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.reviews-container {
+  display: flex;
+  gap: 20px; /* 評價卡片之間的間距 */
+  flex-wrap: wrap; /* 讓卡片自動換行 */
+}
+
+.review-card {
+  flex: 1 1 calc(33.333% - 20px); /* 每行顯示 3 則評價 */
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  /* border-radius: 50%; */
+  margin-right: 10px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+}
+
+.user-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--black);
+}
+
+.user-email {
+  font-size: 14px;
+  color: var(--gray-600-color);
+  margin-left: 10px;
+}
+
+.user-rating {
+  font-size: 20px;
+  color: #ffc107; /* 星星顏色 */
+  margin-bottom: 10px;
+}
+
+.user-comment {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
 }
 
 .under-brand {
+  height: 100%;
   gap: 14px;
   padding: 15px;
+}
+
+.under-brand  span{
+  font-size: 14px;
+  color: var(--gray-600-color);
+  margin-left: 10px;
+  margin-bottom: 10px;
 }
 
 .under-brand .product-brand {
@@ -396,14 +563,33 @@
   font-weight: 700;
 }
 
-.under-brand .under-details-brand {
+.under-details-brand {
   margin: 0;
   color: var(--gray-600-color);
   font-size: 14px;
   font-weight: 400;
   padding-left: 30px;
+  line-height: 2;
   border-left: 3px solid var(--gray-200-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
+
+/* 品牌 Logo 的樣式 */
+.under-details-brand .brand-logo {
+  width: 100px;
+  height: 100px; 
+  margin-right: 16px; 
+  object-fit: cover;
+}
+
+/* 品牌描述的樣式 */
+.under-details-brand .brand-description {
+  white-space: pre-line; /* 保留換行符號並自動換行 */
+  flex: 1; /* 讓描述佔滿剩餘空間 */
+}
+
 
 .you-may-likes {
   margin: 20px 0 30px 0;
@@ -411,11 +597,11 @@
 
 .you-may-like .you-may-like-title {
   margin: 0;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: 20px;
+  margin-bottom: 30px;
   color: var(--primary-color);
   text-align: center;
-  font-size: 36px;
+  font-size: 30px;
   font-weight: 700;
   padding-bottom: 15px;
 }
@@ -459,8 +645,8 @@
   padding: 10px;
   font-size: 14px;
   text-align: center;
-  height: 40px; /* 固定高度 */
-  line-height: 15px; /* 控制最多兩行 */
+  height: 50px; /* 固定高度 */
+  line-height: 20px; /* 控制最多兩行 */
   display: -webkit-box;
   -webkit-line-clamp: 2; /* 顯示最多兩行 */
   -webkit-box-orient: vertical;
@@ -561,42 +747,100 @@
   text-decoration: line-through;
   color: var(--gray-600-color);
 }
-.you-may-likes .you-may-like-products .card .card-body .icon-container {
-  position: absolute;
-  bottom: 35%;
-  left: 50%;
-  transform: translateX(-50%);
-  gap: 15px;
-  opacity: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+
+/* 商品卡片容器 */
+.you-may-like-product .card-container {
+  position: relative;
+  overflow: visible;
 }
 
-.you-may-likes .you-may-like-products .card .card-body .icon-container .icon {
-  text-align: center;
-  background-color: var(--white);
-  border-radius: 50%;
+/* 圖片容器 */
+.you-may-like-product .img-container {
+  position: relative;
+  padding-top: 100%; /* 保持 1:1 比例 */
+  transition: all 0.3s ease; /* 添加过渡效果 */
+}
+
+/* 收藏按鈕 */
+.you-may-like-product .favorite-button-wrapper {
+  position: absolute;
+  bottom: 20px; /* 调整与图片底部的距离 */
+  left: 50%;
+  transform: translateX(-50%); /* 水平居中 */
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden; /* 同时控制可见性 */
+  transition: opacity 0.3s ease, visibility 0.3s ease,
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover */
+.you-may-like-product:hover .favorite-button-wrapper {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-5px);
+}
+
+/* 圓形背景 */
+.circle-button {
   width: 36px;
   height: 36px;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--white) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease, background-color 0.2s ease-in-out;
 }
 
-.you-may-likes .you-may-like-products .card .card-body .icon-container .icon i {
-  text-align: center;
-  font-size: 16px;
+/* 愛心 */
+.circle-button i.bi {
   color: var(--black);
+  transition: color 0.3s ease;
 }
 
-.you-may-likes .you-may-like-products .card:hover .icon-container {
-  opacity: 1;
-  transform: translate(-50%, -50%);
+/* 圓形hover */
+.circle-button:hover {
+  background-color: var(--primary-color) !important;
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 愛心hover */
+
+.circle-button:hover i.bi {
   color: var(--white);
 }
 
-.you-may-likes .you-may-like-products .card:hover .icon-container .icon:hover {
-  background-color: var(--primary-color);
+/* .circle-style.active {
+  background: var(--primary-color) !important;
+}
+
+.you-may-like-product .circle-style.active i {
+  color: white !important;
+} */
+
+/* 圓形收藏 */
+.circle-button.favorited {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color);
+}
+/* 愛心收藏 */
+.circle-button.favorited i.bi {
   color: var(--white);
 }
 
-.you-may-likes .you-may-like-products.card:hover .icon-container .icon i:hover {
-  color: var(--white);
+.you-may-like-product .product-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.you-may-like-product:hover .product-img {
+  transform: scale(1.05);
 }

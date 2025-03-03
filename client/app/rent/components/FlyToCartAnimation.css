@@ -1,0 +1,19 @@
+/* .fly-to-cart {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    animation: flyToCart 1s ease-in-out;
+  }
+  
+  @keyframes flyToCart {
+    0% {
+      transform: translate(-50%, -50%);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(calc(100vw - 100px), calc(-100vh + 100px));
+      opacity: 0;
+    }
+  } */
