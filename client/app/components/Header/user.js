@@ -58,12 +58,13 @@ export default function User() {
               </MenuItem>
               <MenuItem
                 onClick={() => {
-                  logout();
                   handleClose();
                 }}
                 style={{ color: "red" }}
               >
+              <Link href="/member/logout">
                 登出
+              </Link>
               </MenuItem>
             </>
           ) : (
