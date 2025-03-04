@@ -74,6 +74,41 @@
   transform: rotate(180deg);
 }
 
+/* 側欄搜索 */
+.search-box {
+  width: 100%;
+  /* max-width: 300px; */
+  position: relative; /* 新增這行，確保內部的 .search-box i 可以正確定位 */
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 35px 10px 10px; /* 增加右側內距，避免圖示重疊輸入內容 */
+  border: 1px solid #ccc;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-box input:focus {
+  border-color: var(--primary-color);
+}
+
+.search-box i {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #aaa;
+  cursor: pointer;
+}
+
+/* 隱藏內建的清除按鈕 */
+input[type="search"]::-webkit-search-cancel-button {
+  display: none;
+}
+
+
 /* 下拉選單 */
 .sidebar-dropdown {
   position: relative;
@@ -189,6 +224,52 @@
   align-items: center;
   gap: 10px;
 }
+.sidebar .product-filter .filter-subtitle2 i {
+  font-size: 10px;
+}
+
+.clear-filter {
+  cursor: pointer;
+  margin-left: 10px;
+  transition: color 0.3s, transform 0.3s; /* 動畫效果 */
+}
+
+.clear-filter:hover {
+  /* color: red; 鼠標懸停顏色 */
+  transform: scale(1.2); /* 鼠標懸停時放大按鈕 */
+}
+
+.clear-filter:active {
+  /* color: #ff0000; 點擊時的顏色 */
+}
+
+/* 基本的圓形顏色框 */
+.color-circle {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin: 0px 3px -2px 0px;
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.4));
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.3),
+    rgba(0, 0, 0, 0.1)
+  );
+}
+
+.color-circle:hover {
+  transform: scale(1.05); /* 放大 */
+  border-color: var(--black); /* 邊框變深 */
+  box-shadow: 0 0 10px rgba(200, 200, 200, 0.1); /* 陰影 */
+}
+
+/* 當顏色選中時 */
+.color-circle.selected {
+  box-shadow: 0 0 15px rgba(200, 200, 200, 0.7); /* 更明顯的陰影 */
+}
 
 .sidebar .product-filter .product-filter-price .price-input {
   gap: 10px;
@@ -299,9 +380,13 @@
 .sidebar .product-new .new-product-lists .card {
   width: 100%;
   border: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 .sidebar .product-new .new-product-lists .card:hover {
   box-shadow: 2px 4px 15px rgba(0, 0, 0, 0.08);
+  transform: translateY(-5px);
 }
 
 .sidebar .product-new .new-product-lists .card .new-product {
@@ -310,7 +395,26 @@
   display: flex;
   align-items: center;
   box-sizing: border-box;
+  position: relative;
 }
+
+.new-product::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    -135deg,
+    rgba(13, 62, 74, 0.1) 0%,
+    rgba(13, 62, 74, 0) 30%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+
 
 .sidebar .product-new .new-product-lists .card .new-product .product-img {
   width: 90px;
@@ -426,8 +530,12 @@
 
 .sidebar .product-sale .sale-product-lists .card {
   border: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 .sidebar .product-sale .sale-product-lists .card:hover {
+  transform: translateY(-5px);
   box-shadow: 2px 4px 15px rgba(0, 0, 0, 0.08);
 }
 
@@ -437,6 +545,23 @@
   display: flex;
   align-items: center;
   box-sizing: border-box;
+  position: relative;
+}
+
+.sale-product::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    -135deg,
+    rgba(13, 62, 74, 0.1) 0%,
+    rgba(13, 62, 74, 0) 30%
+  );
+  z-index: 1;
+  pointer-events: none;
 }
 
 .sidebar .product-sale .sale-product-lists .card .sale-product .product-img {
@@ -641,14 +766,16 @@
 }
 
 .main .product-lists .card .img-container {
-  /* padding: 10px; */
-  width: 100%;
+  /* width: 100%; */
   aspect-ratio: 1 / 1; /* 確保所有圖片為正方形 */
   position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   overflow: hidden; /* 隱藏超出部分 */
 }
 .main .product-lists .card .img-container::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 40%;
   left: 0;
@@ -662,7 +789,14 @@
 .main .product-lists .card:hover .img-container::after {
   opacity: 1;
 }
-
+.main .product-lists .card .img-container .product-img {
+  /* max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; 保持圖片比例 */
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 保持圖片比例並填充容器 */
+}
 
 .main .product-lists .card .card-body .product-brand,
 .main .product-lists .card .card-body .product-name,
@@ -682,8 +816,8 @@
   margin-bottom: 10px;
   font-size: 14px;
   text-align: center;
-  height: 40px; /* 固定高度 */
-  line-height: 15px; /* 控制最多兩行 */
+  height: 50px; /* 固定高度 */
+  line-height: 20px; /* 控制最多兩行 */
   display: -webkit-box;
   -webkit-line-clamp: 2; /* 顯示最多兩行 */
   -webkit-box-orient: vertical;
@@ -695,6 +829,7 @@
 .main .product-lists .card .card-body .product-price,
 .main .product-lists .card .card-body .product-price2 {
   display: inline-block;
+  font-size: 14px;
 }
 
 .main .product-lists .card .card-body .product-color {
@@ -710,42 +845,77 @@
   filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.4));
 }
 
-.main .product-lists .card .card-body .icon-container {
+/* 保護 bootstrap modal */
+#rentDetailModal.modal {
+  z-index: 1050 !important; /* 固定層級 */
+}
+
+.modal-backdrop {
+  z-index: 1040 !important; /* 固定背景層級 */
+}
+
+.hover-action-container {
   position: absolute;
-  bottom: 35%;
+  bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
-  gap: 15px;
+  display: flex;
   opacity: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
 }
 
-.main .product-lists .card .card-body .icon-container .icon {
-  text-align: center;
-  background-color: var(--white);
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+.icon-group{
+  display: flex;
+  gap: 15px;
 }
 
-.main .product-lists .card .card-body .icon-container .icon i {
-  text-align: center;
-  font-size: 16px;
-  color: var(--black);
-}
-
-.main .product-lists .card:hover .icon-container {
+/* 卡片懸浮狀態 */
+.card:hover .hover-action-container {
   opacity: 1;
-  transform: translate(-50%, -50%);
+  
+}
+/* 按鈕通用樣式 */
+.hover-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.main .product-lists .card:hover .icon-container .icon:hover {
-  background-color: var(--primary-color);
+.hover-action-btn i {
+  color: var(--black);
+  transition: color 0.2s ease;
+}
+
+/* 懸浮互動效果 */
+.hover-action-btn:hover {
+  background: var(--primary-color);
+  transform: scale(1.1);
+}
+
+.hover-action-btn:hover i {
   color: var(--white);
 }
 
-.main .product-lists .card:hover .icon-container .icon i:hover {
+/* 已收藏狀態 */
+.hover-action-btn.favorited:hover {
+  background: var(--primary-color);
+  transform: scale(1.1);
+}
+
+.hover-action-btn.favorited {
+  background: var(--primary-color);
+  transform: scale(1);
+}
+
+.hover-action-btn.favorited i {
   color: var(--white);
 }
 
@@ -789,4 +959,21 @@
 .dropdown .dropdown-item:active {
   background-color: var(--primary-color);
   color: var(--white);
+}
+
+/* 保護 bootstrap modal */
+#rentDetailModal.modal {
+  z-index: 1050 !important; /* 固定層級 */
+}
+
+.modal-backdrop {
+  z-index: 1040 !important; /* 固定背景層級 */
+}
+/* 在全局 CSS 添加 */
+#rentDetailModal.modal .modal-dialog {
+  max-width: 800px !important; /* 保持你的商品詳情 modal 原始寬度 */
+}
+
+#rentDetailModal.modal .modal-content {
+  width: auto !important; /* 重置寬度設定 */
 }

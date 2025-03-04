@@ -1,72 +1,42 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import CartFlow from "../components/cartFlow";
 import OrderSuccess from "./components/OrderSuccess";
 import OrderSummary from "./components/OrderSummary";
 import PaymentInfo from "./components/PaymentInfo";
 import ShippingInfo from "./components/ShippingInfo";
+import axios from "axios";
 import "./step4.css";
 
 export default function Cart4() {
   const router = useRouter();
+  const [orderData, setOrderData] = useState(null);
+  const orderId = localStorage.getItem("lastOrderId");
 
-  // 模擬訂單資料
-  const orderData = {
-    orderNumber: "20240315001",
-    orderDate: "2024-03-15 15:30:00",
-    status: "已付款",
-    totalAmount: 15000,
-    rewardPoints: 150,
-    payment: {
-      method: "信用卡",
-      status: "付款成功",
-      cardLast4: "1234",
-    },
-    shipping: {
-      method: "宅配",
-      address: "台北市大安區...",
-      recipient: "王小明",
-      phone: "0912345678",
-      estimatedDelivery: "2-3 個工作天",
-    },
-    items: {
-      products: [
-        {
-          id: 1,
-          name: "潛水面鏡",
-          quantity: 1,
-          price: 2000,
-          specs: "黑色",
-        },
-      ],
-      activities: [
-        {
-          id: 1,
-          name: "OWD｜自選日期班",
-          date: "2024-03-20",
-          time: "09:00",
-          participants: [
-            {
-              name: "王小明",
-              phone: "0912345678",
-            },
-          ],
-          price: 12000,
-        },
-      ],
-      rentals: [
-        {
-          id: 1,
-          name: "潛水裝備組",
-          startDate: "2024-03-20",
-          endDate: "2024-03-22",
-          deposit: 5000,
-          rentalFee: 1000,
-        },
-      ],
-    },
-  };
+  useEffect(() => {
+    if (!orderId) {
+      console.error("無效的訂單 ID");
+      return;
+    }
+
+    const fetchOrderData = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:3005/api/order/${orderId}`
+        );
+        setOrderData(response.data.data); // 確保取到正確的 `data`
+      } catch (error) {
+        console.error("訂單資料獲取失敗:", error);
+      }
+    };
+
+    fetchOrderData();
+  }, [orderId]);
+
+  if (!orderData) {
+    return <div className="text-center">載入中...</div>;
+  }
 
   return (
     <div className="cartCss4">
@@ -74,7 +44,7 @@ export default function Cart4() {
         <CartFlow />
 
         <div className="success-container text-center py-4">
-          <OrderSuccess orderNumber={orderData.orderNumber} />
+          <OrderSuccess orderNumber={orderData.orderInfo.orderNumber} />
         </div>
 
         <div className="row mt-4">
@@ -95,25 +65,24 @@ export default function Cart4() {
                 <h5 className="mb-0">付款資訊</h5>
               </div>
               <div className="card-body">
-                <PaymentInfo payment={orderData.payment} />
+                <PaymentInfo payment={orderData.paymentInfo} />
               </div>
             </div>
 
             {/* 配送資訊 */}
-            {(orderData.items.products.length > 0 ||
-              orderData.items.rentals.length > 0) && (
+            {orderData.shippingInfo && (
               <div className="card mb-4">
                 <div className="card-header">
                   <h5 className="mb-0">配送資訊</h5>
                 </div>
                 <div className="card-body">
-                  <ShippingInfo shipping={orderData.shipping} />
+                  <ShippingInfo shipping={orderData.shippingInfo} />
                 </div>
               </div>
             )}
           </div>
 
-          {/* 右側訂單摘要 */}
+          {/* 訂單資訊 */}
           <div className="col-md-4">
             <div className="card">
               <div className="card-header">
@@ -123,29 +92,31 @@ export default function Cart4() {
                 <div className="vstack gap-2">
                   <div className="d-flex justify-content-between">
                     <span>訂單編號</span>
-                    <span>{orderData.orderNumber}</span>
+                    <span>{orderData.orderInfo.orderNumber}</span>
                   </div>
                   <div className="d-flex justify-content-between">
                     <span>訂單日期</span>
-                    <span>{orderData.orderDate}</span>
+                    <span>{orderData.orderInfo.orderDate}</span>
                   </div>
                   <div className="d-flex justify-content-between">
                     <span>訂單狀態</span>
-                    <span className="text-success">{orderData.status}</span>
+                    <span className="text-success">
+                      {orderData.orderInfo.orderStatusText}
+                    </span>
                   </div>
                   <hr />
                   <div className="d-flex justify-content-between fw-bold">
                     <span>總計金額</span>
                     <span className="text-danger">
-                      NT$ {orderData.totalAmount}
+                      NT$ {orderData.orderInfo.totalAmount}
                     </span>
                   </div>
                   <div className="text-center mt-2">
                     <small className="text-muted">
-                      本次消費可獲得 {orderData.rewardPoints} 點購物金
+                      本次消費可獲得 {orderData.orderInfo.rewardPoints} 點購物金
                     </small>
                   </div>
-                  <div className="d-grid  mt-3">
+                  <div className="d-grid mt-3">
                     <button
                       className="btn btn-outline-primary"
                       onClick={() => router.push("/")}

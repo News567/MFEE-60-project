@@ -1,39 +1,98 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation"; // 修正匯入路徑 //獲取 url 當中的 id
+// import { jwtDecode } from "jwt-decode";
+
 import axios from "axios";
 import dynamic from "next/dynamic"; // 動態導入，動態加載 flatpickr，從而避免伺服器端渲染時的問題
-import { useParams } from "next/navigation"; // 獲取 url 當中的 id，useParams修改為useSearchParams 更改
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import flatpickr from "flatpickr";
+import React from "react";
+
 import "flatpickr/dist/flatpickr.min.css";
 import "./flatpickr.css"; // 我定義的小日曆css
 import "./RentDetail.css";
+import "bootstrap/dist/css/bootstrap.min.css";
+// import "./modal2.css"; // 我定義的你可能會喜歡modalcss(跟rentlist同支)
 import "../../../public/globals.css";
-import HeartIcon from "./HeartIcon/HeartIcon";
+import { useCart } from "@/hooks/cartContext"; // 加入購物車
+import FavoriteButton from "./FavoriteButton"; // 根據文件路徑調整
+import AddToCartButton from "./AddToCartButton"; // 最後有時間回來補充加入購物車的動態效果
 
 const Flatpickr = dynamic(() => import("flatpickr"), { ssr: false });
 
-export default function RentProductDetail() {
-  const { id } = useParams(); // 取得動態路由參數
-  // const searchParams = useSearchParams(); // 獲取查詢參數
-  // const productId = searchParams.get("productId"); // 從查詢參數中獲取 productId
+const API_BASE_URL = "http://localhost:3005/api";
 
-  const [product, setProduct] = useState(null);
-  const [mainImage, setMainImage] = useState(""); // 商品大張圖片（要做大圖切換
+export default function RentProductDetail() {
+  const router = useRouter();
+  const redirectToLogin = () => {
+    router.push("/login"); // 跳轉到登錄頁面
+  };
+
+  const [token, setToken] = useState(null);
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    // 確保 localStorage 只在客戶端使用
+    if (typeof window !== "undefined") {
+      const storedToken = localStorage.getItem("loginWithToken");
+      setToken(storedToken);
+
+      if (storedToken) {
+        const decoded = jwtDecode(storedToken);
+        setUserId(decoded.id);
+
+        // 輸出會員 ID 和 Token
+        console.log("Token:", storedToken);
+        console.log("會員 ID:", decoded.id);
+      }
+    }
+  }, []);
+
+  console.log("User ID from Token:", userId); // 調試訊息：檢查會員 ID
+
+  const { id } = useParams(); // 取得動態路由參數
+  const [isLoading, setIsLoading] = useState(true);
+  const [product, setProduct] = useState(null); // 商品資料
+  const [quantity, setQuantity] = useState(1); // 租借數量
+  const [selectedColor, setSelectedColor] = useState(null); // 選擇的顏色
+
+  const colorNames =
+    product && product.color_name ? product.color_name.split(",") : [];
+  const colorRGBs =
+    product && product.color_rgb ? product.color_rgb.split(",") : [];
+
+  const [startDate, setStartDate] = useState(""); // 租借開始日期
+  const [endDate, setEndDate] = useState(""); // 租借結束日期
+  // const [isFavorite, setIsFavorite] = useState(0); // 愛心收藏功能
   const [loading, setLoading] = useState(true); // 加載狀態
   const [error, setError] = useState(null); // 錯誤狀態
+  const { fetchCart } = useCart(); // 從 cartContext 中獲取 fetchCart 方法
+  const [mainImage, setMainImage] = useState(""); // 商品大張圖片（要做大圖切換
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0); // 當前顯示的圖片索引
-  const [isFavorite, setIsFavorite] = useState(0); // 愛心收藏功能
   const [selectedDates, setSelectedDates] = useState([]); // 讓我知道會員選擇了多少天數（動態計算價格用
   const [recommendedProducts, setRecommendedProducts] = useState([]); // 你可能會喜歡的隨機推薦商品
 
-  const [quantity, setQuantity] = useState(1);
+  const quantityInputRef = useRef(null);
+
   const [activeTab, setActiveTab] = useState("description"); // 商品描述區塊切換tab
+
+  // 你可能會喜歡區塊，跳出modal選擇詳細資訊加入購物車的 modal
+  // const [show, setShow] = useState(false);
+  // // const [modalVisible, setModalVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  // // const [bookingDate, setBookingDate] = useState("");
+  // const [rentDateRange, setRentDateRange] = useState([]); // 租借日期
+  // const [modalVisible, setModalVisible] = useState(false);
+  // const [selectedProduct, setSelectedProduct] = useState(null);
+  // const [bookingDate, setBookingDate] = useState("");
+  // const [rentDateRange, setRentDateRange] = useState([]); // 租借日期
+  // const [showModal, setShowModal] = useState(false);
 
   // 從後端獲取商品數據
   useEffect(() => {
@@ -46,12 +105,11 @@ export default function RentProductDetail() {
 
         const response = await fetch(`${API_BASE_URL}/api/rent/${id}`);
         if (!response.ok) {
-          throw new Error("無法獲取商品數據");
+          throw new Error("無法獲取租借商品數據！");
         }
         const result = await response.json(); // 解析後端返回的 JSON
         const data = result.data; // 提取 data 物件
-
-        console.log("後端返回的資料:", data); // 檢查資料結構
+        // console.log("後端返回的資料:", data); // 檢查資料結構
         setProduct(data);
 
         // 設置預設大圖
@@ -59,10 +117,8 @@ export default function RentProductDetail() {
         const mainImage =
           (images && images.find((img) => img.is_main === 1)?.img_url) ||
           (images && images[0]?.img_url) ||
-          "/rent/no-img.png"; // 如果沒有圖片，顯示"本商品暫時沒有圖片"的預設圖片
+          "/image/rent/no-img.png"; // 如果沒有圖片，顯示"本商品暫時沒有圖片"的預設圖片
         setMainImage(mainImage);
-
-        console.log("Product images:", images); // 調試訊息
 
         // 獲取推薦商品
         const fetchRecommendedProducts = async (brand, categoryId, id) => {
@@ -125,19 +181,21 @@ export default function RentProductDetail() {
     fetchProduct();
   }, [id]);
 
-  // 判斷收藏的愛心狀態
-  const handleClick = () => {
-    const newIsFavorite = isFavorite === 0 ? 1 : 0;
-    setIsFavorite(newIsFavorite);
+  // 加載中或未找到商品的處理
+  // if (isLoading) {
+  //   return <div>加載中...</div>;
+  // }
 
-    // 這裡可以加入後端 API 呼叫，更新 is_like 狀態
-    // axios.post(`/api/rent-item/${id}/update-favorite`, { isLike: newIsFavorite })
-    //   .then(response => {
-    //     console.log("後端更新成功:", response.data);
-    //   })
-    //   .catch(error => {
-    //     console.error("後端更新失敗:", error);
-    //   });
+  // if (!product) {
+  //   return <div>未找到商品</div>;
+  // }
+
+  const handleColorClick = (colorName, colorRGB) => {
+    if (selectedColor === colorName) {
+      setSelectedColor(null); // 如果已經選中，則取消選擇
+    } else {
+      setSelectedColor(colorName); // 如果未選中，則更新選中的顏色
+    }
   };
 
   // 根據是否有特價動態調整價格樣式
@@ -201,11 +259,12 @@ export default function RentProductDetail() {
         const endDate = selectedDates[1];
 
         if (startDate && endDate) {
-          const formattedStartDate = instance.formatDate(
-            startDate,
-            "Y年m月d日"
-          );
-          const formattedEndDate = instance.formatDate(endDate, "Y年m月d日");
+          const displayStartDate = instance.formatDate(startDate, "Y年m月d日");
+          const displayEndDate = instance.formatDate(endDate, "Y年m月d日");
+
+          // 傳遞給後端的格式
+          const formattedStartDate = startDate.toLocaleDateString("en-CA"); // 輸出 YYYY-MM-DD
+          const formattedEndDate = endDate.toLocaleDateString("en-CA"); // 輸出 YYYY-MM-DD
 
           // 計算租賃天數
           const timeDiff = endDate.getTime() - startDate.getTime();
@@ -216,25 +275,23 @@ export default function RentProductDetail() {
           const price2 = product.price2; // 特價
           const unitPrice = Number(price2 ? price2 : price);
 
-          // 動態數量（假設 quantity 是使用者選擇的數量）
-          const quantity =
-            parseInt(document.querySelector("#quantity").value, 10) || 1;
+          const quantity = parseInt(quantityInputRef.current?.value, 10) || 1;
 
           // 計算押金（單價的 3 折）
           const deposit = Number(unitPrice * 0.3);
 
           // 計算總費用
-          const totalCost = unitPrice * quantity * daysDiff + deposit;
+          const totalCost = (unitPrice + quantity) * daysDiff * quantity;
 
           // 更新日期範圍文字的顯示
-          dateRangeText.textContent = `租賃日期： 自 ${formattedStartDate} 至 ${formattedEndDate}`;
+          dateRangeText.textContent = `租借日期： 自 ${displayStartDate} 至 ${displayEndDate}`;
 
           // 更新價格明細
           priceDetailsText.innerHTML = `
-            <div>單價：${unitPrice.toLocaleString("zh-TW")} 元</div>
+            <div>每日租金：${unitPrice.toLocaleString("zh-TW")} 元</div>
+            <div>每日押金：${deposit.toLocaleString("zh-TW")} 元</div>
             <div>數量：${quantity} 個</div>
-            <div>天數：${daysDiff} 天</div>
-            <div>押金：${deposit.toLocaleString("zh-TW")} 元</div>
+            <div>租借總天數：${daysDiff} 天</div>
           `;
 
           // 更新總費用文字
@@ -244,11 +301,19 @@ export default function RentProductDetail() {
           dateRangeText.style.display = "block";
           totalCostText.style.display = "block";
           priceDetailsText.style.display = "block";
+
+          // 將選擇的日期存入狀態
+          setStartDate(startDate);
+          setEndDate(endDate);
         } else {
           // 如果沒有選擇完整的日期範圍，隱藏區塊
           dateRangeText.style.display = "none";
           totalCostText.style.display = "none";
           priceDetailsText.style.display = "none";
+
+          // 清空日期狀態
+          setStartDate(null);
+          setEndDate(null);
         }
       };
 
@@ -303,9 +368,8 @@ export default function RentProductDetail() {
       });
 
       // 監聽數量輸入框的變化
-      const quantityInput = document.querySelector("#quantity");
-      if (quantityInput) {
-        quantityInput.addEventListener("input", () => {
+      if (quantityInputRef.current) {
+        quantityInputRef.current.addEventListener("input", () => {
           const selectedDates = calendar.selectedDates;
           if (selectedDates.length === 2) {
             // 如果有選擇完整的日期範圍，更新價格明細
@@ -337,6 +401,363 @@ export default function RentProductDetail() {
     );
   };
 
+  // 點擊圖標時顯示 Modal
+  // const handleIconClick = (product, e) => {
+  //   e.stopPropagation(); // 防止事件冒泡（才不會點到跳轉 rent detail）
+  //   e.preventDefault(); //
+
+  //   // 重設選擇的商品及相關狀態
+  //   setSelectedProduct({
+  //     ...product,
+  //     quantity: 1, // 重置數量
+  //   });
+
+  //   setQuantity(1); // 確保數量輸入框重置
+  //   setBookingDate(""); // 重置預訂日期
+  //   setRentDateRange([]); // 重置日期區間
+
+  //   // 清空日期選擇器的值
+  //   const dateRangeInput = document.getElementById("rentDateRange");
+  //   if (dateRangeInput && dateRangeInput._flatpickr) {
+  //     dateRangeInput._flatpickr.clear();
+  //   }
+
+  // 觸發 Bootstrap Modal
+  // const myModal = new bootstrap.Modal(
+  //   document.getElementById("rentDetailModal")
+  // );
+  // myModal.show();
+
+  // 在 modal 顯示後初始化 flatpickr
+  //   const modalElement = document.getElementById("rentDetailModal");
+
+  //   const handleModalShown = () => {
+  //     const dateRangeInput = document.getElementById("rentDateRange");
+
+  //     if (dateRangeInput && !dateRangeInput._flatpickr) {
+  //       dateRangeInput.classList.add("rentlist-flatpickr");
+
+  //       const flatpickrInstance = flatpickr(dateRangeInput, {
+  //         mode: "range", // 設置為日期區間選擇模式
+  //         dateFormat: "Y年m月d日", // 設置日期格式
+  //         minDate: "today", // 設置最小日期為今天
+  //         locale: {
+  //           rangeSeparator: " ~ ", // 設置日期區間的分隔符
+  //           firstDayOfWeek: 1,
+  //           weekdays: {
+  //             shorthand: [
+  //               "週日",
+  //               "週一",
+  //               "週二",
+  //               "週三",
+  //               "週四",
+  //               "週五",
+  //               "週六",
+  //             ],
+  //             longhand: [
+  //               "週日",
+  //               "週一",
+  //               "週二",
+  //               "週三",
+  //               "週四",
+  //               "週五",
+  //               "週六",
+  //             ],
+  //           },
+  //           months: {
+  //             shorthand: [
+  //               "1月",
+  //               "2月",
+  //               "3月",
+  //               "4月",
+  //               "5月",
+  //               "6月",
+  //               "7月",
+  //               "8月",
+  //               "9月",
+  //               "10月",
+  //               "11月",
+  //               "12月",
+  //             ],
+  //             longhand: [
+  //               "一月",
+  //               "二月",
+  //               "三月",
+  //               "四月",
+  //               "五月",
+  //               "六月",
+  //               "七月",
+  //               "八月",
+  //               "九月",
+  //               "十月",
+  //               "十一月",
+  //               "十二月",
+  //             ],
+  //           },
+  //         },
+  //         disableMobile: true,
+  //         onClose: (selectedDates) => {
+  //           if (selectedDates.length === 2) {
+  //             const [startDate, endDate] = selectedDates.map(
+  //               (date) => date.toISOString().split("T")[0]
+  //             ); // 轉換為 YYYY-MM-DD 格式
+
+  //             setRentDateRange([startDate, endDate]);
+  //             console.log("選擇的日期區間:", startDate, endDate);
+  //           }
+  //         },
+  //         onOpen: () => {
+  //           // 在日曆打開時，將 rentlist-flatpickr 類名添加到日曆容器
+  //           const calendarContainer = document.querySelector(
+  //             ".flatpickr-calendar"
+  //           );
+  //           if (calendarContainer) {
+  //             calendarContainer.classList.add("rentlist-flatpickr");
+  //           }
+  //           // 清空日期選擇器的值
+  //           dateRangeInput.value = "";
+  //         },
+  //       });
+  //     }
+  //   };
+
+  //   // 綁定事件監聽器
+  //   modalElement.addEventListener("shown.bs.modal", handleModalShown);
+
+  //   // 清理事件監聽器
+  //   return () => {
+  //     modalElement.removeEventListener("shown.bs.modal", handleModalShown);
+  //   };
+  // };
+  // 在模態框顯示後初始化 flatpickr
+  // useEffect(() => {
+  //   const modalElement = document.getElementById("rentDetailModal");
+
+  //   if (!modalElement) {
+  //     console.error("模態框元素未找到！");
+  //     return; // 如果元素不存在，直接返回
+  //   }
+
+  //   const handleModalShown = () => {
+  //     const dateRangeInput = document.getElementById("rentDateRange");
+
+  //     if (dateRangeInput && !dateRangeInput._flatpickr) {
+  //       dateRangeInput.classList.add("rentlist-flatpickr");
+
+  //       const flatpickrInstance = flatpickr(dateRangeInput, {
+  //         className: "calendar-recommended",
+  //         mode: "range", // 設置為日期區間選擇模式
+  //         dateFormat: "Y年m月d日", // 設置日期格式
+  //         minDate: "today", // 設置最小日期為今天
+  //         locale: {
+  //           rangeSeparator: " ~ ", // 設置日期區間的分隔符
+  //           firstDayOfWeek: 1,
+  //           weekdays: {
+  //             shorthand: [
+  //               "週日",
+  //               "週一",
+  //               "週二",
+  //               "週三",
+  //               "週四",
+  //               "週五",
+  //               "週六",
+  //             ],
+  //             longhand: [
+  //               "週日",
+  //               "週一",
+  //               "週二",
+  //               "週三",
+  //               "週四",
+  //               "週五",
+  //               "週六",
+  //             ],
+  //           },
+  //           months: {
+  //             shorthand: [
+  //               "1月",
+  //               "2月",
+  //               "3月",
+  //               "4月",
+  //               "5月",
+  //               "6月",
+  //               "7月",
+  //               "8月",
+  //               "9月",
+  //               "10月",
+  //               "11月",
+  //               "12月",
+  //             ],
+  //             longhand: [
+  //               "一月",
+  //               "二月",
+  //               "三月",
+  //               "四月",
+  //               "五月",
+  //               "六月",
+  //               "七月",
+  //               "八月",
+  //               "九月",
+  //               "十月",
+  //               "十一月",
+  //               "十二月",
+  //             ],
+  //           },
+  //         },
+  //         disableMobile: true,
+  //         onClose: (selectedDates) => {
+  //           if (selectedDates.length === 2) {
+  //             const [startDate, endDate] = selectedDates.map(
+  //               (date) => date.toISOString().split("T")[0]
+  //             ); // 轉換為 YYYY-MM-DD 格式
+
+  //             setRentDateRange([startDate, endDate]);
+  //             console.log("選擇的日期區間:", startDate, endDate);
+  //           }
+  //         },
+  //         onOpen: () => {
+  //           // 在日曆打開時，將 rentlist-flatpickr 類名添加到日曆容器
+  //           const calendarContainer = document.querySelector(
+  //             ".flatpickr-calendar"
+  //           );
+  //           if (calendarContainer) {
+  //             calendarContainer.classList.add("rentlist-flatpickr");
+  //           }
+  //           // 清空日期選擇器的值
+  //           dateRangeInput.value = "";
+  //         },
+  //       });
+  //     }
+  //   };
+
+  //   // 綁定事件監聽器
+  //   modalElement.addEventListener("shown.bs.modal", handleModalShown);
+
+  //   // 清理事件監聽器
+  //   return () => {
+  //     modalElement.removeEventListener("shown.bs.modal", handleModalShown);
+  //   };
+  // }, []);
+
+  // 加入購物車
+  const handleAddToCart = async () => {
+    // 檢查會員是否已登錄
+    const token = localStorage.getItem("loginWithToken");
+
+    if (!token) {
+      alert("請先登錄以加入購物車");
+      redirectToLogin();
+      // return;
+      return false; // 不觸發加入購物車動畫
+    }
+
+    const decoded = jwtDecode(token);
+    const userId = decoded.id;
+
+    console.log("Token:", token); // 調試訊息：檢查 Token
+    console.log("User ID:", userId); // 調試訊息：檢查會員 ID
+
+    if (!userId) {
+      alert("會員 ID 無效，請重新登錄");
+      redirectToLogin();
+      // return;
+      return false; // 不觸發加入購物車動畫
+    }
+
+    // 檢查 userId 是否有效，等 -1 問題解決以後打開
+    // if (isNaN(userId) || userId <= 0) {
+    //   alert("會員 ID 無效，請重新登錄");
+    //   redirectToLogin();
+    //   return;
+    // }
+
+    if (!product) {
+      alert("租借訂單資料未加載完成，請稍後再試！");
+      // return;
+      return false; // 不觸發加入購物車動畫
+    }
+
+    // 檢查是否選擇了日期
+    if (!startDate || !endDate) {
+      alert("請選擇租借日期！");
+      // return;
+      return false; // 不觸發加入購物車動畫
+    }
+
+    // 確保 startDate 和 endDate 是 Date 物件
+    if (!(startDate instanceof Date) || !(endDate instanceof Date)) {
+      alert("日期格式錯誤，請重新選擇！");
+      // return;
+      return false; // 不觸發加入購物車動畫
+    }
+    // 傳遞給後端的格式
+    const formattedStartDate = startDate.toLocaleDateString("en-CA"); // 輸出 YYYY-MM-DD
+    const formattedEndDate = endDate.toLocaleDateString("en-CA"); // 輸出 YYYY-MM-DD
+
+    // 檢查商品是否有顏色規格
+    const hasColorSpecifications =
+      product.specifications &&
+      product.specifications.some((spec) => spec.color); // 檢查 specifications 中的 color 欄位是否有值
+
+    let selectedColorRGB = null;
+    if (hasColorSpecifications) {
+      // 如果有顏色規格但未選擇顏色，則提示會員選擇顏色
+      if (!selectedColor) {
+        alert("請選擇商品顏色！");
+        // return;
+        return false; // 不觸發加入購物車動畫
+      }
+      // 獲取選擇的顏色 RGB 值
+      const selectedSpec = product.specifications.find(
+        (spec) => spec.color === selectedColor
+      );
+      selectedColorRGB = selectedSpec ? selectedSpec.color_rgb : null;
+    }
+
+    // 前面token那邊已經有獲取會員 ID
+
+    const cartData = {
+      userId: parseInt(userId, 10), // 從 localStorage 中獲取的會員 ID，並轉換為數字
+      // userId: userId
+      type: "rental", // (寫死)
+      rentalId: product.id, // 商品 ID
+      rentalName: product.name, // 商品名稱
+      rentalBrand: product.brand_name, // 商品的品牌名稱
+      quantity: quantity, // 租借數量
+      color: selectedColor, // 選擇的顏色名稱
+      colorRGB: selectedColorRGB, // 選擇的顏色 RGB 值
+      startDate: formattedStartDate, // 轉換為 YYYY-MM-DD 格式
+      endDate: formattedEndDate, // 轉換為 YYYY-MM-DD 格式
+      price: product.price, // 有特價選取特價的價格，沒有的話就是原價  product.price2 ? product.price2 : product.price
+    };
+
+    console.log("傳遞的租借購物車資料:", cartData); // 檢查資料格式
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/cart/add`, cartData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("API Response:", response.data); // 調試訊息：檢查 API 回應
+
+      if (response.data.success) {
+        alert("成功加入購物車！");
+        return true; // 成功加入購物車，觸發動畫
+      } else {
+        alert(response.data.message || "加入購物車失敗");
+        return false; // 不觸發動畫
+      }
+    } catch (error) {
+      console.error("加入購物車失敗:", error);
+      if (error.response) {
+        console.error("後端錯誤訊息:", error.response.data);
+      }
+      alert("加入購物車失敗，請稍後再試");
+      return false; // 不觸發動畫
+    }
+  };
+
   if (loading) return <div>商品載入中...</div>;
   if (error) return <div>錯誤：{error}</div>;
   if (!product) return <div>未找到商品</div>;
@@ -352,7 +773,7 @@ export default function RentProductDetail() {
 
   return (
     <div className="container py-4 mx-auto">
-      <Head>
+      {/* <Head>
         <title>租借商品詳情</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link
@@ -367,14 +788,14 @@ export default function RentProductDetail() {
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
         />
-      </Head>
+      </Head> */}
 
       {/* 商品詳細資訊 */}
       <div className="row">
         <div className="main-details d-flex flex-row justify-content-between align-items-start">
           <div className="row">
             {/* 圖片區域 */}
-            <div className="px-3 col-12 col-md-6 col-lg-6 order-1 mx-auto d-flex flex-column gap-5">
+            <div className="px-3 col-12 col-md-6 col-lg-6 order-1 mx-auto d-flex flex-column gap-2">
               <div className="main-image">
                 <Image
                   src={mainImage} // 動態設置大圖的 src
@@ -405,10 +826,7 @@ export default function RentProductDetail() {
                       const containerWidth = 538; // 小圖總容器
                       const gap = 10;
                       const imageCount = visibleImages.length;
-                      {
-                        /* const imageWidth =
-                        (containerWidth - (imageCount - 1) * gap) / imageCount; */
-                      }
+
                       const imageWidth = (containerWidth - (3 - 1) * gap) / 3;
                       const imageHeight = imageWidth; // 正方形
 
@@ -437,10 +855,7 @@ export default function RentProductDetail() {
                       const containerWidth = 538; // 小圖總容器
                       const gap = 10;
                       const imageCount = 3; // 最多顯示 3 張小圖
-                      {
-                        /* const imageWidth =
-                        (containerWidth - (imageCount - 1) * gap) / imageCount; */
-                      }
+
                       const imageWidth = (containerWidth - (3 - 1) * gap) / 3;
                       const imageHeight = imageWidth; // 正方形
 
@@ -466,18 +881,15 @@ export default function RentProductDetail() {
               <div className="rent-rules d-flex flex-column">
                 <p className="rules-title">租借規則</p>
                 <ul className="rules-content">
-                  <li>租借本人出示潛水證</li>
-                  <li>租用需先付款，並提供個人證件一張</li>
-                  <li>完成租借表單並完成簽名</li>
+                  <li>限本站會員租借</li>
                   <li>如有遺失或損害，需修復原有狀況或是全新賠償</li>
                   <li>
-                    租借與歸還時間限每日上午8:00至
-                    下午5:00，過時則以多借一天計算
+                    租借與歸還時間限每日上午8:00至下午5:00，過時則以多借一天計算
                   </li>
                   <li>
-                    以天計價，非24小時制度。例如:
-                    12/18日下午2點租借，12/19下午2點歸還，則算兩天
+                    以天計價，非24小時制度，例如：12/18日下午2:00租借，12/19下午2:00歸還，則算兩天
                   </li>
+                  <li>計價方式：(每日租金 + 每日押金) x 數量 x 租借天數</li>
                 </ul>
               </div>
             </div>
@@ -490,8 +902,10 @@ export default function RentProductDetail() {
                 </p>
                 <div className="product-name-fav d-flex flex-row justify-content-between align-items-center">
                   <p className="product-name">{product.name}</p>
-                  <div className="product-name-fav" onClick={handleClick}>
-                    <HeartIcon isFavorite={isFavorite} onClick={handleClick} />
+                  <div className="product-name-fav">
+                    {product && (
+                      <FavoriteButton userId={userId} rentalId={product.id} />
+                    )}
                   </div>
                 </div>
                 <div className="stars d-flex flex-row">
@@ -510,25 +924,37 @@ export default function RentProductDetail() {
                   <p className="product-price2">NT${product.price2}/日</p>
                 )}
                 <p className="product-price">NT${product.price}/日</p>
-                <p className="product-description">{product.description}</p>
+                <div className="product-description">
+                  {product.description?.split("\n").map((line, index) => (
+                    <div
+                      key={index}
+                      style={{ fontSize: "14px", lineHeight: "1.6" }}
+                    >
+                      {line}
+                      <br />
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="details-select d-flex flex-column">
                 <div className="product-color">
-                  <p className="color-title">產品顏色</p>
+                  <p className="color-title">商品顏色</p>
                   <div className="colors d-flex flex-row">
                     {product.specifications &&
                     product.specifications.some((spec) => spec.color_rgb) ? (
                       <div className="product-colors">
-                        {product.specifications.map(
-                          (spec, index) =>
-                            spec.color_rgb && (
-                              <span
-                                key={index}
-                                className="color-box"
-                                style={{ backgroundColor: spec.color_rgb }}
-                              ></span>
-                            )
-                        )}
+                        {colorNames.map((colorName, index) => (
+                          <span
+                            key={index}
+                            className={`color-box ${
+                              selectedColor === colorName ? "selected" : ""
+                            }`}
+                            style={{ backgroundColor: colorRGBs[index] }}
+                            onClick={() =>
+                              handleColorClick(colorName, colorRGBs[index])
+                            } // 點擊時更新選中顏色
+                          ></span>
+                        ))}
                       </div>
                     ) : (
                       <p className="no-colors">本商品暫無其他顏色</p>
@@ -536,29 +962,39 @@ export default function RentProductDetail() {
                   </div>
                 </div>
                 <div className="product-amount">
-                  <p className="amount-title">產品數量</p>
+                  <p className="amount-title">商品數量</p>
                   <div className="amounts d-flex flex-row align-items-center">
+                    {/* 減少數量按鈕 */}
                     <button
-                      className="quantity-btn minus"
-                      onClick={() =>
-                        setQuantity((prev) => (prev > 1 ? prev - 1 : prev))
-                      }
+                      className="btn btn-outline-secondary btn-sm"
+                      onClick={() => {
+                        if (quantity > 1) {
+                          setQuantity((prev) => prev - 1);
+                        }
+                      }}
                     >
                       <i className="bi bi-dash"></i>
                     </button>
+                    {/* 數量輸入框 */}
                     <input
                       type="text"
-                      id="quantity"
-                      className="quantity-input"
+                      className="form-control text-center mx-2"
+                      style={{ width: "50px" }}
                       value={quantity}
                       readOnly
                     />
+                    {/* 增加數量按鈕 */}
                     <button
-                      className="quantity-btn plus"
-                      onClick={() => setQuantity((prev) => prev + 1)}
+                      className="btn btn-outline-secondary btn-sm"
+                      onClick={() => {
+                        if (!product.stock || quantity < product.stock) {
+                          setQuantity((prev) => prev + 1);
+                        }
+                      }}
                     >
                       <i className="bi bi-plus"></i>
                     </button>
+
                     {/* 庫存判斷 */}
                     {product.stock && product.stock > 0 ? (
                       <p className="product-stock">
@@ -571,8 +1007,8 @@ export default function RentProductDetail() {
                 </div>
                 <div className="booking-date">
                   <p className="booking-title">預訂日期</p>
-                  <div className="booking-calendar d-flex flex-column align-items-center">
-                    <div id="fixed-calendar"></div>
+                  <div className="booking-calendar calendar-detail d-flex flex-column align-items-center">
+                    <div id="fixed-calendar" className=""></div>
                     <div className="d-flex flex-column selected-date-range w-100">
                       <p id="date-range-text" style={{ display: "none" }}></p>
                       <div
@@ -588,12 +1024,14 @@ export default function RentProductDetail() {
                 </div>
               </div>
               <div className="d-flex flex-row justify-content-between align-items-center product-btns">
-                <button type="button" className="mybtn btn-cart flex-grow-1">
+                {/* <button
+                  type="button"
+                  className="mybtn btn-cart flex-grow-1"
+                  onClick={handleAddToCart}
+                >
                   加入購物車
-                </button>
-                <button type="button" className="mybtn btn-buy flex-grow-1">
-                  直接購買
-                </button>
+                </button> */}
+                <AddToCartButton onClick={handleAddToCart} />
               </div>
             </div>
           </div>
@@ -601,9 +1039,9 @@ export default function RentProductDetail() {
       </div>
 
       {/* 商品描述及品牌介紹 */}
-      <div className="col-12 d-flex flex-column mt-4 under-details">
+      <div className="col-12 d-flex flex-column under-details">
         {/* 分頁按鈕 */}
-        <div className="d-flex flex-row justify-content-center align-items-center tab-buttons">
+        <div className="d-flex flex-row align-items-center tab-buttons">
           <button
             className={`tab-button ${
               activeTab === "description" ? "active" : ""
@@ -624,12 +1062,59 @@ export default function RentProductDetail() {
           {activeTab === "description" && (
             <div className="under-detail">
               <div className="d-flex flex-column under-details-content">
-                <p>{product.description2 || product.description}</p>
+                <div>
+                  {(product.description2 || product.description)
+                    ?.split("\n")
+                    .map((line, index) => (
+                      <div
+                        key={index}
+                        style={{ fontSize: "14px", lineHeight: "1.6" }}
+                      >
+                        {line}
+                        <br />
+                      </div>
+                    ))}
+                </div>
               </div>
               <div className="d-flex flex-column under-brand">
-                <p className="product-brand">品牌介紹</p>
-                <div className="d-flex flex-column under-details-brand">
-                  來自義大利的複合材料製造商C4創立於1986年，初始研發的是自行車使用之碳纖維材料，隨後將這樣的材料技術延伸至自由潛水/水中漁獵的裝備；卓越的性能與粗獷的外型，受到許多專業玩家的喜愛。
+                <p className="product-brand">
+                  品牌介紹<span>-</span>
+                  <span>{product.brand_name}</span>
+                </p>
+                <div className="d-flex under-details-brand">
+                  {/* 品牌 Logo 和描述 */}
+
+                  {/* 品牌 Logo */}
+                  {product.brand_img_url && (
+                    <Image
+                      src={
+                        product.brand_img_url &&
+                        product.brand_img_url.startsWith("/")
+                          ? product.brand_img_url
+                          : "/image/rent/no-brandimg.png"
+                      }
+                      alt={`${product.brand_name} Logo`}
+                      width={50}
+                      height={50}
+                      className="brand-logo"
+                      onError={(event) =>
+                        (event.target.src = "/image/rent/no-brandimg.png")
+                      } // 圖片載入錯誤時替換
+                    />
+                  )}
+                  {/* 品牌描述 */}
+                  <div className="brand-description">
+                    {(product.brand_description || "")
+                      .split("\n")
+                      .map((line, index) => (
+                        <div
+                          key={index}
+                          style={{ fontSize: "14px", lineHeight: "1.6" }}
+                        >
+                          {line}
+                        </div>
+                      ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -638,7 +1123,86 @@ export default function RentProductDetail() {
             <div className="under-comments">
               <div className="d-flex flex-column under-comments-content">
                 {/* 這裡放會員評價的內容 */}
-                <p>切版用：暫無評價。</p>
+                <div className="reviews-container">
+                  {/* 會員評價 1 */}
+                  <div className="review-card">
+                    <div className="user-info">
+                      <Image
+                        src="/avatar3.jpg"
+                        alt="User Avatar"
+                        className="user-avatar"
+                        width={150}
+                        height={150}
+                      />
+                      <div className="user-details">
+                        <div className="user-name-email">
+                          <span className="user-name">張三</span>
+                          <span className="user-email">
+                            (zhangsan@example.com)
+                          </span>
+                        </div>
+                        <div className="user-rating">
+                          ⭐⭐⭐⭐⭐ {/* 5 顆星 */}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="user-comment">
+                      這是我用過最好的產品！服務非常周到，物流也很快，強烈推薦給大家！
+                    </p>
+                  </div>
+
+                  {/* 會員評價 2 */}
+                  <div className="review-card">
+                    <div className="user-info">
+                      <Image
+                        src="/avatar3.jpg"
+                        alt="User Avatar"
+                        className="user-avatar"
+                        width={150}
+                        height={150}
+                      />
+                      <div className="user-details">
+                        <div className="user-name-email">
+                          <span className="user-name">李四</span>
+                          <span className="user-email">(lisi@example.com)</span>
+                        </div>
+                        <div className="user-rating">
+                          ⭐⭐⭐⭐ {/* 4 顆星 */}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="user-comment">
+                      產品質量不錯，但價格稍微有點高。客服態度很好，解決問題很迅速。
+                    </p>
+                  </div>
+
+                  {/* 會員評價 3 */}
+                  <div className="review-card">
+                    <div className="user-info">
+                      <Image
+                        src="/avatar3.jpg"
+                        alt="User Avatar"
+                        className="user-avatar"
+                        width={150}
+                        height={150}
+                      />
+                      <div className="user-details">
+                        <div className="user-name-email">
+                          <span className="user-name">王五</span>
+                          <span className="user-email">
+                            (wangwu@example.com)
+                          </span>
+                        </div>
+                        <div className="user-rating">
+                          ⭐⭐⭐⭐⭐ {/* 5 顆星 */}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="user-comment">
+                      非常滿意的一次購物體驗！產品功能強大，使用起來非常順手，值得推薦！
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -656,98 +1220,128 @@ export default function RentProductDetail() {
               key={product.id}
               className="col-12 col-sm-6 col-md-4 col-lg-3 you-may-like-product mb-4"
             >
-              <Link
-                href={`/rent/${product.id}`}
-                passHref
-                style={{
-                  cursor: "pointer",
-                  textDecoration: "none",
-                  color: "none",
-                }}
-              >
-                <div className="card border-0 h-100">
-                  <div className="d-flex justify-content-center align-items-center img-container">
-                    <Image
-                      src={product.img_url || "/img/rent/no-img.png"}
-                      className="product-img"
-                      alt={product.name}
-                      layout="intrinsic"
-                      width={248}
-                      height={248}
-                      objectFit="contain"
-                      priority
-                      unoptimized
-                    />
-                  </div>
-                  <div className="d-flex flex-column justify-content-start align-items-center card-body">
-                    <p className="product-brand">{product.brand}</p>
-                    <p className="product-name text-center">{product.name}</p>
-
-                    <div
-                      className={`price-container d-flex gap-3 ${
-                        product.price2 ? "has-discount" : ""
-                      }`}
-                    >
-                      <h6 className="product-price">NT$ {product.price} 元</h6>
-                      {product.price2 && (
-                        <h6 className="product-price2">
-                          NT$ {product.price2} 元
-                        </h6>
-                      )}
-                    </div>
-                    <div className="d-flex flex-row justify-content-center align-items-center product-color">
-                      {product.color_rgb && product.color_rgb !== "無顏色" ? (
-                        // 先將顏色陣列分割出來
-                        product.color_rgb
-                          .split(",")
-                          .slice(0, 3)
-                          .map((color, index) => (
-                            <span
-                              key={index}
-                              className="color-box"
-                              style={{ backgroundColor: color.trim() }}
-                            ></span>
-                          ))
-                      ) : (
-                        <span
-                          className="color-box"
-                          style={{
-                            backgroundColor: "transparent",
-                            border: "none",
+              <div className="card-container position-relative">
+                <Link
+                  href={`/rent/${product.id}`}
+                  passHref
+                  style={{
+                    cursor: "pointer",
+                    textDecoration: "none",
+                    color: "none",
+                  }}
+                  onClick={(e) => {
+                    if (e.defaultPrevented) return; // 如果事件已被阻止，就不執行跳轉
+                  }}
+                >
+                  <div className="card border-0 h-100">
+                    <div className="d-flex justify-content-center align-items-center img-container">
+                      <Image
+                        src={product.img_url || "/image/rent/no-img.png"}
+                        className="product-img"
+                        alt={product.name}
+                        layout="intrinsic"
+                        width={248}
+                        height={248}
+                        objectFit="contain"
+                        priority
+                        unoptimized
+                      />
+                      <div className="favorite-button-wrapper">
+                        <FavoriteButton
+                          userId={userId}
+                          rentalId={product.id}
+                          isCircle={true}
+                          className="circle-style"
+                          onFavoriteChange={(newStatus) => {
+                            console.log(`${product.name} 收藏狀態:`, newStatus);
+                            // 這裡可以加入更新推薦列表的邏輯
                           }}
-                        ></span>
-                      )}
+                        />
+                      </div>
+                    </div>
+                    <div className="d-flex flex-column justify-content-start align-items-center card-body">
+                      <p className="product-brand">{product.brand}</p>
+                      <p className="product-name text-center">{product.name}</p>
 
-                      {/* 若顏色數量超過3，顯示 '...' */}
-                      {product.color_rgb &&
-                        product.color_rgb !== "無顏色" &&
-                        product.color_rgb.split(",").length > 3 && (
+                      <div
+                        className={`price-container d-flex gap-3 ${
+                          product.price2 ? "has-discount" : ""
+                        }`}
+                      >
+                        <h6 className="product-price">
+                          NT$ {product.price} 元
+                        </h6>
+                        {product.price2 && (
+                          <h6 className="product-price2">
+                            NT$ {product.price2} 元
+                          </h6>
+                        )}
+                      </div>
+                      <div className="d-flex flex-row justify-content-center align-items-center product-color">
+                        {product.color_rgb && product.color_rgb !== "無顏色" ? (
+                          // 先將顏色陣列分割出來
+                          product.color_rgb
+                            .split(",")
+                            .slice(0, 3)
+                            .map((color, index) => (
+                              <span
+                                key={index}
+                                className="color-box"
+                                style={{ backgroundColor: color.trim() }}
+                              ></span>
+                            ))
+                        ) : (
                           <span
                             className="color-box"
                             style={{
                               backgroundColor: "transparent",
                               border: "none",
-                              textAlign: "center",
-                              lineHeight: "7.5px",
                             }}
-                          >
-                            ...
-                          </span>
+                          ></span>
                         )}
-                    </div>
 
-                    {/* hover出現收藏 & 加入購物車 */}
-                    <div className="icon-container d-flex flex-row">
-                      <div className="icon d-flex justify-content-center align-items-center">
-                        <i className="bi bi-heart"></i>
+                        {/* 若顏色數量超過3，顯示 '...' */}
+                        {product.color_rgb &&
+                          product.color_rgb !== "無顏色" &&
+                          product.color_rgb.split(",").length > 3 && (
+                            <span
+                              className="color-box"
+                              style={{
+                                backgroundColor: "transparent",
+                                border: "none",
+                                textAlign: "center",
+                                lineHeight: "7.5px",
+                              }}
+                            >
+                              ...
+                            </span>
+                          )}
                       </div>
-                      <div className="icon d-flex justify-content-center align-items-center">
-                        <i className="bi bi-cart"></i>
+
+                      {/* hover出現收藏 & 加入購物車 */}
+                      {/* <div className="icon-container d-flex flex-row"> */}
+                      {/* 收藏按鈕 */}
+                      {/* <div className="icon d-flex justify-content-center align-items-center"> */}
+                      {/* 使用 FavoriteButton 元件，傳入必要的 props */}
+                      {/* {product && (
+                          <FavoriteButton
+                            userId={userId} // 用戶 ID
+                            rentalId={product.id} // 商品的 rentalId
+                            className="icon d-flex justify-content-center align-items-center"
+                            onFavoriteChange={(newFavoriteStatus) => {
+                              console.log(
+                                `${product.name} 收藏狀態改變為:`,
+                                newFavoriteStatus
+                              );
+                            }}
+                          />
+                        )}
                       </div>
+                    </div> */}
                     </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              </div>
             </div>
           ))}
         </div>

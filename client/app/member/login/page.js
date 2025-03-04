@@ -3,20 +3,28 @@ import styles from "../Login.module.css";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function Login() {
   const [checkingAuth, setCheckingAuth] = useState(true);
-  // const [accountOrEmail, setAccountEmail] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [password1, setPassword1] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const { user, login } = useAuth() || {};
 
   const handleLogin = () => {
+    // setError("");
+    if (password !== password1) {
+      alert("密碼不一致，請重新輸入");
+      // console.log("密碼不一致");
+      return;
+    }
     console.log(email, password);
-    if (typeof login === 'function') {
+    if (typeof login === "function") {
       login(email, password);
     } else {
-      console.error('login is not a function');
+      console.error("login is not a function");
     }
   };
 
@@ -31,7 +39,11 @@ export default function Login() {
   return (
     <div className={styles.loginPage}>
       <div className={styles.main}>
-        <img src="/image/DiveIn-logo-dark-final.png" alt="logo" className={styles.logo} />
+        <img
+          src="/image/DiveIn-logo-dark-final.png"
+          alt="logo"
+          className={styles.logo}
+        />
         <div className={styles.line1}></div>
         <div className={styles.sectionLogin}>
           <h3>登入</h3>
@@ -45,16 +57,50 @@ export default function Login() {
             }}
             placeholder="Email"
           />
-          <input
-            type="password"
-            name="password"
-            className={styles.wordbox}
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-            }}
-            placeholder="密碼"
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              className={styles.wordbox}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="密碼"
+            />
+            <span
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute",
+                right: "2rem",
+                top: "50%",
+                transform: "translateY(-50%)",
+                cursor: "pointer",
+              }}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password1"
+              className={styles.wordbox}
+              value={password1}
+              onChange={(e) => setPassword1(e.target.value)}
+              placeholder="再次輸入密碼"
+            />
+            <span
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute",
+                right: "2rem",
+                top: "50%",
+                transform: "translateY(-50%)",
+                cursor: "pointer",
+              }}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
           <div className={styles.loginWays}>
             <div className={styles.loginBtn} onClick={handleLogin}>
               <h6>登入</h6>

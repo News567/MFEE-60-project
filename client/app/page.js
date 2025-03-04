@@ -11,13 +11,21 @@ import {
 } from "react-icons/fa";
 import { FiShoppingCart } from "react-icons/fi";
 import Link from "next/link";
+import { useState } from "react";
+import Carousel from "./components/Swiper/Carousel";
+
 
 export default function Home() {
+  // 設定串接資料
+  const [activity,setActivity] = useState([])
+  const [product,setProduct] = useState([])
+  const [article,setArticle] = useState([])
   return (
     <>
       <main>
         {/* KV */}
-        <div className={`${styles.kv}`}>
+        <Carousel/>
+        {/* <div className={`${styles.kv}`}>
           <div
             className={`w-100 d-flex justify-content-between align-items-center`}
           >
@@ -42,7 +50,7 @@ export default function Home() {
               <FaAngleRight />
             </button>
           </div>
-        </div>
+        </div> */}
 
         {/* section start */}
         <div className={`container ${styles.sectionStart}`}>
@@ -141,7 +149,7 @@ export default function Home() {
                 進階深潛或技術潛水
               </button>
             </div>
-            <div className={`d-flex justify-content-between ${styles.cards}`}>
+            <div className={`d-flex justify-content-sm-between justify-content-around w-100 ${styles.cards}`}>
               <div className={styles.card}>
                 <div className={styles.imgContainer}>
                   <div className={styles.circleIcons}>
@@ -301,12 +309,12 @@ export default function Home() {
                       />
                     </div>
                     <div className={styles.cardText}>
-                      <p className={`${styles.p} ${styles.p1}`}>專業教練</p>
+                      <p className={`${styles.p} ${styles.p1}`}>精彩活動</p>
                       <p className={`${styles.p} ${styles.p2}`}>
-                        國際認證的專業教練
+                      發現海底的無限魅力，開啟你的潛水冒險
                       </p>
-                      <Link href="#" className={`${styles.p} ${styles.p3}`}>
-                        我們也提供初學者到進階潛水的完整課程
+                      <Link href="/activity" className={`${styles.p} ${styles.p3}`}>
+                        我們提供豐富多元的潛水活動
                       </Link>
                     </div>
                   </div>
@@ -323,9 +331,9 @@ export default function Home() {
                       <p className={`${styles.p} ${styles.p2}`}>
                         嚴選品質，確保每件商品經過嚴格檢驗
                       </p>
-                      <a href="#" className={`${styles.p} ${styles.p3}`}>
+                      <Link href="/products" className={`${styles.p} ${styles.p3}`}>
                         現在就去逛逛！
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -347,9 +355,9 @@ export default function Home() {
                       <p className={`${styles.p} ${styles.p2}`}>
                         不想購買？租借無憂，輕鬆享受潛水樂趣
                       </p>
-                      <a href="#" className={`${styles.p} ${styles.p3}`}>
+                      <Link href="/rent" className={`${styles.p} ${styles.p3}`}>
                         我們提供設備租借服務，減少旅遊負擔
-                      </a>
+                      </Link>
                     </div>
                   </div>
                   <div className={`d-flex align-items-center ${styles.card}`}>
@@ -365,9 +373,9 @@ export default function Home() {
                       <p className={`${styles.p} ${styles.p2}`}>
                         提供討論區讓學員交流心得，幫助您安心選擇課程與裝備
                       </p>
-                      <a href="#" className={`${styles.p} ${styles.p3}`}>
+                      <Link href="/article" className={`${styles.p} ${styles.p3}`}>
                         看看大家都在討論什麼
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -380,7 +388,7 @@ export default function Home() {
         <div className={`container ${styles.section} ${styles.sectionCourse}`}>
           <h3 className={styles.h3}>零基礎學習，輕鬆進入深藍</h3>
           <div className={styles.cardsAndDots}>
-            <div className={`d-flex justify-content-between`}>
+            <div className={`d-flex justify-content-sm-between justify-content-around`}>
               <div className={`${styles.card}`}>
                 <div className={styles.imgContainer}>
                   <img

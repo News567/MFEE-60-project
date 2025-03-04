@@ -10,15 +10,18 @@ router.get("/list/:id", async (req, res) => {
         activity_city.name AS city_name, 
         groups_image.img_url AS group_img, 
         activity_country.name AS country_name, 
-        users.name AS user_name
+        users.name AS user_name,
+        COUNT(groups_participants.id) AS participant_number
         FROM groups 
         LEFT JOIN activity_city ON groups.groups_city_id = activity_city.id
         LEFT JOIN groups_image ON groups.id = groups_image.groups_id
         LEFT JOIN activity_country ON activity_city.activity_country_id = activity_country.id
         LEFT JOIN users ON groups.user_id = users.id
-        WHERE groups.id = ${id}`;
+        LEFT JOIN groups_participants ON groups_participants.groups_id = groups.id
+        WHERE groups.id = ${id}
+        GROUP BY groups.id, activity_city.name, groups_image.img_url, activity_country.name, users.name `
         const [rows] = await pool.execute(sql);
-        // console.log(rows[0]);
+        console.log(rows[0]);
         res.status(200).json({
             status: "success",
             message: "成功獲取資料",

@@ -69,11 +69,11 @@ router.get("/:id", async (req, res) => {
     product.variants = variants;
 
     const imagesSql = `
-    SELECT pi.image_url, pi.variant_id
-    FROM product_images pi
-    WHERE pi.product_id = ?
-    ORDER BY pi.is_main DESC, pi.sort_order ASC
-  `;
+      SELECT pi.image_url, pi.variant_id
+      FROM product_images pi
+      WHERE pi.product_id = ?
+      ORDER BY pi.is_main DESC, pi.sort_order ASC
+    `;
     const [images] = await pool.execute(imagesSql, [productId]);
 
     // 建立一個變體對應的圖片 Map
@@ -93,6 +93,57 @@ router.get("/:id", async (req, res) => {
 
     // 獨立出商品的主要圖片（不屬於變體）
     product.images = variantImageMap.get(null) || [];
+
+    // ----- 從這裡開始添加新的數據查詢 -----
+
+    // 添加商品詳情查詢
+    const detailsSql = `
+      SELECT * FROM product_details 
+      WHERE product_id = ? 
+      ORDER BY sort_order ASC
+    `;
+    const [details] = await pool.execute(detailsSql, [productId]);
+    product.details = details;
+
+    // 添加配件查詢
+    const accessoriesSql = `
+      SELECT p.*, pi.image_url as main_image 
+      FROM product_accessories pa
+      JOIN product p ON pa.accessory_product_id = p.id
+      LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_main = 1
+      WHERE pa.product_id = ?
+    `;
+    const [accessories] = await pool.execute(accessoriesSql, [productId]);
+    product.accessories = accessories;
+
+    // 添加組合產品查詢
+    const bundlesSql = `
+      SELECT pb.*, 
+             SUM(pv.price * pbi.quantity) as original_total
+      FROM product_bundle pb
+      JOIN product_bundle_items pbi ON pb.id = pbi.bundle_id
+      JOIN product_variant pv ON pbi.product_id = pv.product_id
+      WHERE pbi.product_id = ?
+      GROUP BY pb.id
+    `;
+    const [bundles] = await pool.execute(bundlesSql, [productId]);
+    
+    // 為每個組合查詢詳細項目
+    for (const bundle of bundles) {
+      const bundleItemsSql = `
+        SELECT pbi.*, p.name as product_name, pv.price, pi.image_url as main_image
+        FROM product_bundle_items pbi
+        JOIN product p ON pbi.product_id = p.id
+        JOIN product_variant pv ON p.id = pv.product_id
+        LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_main = 1
+        WHERE pbi.bundle_id = ?
+      `;
+      const [bundleItems] = await pool.execute(bundleItemsSql, [bundle.id]);
+      bundle.items = bundleItems;
+    }
+    product.bundles = bundles;
+
+    // ----- 新增查詢結束 -----
 
     res.json({ status: "success", data: product });
   } catch (error) {

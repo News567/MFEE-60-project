@@ -5,10 +5,56 @@
   margin-bottom: 20px; /* 添加底部间距 */
   display: flex;
   justify-content: space-between; /* 将筛选器和按钮区域分开 */
-  padding: 8px 0 15px 0; /* 添加一些内边距 */
+  padding: 0 15px 15px 0; /* 添加一些内边距 */
   background-color: #fff; /* 设置背景颜色 */
   margin: 0 8px;
 }
+
+.article-search-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  overflow: hidden; /* 防止內部元素溢出 */
+  background-color: #fff;
+  width: 100%;
+  max-width: 400px; /* 控制最大寬度 */
+}
+
+.article-search-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 7px 15px;
+  font-size: 16px;
+  border-radius: 30px; /* 讓 input 也有圓角 */
+}
+
+.clear-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  font-size: 18px;
+  color: #888;
+}
+
+.clear-button:hover {
+  color: #333;
+}
+
+.article-search-box .search-button {
+  background-color: #029cad; /* 背景顏色 */
+  color: white;
+  border: none;
+  padding: 7px 20px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.article-search-box .search-button:hover {
+  background-color: #02818b; /* 滑鼠懸停時改變背景顏色 */
+}
+
 .article-controls-btn {
   display: flex;
   justify-content: flex-end; /* 将按钮区域置于右侧 */
@@ -47,32 +93,23 @@
   align-items: flex-start; /* 确保内容从上往下排列 */
   min-height: auto; /* 让容器自动适应高度 */
   text-align: left; /* 避免 inline-block 触发居中 */
-  padding-bottom: 650px; /* 確保底部有足夠的間距 */
+  padding-bottom: 100px; /* 確保底部有足夠的間距 */
 }
 
 .article-list-card {
   display: inline-block;
   width: 48%; /* 让每个卡片占 48%，留一点间距 */
-  margin: 8px 1%; /* 水平间距 */
+  margin: 8px 1% 25px 1%; /* 水平间距 */
   vertical-align: top; /* 避免 inline-block 造成的对齐问题 */
-  height: 25%; /* 让所有卡片高度一致 */
+  height: 300px;
 }
 
 .article-list-card-photo {
-  position: relative; /* 相对定位 */
-  width: 100%; /* 确保图片容器占满父元素 */
+  position: relative;
   height: 40%; /* 图片区域占卡片高度的40% */
   overflow: hidden; /* 隐藏超出部分 */
-}
-
-.article-list-card-photo-img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* 根据长边适配并裁剪 */
-  object-position: center; /* 图片居中 */
+  object-fit: cover;
+  object-position: center;
 }
 
 .article-list-card-text {
@@ -87,6 +124,13 @@
   font-size: 20px;
   font-weight: 700;
   margin: 10px 0;
+}
+
+.article-list-icon {
+  margin-right: 6px; /* 調整數值來改變距離 */
+  display: inline-flex; /* 保持圖標與文字對齊 */
+  align-items: center;
+  font-size: 15px;
 }
 
 .article-list-card-info {
@@ -132,11 +176,21 @@
 }
 
 .article-list-card-btn .btn {
-  border-radius: 30px; /* 控制边框圆角大小 */
-  color: black;
-  background-color: #ffd500;
+  margin: 5px;
+  text-align: center; /* 文字置中 */
+  font-size: 14px; /* 字體大小 */
+  border: none; /* 移除邊框 */
+  border-radius: 4px; /* 圓角邊框 */
+  padding: 8px 19px; /* 內邊距 */
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  color: black; /* 文字顏色為白色 */
+  text-align: center; /* 文字置中 */
   padding: 4px 33px; /* 上下 5px，高度更扁，左右 30px，宽度更长 */
-  font-size: 16px;
+}
+
+.article-list-card-btn .btn:hover {
+  background-color: #029cad; /* 背景顏色 */
+  color: #fff; /* 文字顏色為白色 */
 }
 
 /* Pagination 分页 */
@@ -146,8 +200,7 @@
   background-color: white;
   list-style: none;
   width: 100%;
-  /* padding: 40px 0; */
-  margin-top: 100px;
+  margin-top: 60px;
 }
 
 .page-item {

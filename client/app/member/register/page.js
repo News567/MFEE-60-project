@@ -4,12 +4,14 @@ import styles from "../Login.module.css";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function Register() {
   const [checkingAuth, setCheckingAuth] = useState(true);
-  // const [account, setAccount] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [password1, setPassword1] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const { user, register } = useAuth() || {};
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -25,15 +27,28 @@ export default function Register() {
       alert("請輸入密碼");
       return;
     }
+    if (!password1.trim()) {
+      alert("請再次輸入密碼");
+      return;
+    }
+    // console.log("password:", password, "password1:", password1);
 
     setLoading(true);
 
     try {
-      await register(email, password);
+      const response = await register(email, password, password1);
+      console.log("register response:", response);
+      alert("註冊成功，請登入！");
       router.push("/member/login");
     } catch (error) {
       console.error("註冊錯誤:", error);
-      alert("註冊失敗，請稍後再試");
+      // 如果錯誤訊息中包含 'Email 已存在'
+      if (error.message && error.message.includes("Email 已存在")) {
+        alert("此 Email 已被註冊，請直接登入！");
+        router.push("/member/login");
+      } else {
+        alert("註冊失敗，請稍後再試");
+      }
     } finally {
       setLoading(false);
     }
@@ -51,7 +66,11 @@ export default function Register() {
   return (
     <div className={styles.loginPage}>
       <div className={styles.main}>
-        <img src="/image/DiveIn-logo-dark-final.png" alt="logo" className={styles.logo} />
+        <img
+          src="/image/DiveIn-logo-dark-final.png"
+          alt="logo"
+          className={styles.logo}
+        />
         <div className={styles.line1}></div>
         <div className={styles.sectionLogin}>
           <h3>註冊</h3>
@@ -65,16 +84,51 @@ export default function Register() {
             }}
             placeholder="Email"
           />
-          <input
-            type="password"
-            name="password"
-            className={styles.wordbox}
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-            }}
-            placeholder="密碼"
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              className={styles.wordbox}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="密碼"
+            />
+            <span
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute",
+                right: "2rem",
+                top: "50%",
+                transform: "translateY(-50%)",
+                cursor: "pointer",
+              }}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password1"
+              className={styles.wordbox}
+              value={password1}
+              onChange={(e) => setPassword1(e.target.value)}
+              placeholder="再次輸入密碼"
+            />
+            <span
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute",
+                right: "2rem",
+                top: "50%",
+                transform: "translateY(-50%)",
+                cursor: "pointer",
+              }}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
+          
 
           <div className={styles.loginWays}>
             <div className={styles.loginBtn} onClick={handleRegister}>

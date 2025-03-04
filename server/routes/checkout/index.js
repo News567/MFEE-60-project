@@ -179,30 +179,54 @@ router.post("/complete", async (req, res) => {
 
     // 5. 保存配送資訊(如果有)
     if (shippingInfo) {
-      // 標準化地址格式
-      const shippingAddress =
-        shippingInfo.method === "homeDelivery"
-          ? `${shippingInfo.city}${shippingInfo.address}`
-          : `${shippingInfo.storeName} (${shippingInfo.storeAddress})`;
+      // 判斷配送方式
+      const isHomeDelivery = shippingInfo.method === "home_delivery";
 
-      // 標準化配送方式
-      const shippingMethod =
-        shippingInfo.method === "homeDelivery"
-          ? "home_delivery"
-          : "convenience_store";
+      // 宅配與超商取貨的地址處理方式不同
+      let shippingAddress;
+      if (isHomeDelivery) {
+        shippingAddress = `${shippingInfo.city}${shippingInfo.address}`;
+      } else {
+        shippingAddress = shippingInfo.storeAddress || "";
+      }
 
-      await connection.execute(
-        `INSERT INTO order_shipping_info 
-         (order_id, recipient_name, recipient_phone, shipping_address, shipping_method) 
-         VALUES (?, ?, ?, ?, ?)`,
-        [
-          orderId,
-          shippingInfo.name,
-          shippingInfo.phone,
-          shippingAddress,
-          shippingMethod,
-        ]
-      );
+      // 準備插入資料庫的欄位和值
+      let insertQuery = `
+    INSERT INTO order_shipping_info 
+    (order_id, recipient_name, recipient_phone, shipping_address, shipping_method
+  `;
+
+      let insertValues = [
+        orderId,
+        shippingInfo.name,
+        shippingInfo.phone,
+        shippingAddress,
+        shippingInfo.method,
+      ];
+
+      // 如果是便利商店取貨，加入商店相關欄位
+      if (!isHomeDelivery) {
+        insertQuery += `, store_id, store_name, store_address`;
+        insertValues.push(
+          shippingInfo.storeId || "",
+          shippingInfo.storeName || "",
+          shippingInfo.storeAddress || ""
+        );
+      }
+
+      // 完成 SQL 語句
+      insertQuery += `) VALUES (${insertValues.map(() => "?").join(", ")})`;
+
+      // 執行插入
+      await connection.execute(insertQuery, insertValues);
+
+      console.log("已保存配送資訊:", {
+        orderId,
+        shippingMethod: shippingInfo.method,
+        isHomeDelivery,
+      });
+    } else {
+      console.log("無需保存配送資訊");
     }
 
     // 6. 移動購物車商品到訂單

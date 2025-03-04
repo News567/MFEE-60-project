@@ -42,6 +42,7 @@ router.get("/", async (req, res) => {
             LEFT JOIN activity_city ON activity.activity_city_id = activity_city.id
             LEFT JOIN activity_image ON activity.id = activity_image.activity_id AND activity_image.is_main = 1
             LEFT JOIN activity_country ON activity_city.activity_country_id = activity_country.id
+            LEFT JOIN activity_project ON activity_project.activity_id = activity.id
             WHERE activity.price BETWEEN ${minPrice} AND ${maxPrice} `
 
         if (location) {
@@ -107,7 +108,8 @@ router.get("/", async (req, res) => {
                 sql += ` AND (${durationCondition}) `;
             }
         }
-        sql += ` ORDER BY ${orderBy}
+        sql += ` GROUP BY activity.id
+        ORDER BY ${orderBy}
         LIMIT ? OFFSET ? `;
         console.log(sql);
         const [rows] = await pool.execute(sql, [limit, firstActivity]);
@@ -119,7 +121,7 @@ router.get("/", async (req, res) => {
         const totalPages = Math.ceil(totalCount / limit);
 
         // const totalPages =
-        // console.log(rows);
+        console.log(rows);
         res.status(200).json({
             status: "success",
             data: rows,

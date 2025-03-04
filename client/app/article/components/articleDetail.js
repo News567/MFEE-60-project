@@ -1,9 +1,31 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import axios from "axios";
-import "./articleList.css";
+import DOMPurify from "dompurify"; // 用於清理 HTML 內容
+import "./article.css";
 
+// ArticleContent 組件：用於顯示 CKEditor 的 HTML 內容
+const ArticleContent = ({ article }) => {
+  const [sanitizedContent, setSanitizedContent] = useState("");
+
+  // 當 article.content 變化時，清理 HTML 內容
+  useEffect(() => {
+    if (article.content) {
+      const cleanedContent = DOMPurify.sanitize(article.content);
+      setSanitizedContent(cleanedContent);
+    }
+  }, [article.content]);
+
+  return (
+    <div className="article-content-area">
+      <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+    </div>
+  );
+};
+
+// ArticleDetail 組件：用於顯示文章詳情
 export default function ArticleDetail() {
   const { id } = useParams(); // 從 URL 中獲取文章 ID
   const [article, setArticle] = useState(null); // 文章數據
@@ -11,37 +33,25 @@ export default function ArticleDetail() {
   const [error, setError] = useState(null); // 錯誤狀態
   const [relatedArticles, setRelatedArticles] = useState([]); // 相關文章
 
-  useEffect(() => {
-    // 從 API 獲取文章數據
-    const fetchArticle = async () => {
-      try {
-        const res = await axios.get(`http://localhost:3005/api/article/${id}`);
-        setArticle(res.data.data); // 根據返回結果，設置數據
-      } catch (err) {
-        setError(err.message); // 設置錯誤訊息
-      } finally {
-        setLoading(false); // 加載完成
-      }
-    };
+  const backendURL = "http://localhost:3005";
+  const defaultImage = "/uploads/article/no_is_main.png";
+  const [imageUrl, setImageUrl] = useState(defaultImage);
 
-    const fetchRelatedArticles = async (categoryId) => {
-      try {
-        const res = await axios.get(
-          `http://localhost:3005/api/article/related/${categoryId}`
-        );
-        setRelatedArticles(res.data.data); // 設置相關文章數據
-      } catch (err) {
-        console.error("Error fetching related articles:", err.message);
-      }
-    };
+  // 當 article.img_url 變化時，設置圖片 URL
+  // useEffect(() => {
+  //     if (article && article.img_url) {
+  //         const fullImageUrl = article.img_url.startsWith("http")
+  //             ? article.img_url
+  //             : `${backendURL}${article.img_url || defaultImage}`;
+  //         setImageUrl(fullImageUrl);
+  //     }
+  // }, [article]);
 
-    fetchArticle();
-  }, [id]);
-
+  // 從 API 獲取文章數據
   useEffect(() => {
     const fetchArticle = async () => {
       try {
-        const res = await axios.get(`http://localhost:3005/api/article/${id}`);
+        const res = await axios.get(`${backendURL}/api/article/${id}`);
         const data = res.data.data;
 
         // 將 tags 字串轉為陣列
@@ -56,6 +66,19 @@ export default function ArticleDetail() {
 
         setArticle(data);
         setRelatedArticles(formattedRelatedArticles); // 更新相關文章
+
+        // 找到符合條件的封面圖片
+        if (article?.images) {
+          const mainImage = article.images.find(
+            (img) => img.is_main === 1 && img.is_deleted === 0
+          );
+
+          const fullImageUrl = mainImage
+            ? `${backendURL}${mainImage.img_url}`
+            : defaultImage;
+
+          setImageUrl(fullImageUrl);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -66,26 +89,20 @@ export default function ArticleDetail() {
     fetchArticle();
   }, [id]);
 
-  if (loading) return <div>Loading...</div>; // 加載中顯示 Loading
-  if (error) return <div>Error: {error}</div>; // 錯誤時顯示錯誤訊息
-  if (!article) return <div>No article found</div>; // 如果沒有數據，顯示提示
-
   // 渲染回覆
   const renderReplies = () => {
-    // 如果沒有回覆或回覆數量為 0，顯示提示文字
     if (!article.replies || article.replies.length === 0) {
       return <div>目前沒有留言</div>;
     }
 
-    // 如果有回覆，則開始渲染
     return article.replies.map((reply) => (
       <div key={reply.id}>
         {/* 層級1回覆 */}
         {Number(reply.level) === 1 && (
           <div className="reply1">
             <img
-              src="../img/article/reply1.jpg"
-              className="reply-avatar1"
+              src="../img/article/reply2.jpg"
+              className="reply-avatar2"
               alt=""
             />
             <div className="reply-details1">
@@ -148,9 +165,19 @@ export default function ArticleDetail() {
     ));
   };
 
+  // 加載中顯示 Loading
+  if (loading) return <div>Loading...</div>;
+
+  // 錯誤時顯示錯誤訊息
+  if (error) return <div>Error: {error}</div>;
+
+  // 如果沒有數據，顯示提示
+  if (!article) return <div>No article found</div>;
+
   return (
     <div className="article col-9">
       <div className="articleDetail">
+        {/* 文章標題 */}
         <div className="title">
           <div className="text-area">{article.title}</div>
           <div className="author-area">
@@ -162,18 +189,27 @@ export default function ArticleDetail() {
             {article.publish_at}
           </div>
         </div>
+
+        {/* 文章主圖 */}
         <div className="main-photo">
-          <img
-            src={
-              article.img_url && article.img_url !== ""
-                ? article.img_url
-                : "/default-image.jpg"
-            }
-            className="img-fluid"
-            alt="main-photo"
+          <Image
+            src={imageUrl}
+            alt="Article Thumbnail"
+            fill
+            style={{ objectFit: "cover" }}
+            sizes="(max-width: 768px) 100vw, 50vw"
+            onError={(e) => setImageUrl(defaultImage)} // 这里修正了默认图片路径
           />
         </div>
-        <div className="article-content-area">{article.content}</div>
+
+        {/* 文章內容 */}
+        {article && (
+          <div className="article-content-area">
+            <ArticleContent article={article} />
+          </div>
+        )}
+
+        {/* 文章標籤 */}
         <div className="tag-area">
           {Array.isArray(article.tags) ? (
             article.tags.map((tag, index) => (
@@ -185,51 +221,21 @@ export default function ArticleDetail() {
             <span>No tags available</span>
           )}
         </div>
-        {/* tag點擊事件 */}
 
-        {/* import { useHistory } from 'react-router-dom';
-
-const TagList = ({ tags }) => {
-  const history = useHistory();
-
-  // 點擊標籤時觸發的函數
-  const handleTagClick = (tag) => {
-    // 假設有一個搜尋頁面，根據 tag 查詢文章
-    history.push(`/search?tag=${tag}`);
-  }; */}
-
-        {/* <div className="tag-area">
-      {Array.isArray(tags) ? (
-        tags.map((tag, index) => (
-          <span
-            key={index}
-            className="tag"
-            onClick={() => handleTagClick(tag)}
-          >
-            #{tag.trim()}
-          </span>
-        ))
-      ) : (
-        <span>No tags available</span>
-      )}
-    </div> */}
-
+        {/* 留言區 */}
         <div className="replyArea">
           <div className="replyFilter">
             <div className="totalReply">共10筆留言</div>
             <div className="timeSort">
               新舊排序<i className="fa-solid fa-arrows-up-down"></i>
             </div>
-          </div>{" "}
-        </div>
-
-        <div className="articleDetail">
-          <div className="replyArea">
-            {renderReplies()} {/* 渲染已加載的回覆 */}
+          </div>
+          <div className="articleDetail">
+            <div className="replyArea">{renderReplies()}</div>
           </div>
         </div>
 
-        {/* more reply */}
+        {/* 更多留言輸入框 */}
         <div className="more-reply">
           <img
             src="../img/article/reply3.jpg"
@@ -241,47 +247,59 @@ const TagList = ({ tags }) => {
         <div className="button-container">
           <button className="more-btn">更多</button>
         </div>
-        {/* related article */}
-        <div className="related-article-area-title">相關文章</div>
 
+        {/* 相關文章 */}
+        <div className="related-article-area-title">相關文章</div>
         <div className="related-article-area row row-cols-1 row-cols-md-2">
-          {relatedArticles.map((relatedArticle, index) => (
-            <div className="related-card" key={index}>
-              <div className="img-container">
-                <img
-                  src={
-                    relatedArticle.img_url ||
-                    "../img/article/article-ex-main-photo.jpeg"
-                  }
-                  alt="..."
-                />
-              </div>
-              <div className="card-body">
-                <div className="card-title">{relatedArticle.title}</div>
-                <div className="card-content">{relatedArticle.content}</div>
-                <div className="related-tag-area">
-                  {Array.isArray(relatedArticle.tags) ? (
-                    relatedArticle.tags.map((tag, index) => (
-                      <span key={index} className="tag">
-                        #{tag.trim()}
-                      </span>
-                    ))
-                  ) : (
-                    <span>No tags available</span>
-                  )}
+          {relatedArticles.map((relatedArticle, index) => {
+            const relatedImageUrl = relatedArticle.img_url?.startsWith("http")
+              ? relatedArticle.img_url
+              : `${backendURL}${relatedArticle.img_url || defaultImage}`;
+
+            return (
+              <div className="related-card" key={index}>
+                <div className="img-container">
+                  <Image
+                    className="article-list-card-photo-img"
+                    src={relatedImageUrl}
+                    alt="Article Thumbnail"
+                    width={300}
+                    height={200}
+                    style={{ objectFit: "cover", objectPosition: "center" }}
+                    onError={(e) => {
+                      e.currentTarget.src = defaultImage;
+                    }}
+                  />
                 </div>
-                <div className="others-reply-area">
-                  <div className="good1">
-                    <i className="fa-regular fa-thumbs-up"></i>1
+                <div className="card-body">
+                  <div className="card-title">{relatedArticle.title}</div>
+                  <div className="card-content">{relatedArticle.content}</div>
+                  <div className="related-tag-area">
+                    {Array.isArray(relatedArticle.tags) ? (
+                      relatedArticle.tags.map((tag, index) => (
+                        <span key={index} className="tag">
+                          #{tag.trim()}
+                        </span>
+                      ))
+                    ) : (
+                      <span>No tags available</span>
+                    )}
                   </div>
-                  <div className="comment">
-                    <i className="fa-regular fa-thumbs-down"></i>10
+                  <div className="others-reply-area">
+                    <div className="good1">
+                      <i className="fa-regular fa-thumbs-up"></i>
+                      {relatedArticle.likes_count || 0}
+                    </div>
+                    <div className="comment">
+                      <i className="fa-regular fa-thumbs-down"></i>
+                      {relatedArticle.dislikes_count || 0}
+                    </div>
+                    <div className="others-reply">回覆</div>
                   </div>
-                  <div className="others-reply">回覆</div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

@@ -42,7 +42,6 @@
   justify-content: center;
   align-items: center;
   font-size: 20px;
-  display: flex;
 }
 .circleIcon {
   background-color: #fff;
@@ -212,7 +211,7 @@
     }
   }
   .cards {
-    padding: 0px 15px 30px 15px;
+    padding: 0px 0px 30px 0px;
     text-decoration: none;
     .card {
       display: flex;
@@ -282,7 +281,6 @@
     }
     .cards {
       padding: 0;
-      justify-content: center !important;
       .card {
         display: flex;
         flex-direction: column;

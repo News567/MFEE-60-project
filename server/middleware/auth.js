@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken";
 
 export function checkToken (req, res, next) {
   let token = req.get("Authorization");
+  console.log('JWT_SECRET:', process.env.JWT_SECRET);
+
   if (!token) {
     return res.status(401).json({
       status: "error",

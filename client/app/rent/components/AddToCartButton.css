@@ -1,0 +1,25 @@
+.mybtn {
+  border-radius: 50px;
+  padding: 10px 20px;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(45deg, #219ebc, #ffd500); /* 藍色到黃色 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mybtn:hover {
+  background: linear-gradient(45deg, #ffd500, #219ebc); /* 黃色到藍色 */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.mybtn:active {
+  transform: scale(0.95);
+}

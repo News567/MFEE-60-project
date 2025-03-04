@@ -186,7 +186,7 @@ router.post("/add", async (req, res) => {
         if (!startDate || !endDate) {
           return res.status(400).json({
             success: false,
-            message: "租賃商品需要起始和結束日期",
+            message: "租借商品需要起始和結束日期",
           });
         }
 
@@ -227,7 +227,7 @@ router.post("/add", async (req, res) => {
           });
         }
 
-        // 檢查租賃商品是否存在
+        // 檢查租借商品是否存在
         const [rental] = await pool.execute(
           "SELECT * FROM rent_item WHERE id = ? AND is_deleted = 0",
           [rentalId]
@@ -236,19 +236,17 @@ router.post("/add", async (req, res) => {
         if (rental.length === 0) {
           return res.status(400).json({
             success: false,
-            message: "找不到指定租賃商品",
+            message: "找不到指定租借商品",
           });
         }
 
-        const stock = parseInt(rental[0].stock, 10);
+        const stock = rental[0].stock === null ? Infinity : parseInt(rental[0].stock, 10);
         if (isNaN(stock)) {
-          return res.status(500).json({
-            success: false,
-            message: "庫存數據異常",
-          });
+            console.error("庫存數據異常:", rental[0].stock);
+            return res.status(500).json({ success: false, message: "庫存數據異常" });
         }
 
-        //檢查此次租賃數量是否超過庫存
+        //檢查此次租借數量是否超過庫存
         if (stock < quantity) {
           return res.status(400).json({
             success: false,
@@ -333,6 +331,7 @@ router.post("/add", async (req, res) => {
   } catch (error) {
     console.error("加入購物車失敗:", error);
     res.status(500).json({ success: false, message: "加入購物車失敗" });
+    res.status(400).json({ success: false, message: "404 Error" });
   }
 });
 
@@ -414,7 +413,7 @@ router.get("/:userId", async (req, res) => {
       [cartId]
     );
 
-    // 4. 獲取租賃項目並計算租期
+    // 4. 獲取租借項目並計算租期
     const [rentals] = await pool.execute(
       `SELECT 
         cri.id,
@@ -442,9 +441,9 @@ router.get("/:userId", async (req, res) => {
 
       return {
         ...item,
-        rental_fee: rentalFee, //租賃總費用
+        rental_fee: rentalFee, //租借總費用
         deposit_fee: item.deposit * item.quantity, // 直接使用資料庫的押金（先簡單計算，再看要不要根據天數變化去計算）
-        subtotal: rentalFee + item.deposit * item.quantity, //總押金＋租賃費用=總費用
+        subtotal: rentalFee + item.deposit * item.quantity, //總押金＋租借費用=總費用
       };
     });
 
@@ -485,7 +484,7 @@ router.get("/:userId", async (req, res) => {
         products: productTotal,
         activities: activityTotal,
         rentals: rentalTotals,
-        // 最終總金額（包含租賃費用但不包含押金）
+        // 最終總金額（包含租借費用但不包含押金）
         final: productTotal + activityTotal + rentalTotals.rental_fee,
       },
     };
@@ -678,7 +677,7 @@ router.put("/update", async (req, res) => {
       }
 
       case "rental": {
-        // 檢查租賃項目是否存在於該用戶的購物車
+        // 檢查租借項目是否存在於該用戶的購物車
         const [existingItem] = await pool.execute(
           `SELECT cri.*, ri.stock
            FROM cart_rental_items cri
@@ -690,7 +689,7 @@ router.put("/update", async (req, res) => {
         if (existingItem.length === 0) {
           return res.status(404).json({
             success: false,
-            message: "找不到租賃項目",
+            message: "找不到租借項目",
           });
         }
 

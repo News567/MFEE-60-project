@@ -75,7 +75,7 @@ router.get("/reserve", async (req, res) => {
 
     const transactionId = linePayResponse.body.info.transactionId;
 
-    // 🚀 **不使用 session，直接讓前端保存 `transactionId`**
+    // **不使用 session，直接讓前端保存 `transactionId`**
     successResponse(res, {
       transactionId,
       paymentUrl: linePayResponse.body.info.paymentUrl.web,
@@ -90,14 +90,17 @@ router.get("/confirm", async (req, res) => {
   try {
     const transactionId = req.query.transactionId;
     if (!transactionId) {
-      return errorResponse(res, "缺少交易編號");
+      return errorResponse(res, "❌ 缺少交易編號");
     }
 
-    const amount = req.query.amount; // 前端需要提供交易金額
+    const amount = req.query.amount;
     if (!amount || isNaN(Number(amount))) {
-      return errorResponse(res, "金額錯誤");
+      return errorResponse(res, "❌ 金額錯誤");
     }
 
+    console.log("🟢 確認 LINE Pay 交易:", transactionId);
+
+    // **1️⃣ 呼叫 LINE Pay 確認 API**
     const linePayResponse = await linePayClient.confirm.send({
       transactionId: transactionId,
       body: {
@@ -106,9 +109,40 @@ router.get("/confirm", async (req, res) => {
       },
     });
 
-    successResponse(res, { ...linePayResponse.body });
+    console.log("🟢 LINE Pay 確認結果:", linePayResponse.body);
+
+    if (linePayResponse.body.returnCode !== "0000") {
+      return errorResponse(res, "❌ LINE Pay 確認失敗");
+    }
+
+    // **2️⃣ 取得 `orderId`（這裡假設 `orderId` 之前已存入資料庫）**
+    const [orderResult] = await connection.execute(
+      "SELECT orderId FROM orders WHERE transactionId = ?",
+      [transactionId]
+    );
+
+    if (!orderResult.length) {
+      return errorResponse(res, "❌ 找不到對應的訂單");
+    }
+
+    const orderId = orderResult[0].orderId;
+    console.log(" 付款成功，對應的訂單 ID:", orderId);
+
+    // **3️⃣ 更新訂單狀態**
+    await connection.execute(
+      `UPDATE orders SET orderStatus = 'paid' WHERE orderId = ?`,
+      [orderId]
+    );
+
+    console.log(`✅ 訂單 ${orderId} 更新為「已付款」`);
+
+    // **4️⃣ 回傳成功結果**
+    successResponse(res, {
+      message: "付款成功，訂單已更新",
+      orderId: orderId,
+    });
   } catch (error) {
-    console.error("LINE Pay Confirm 錯誤:", error);
+    console.error("❌ LINE Pay Confirm 錯誤:", error);
     errorResponse(res, error.toString());
   }
 });

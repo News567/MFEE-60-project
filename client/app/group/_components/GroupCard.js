@@ -17,14 +17,16 @@ export default function GroupCard({ group }) {
     //     e.stopPropagation();
     //     addToCart(group);
     // };
+    const now = new Date()
+    console.log(now);
     return (
-        <div className="group-card row d-flex justify-content-between align-items-center">
+        <div className="group-card row d-flex justify-content-between align-items-center w-100">
             <div className="col-12 col-sm-6 d-flex avatar">
                 <div className="group-card-img">
                     <img
                         className="img"
                         src={`/image/group/${group.group_img}`}
-                        alt
+                        alt=""
                     />
                 </div>
                 <div className="description">
@@ -90,7 +92,7 @@ export default function GroupCard({ group }) {
                     <div>
                         <i className="bi bi-person color-primary" />{" "}
                         {(() => {
-                            console.log("123");
+                            {/* console.log("123"); */}
                             switch (group.gender) {
                                 case 1:
                                     return "不限性別";
@@ -101,11 +103,13 @@ export default function GroupCard({ group }) {
                             }
                         })()}
                     </div>
-                    <div>已揪：0</div>
+                    <div>已揪：{group.participant_number}/{group.max_number}</div>
                 </div>
-                <div className="color-primary">
+                {now < new Date(group.sign_end_date)?(<div className="color-primary">
                     揪團截止:{group.sign_end_date}
-                </div>
+                </div>):(<div className="text-secondary">
+                    揪團截止:{group.sign_end_date} <span className="text-danger">已截止</span>
+                </div>)}
             </div>
         </div>
     );

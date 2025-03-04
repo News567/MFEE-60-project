@@ -10,12 +10,70 @@ import Calendar from "react-calendar";
 import { FaRegCalendar } from "react-icons/fa";
 import "./Calendar.css";
 
-// API 基礎 URL
-const API_BASE_URL = "http://localhost:3005/api";
-
 export default function GroupListPage() {
     // 設定揪團資料
     const [groups, setGroups] = useState([]);
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [showDisplayDropdown, setShowDisplayDropdown] = useState(false);
+    const [selectedSort, setSelectedSort] = useState({
+        text: "排序",
+        value: 1,
+    });
+    const [showClassification, setShowClassification] = useState(false);
+    const [selectedDisplay, setSelectedDisplay] = useState("每頁顯示24件");
+    const [showBrandClassification, setShowBrandClassification] =
+        useState(false);
+    const [location, setLocation] = useState("");
+    const [country, setCountry] = useState("");
+    const [language, setLanguage] = useState([]);
+    const [minPrice, setMinPrice] = useState("");
+    const [maxPrice, setMaxPrice] = useState("");
+    const [duration, setDuration] = useState("");
+    // 分頁
+    //parseInt 把字串轉成數字    || 負責設定預設值
+    const [page, setPage] = useState(parseInt(searchParams.get("page")) || 1);
+    const [limit, setLimit] = useState(
+        parseInt(searchParams.get("limit")) || 24
+    );
+    const [totalPages, setTotalPages] = useState(1);
+    // 可以放動畫 先不動
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    // 處理排序
+    const handleSort = (text, value) => {
+        console.log("text:" + text, "value:" + value);
+        setSelectedSort({ text, value });
+        setShowDropdown(false); // 關閉下拉選單
+
+        const sortedGroups = [...groups];
+        switch (value) {
+            case 1: // 綜合
+            sortedGroups.sort((a, b) => a.id - b.id);
+                break;
+            case 2: // 最新上架
+            sortedGroups.sort(
+                    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                );
+                break;
+            case 3: // 價格：由低到高
+            sortedGroups.sort((a, b) => a.price - b.price);
+                break;
+            case 4: // 價格：由高到低
+            sortedGroups.sort((a, b) => b.price - a.price);
+                break;
+            default:
+                break;
+        }
+    };
+    // 每頁顯示按鈕
+    const handleDisplayChange = (newLimit, displayText) => {
+        setSelectedDisplay(displayText);
+        setLimit(newLimit);
+        setPage(1); // 切換顯示數量時重置為第一頁
+        setShowDisplayDropdown(false); //關閉下拉選單
+    };
 
     // 設定api路徑
     const api = "http://localhost:3005/api";
@@ -36,11 +94,17 @@ export default function GroupListPage() {
         getList();
     }, []);
 
+    // 處理點擊外部關閉下拉選單
     useEffect(() => {
-        if (groups.length > 0) {
-            console.log(groups);
-        }
-    }, [groups]);
+        const handleClickOutside = (e) => {
+            if (!e.target.closest(".dropdown")) {
+                setShowDropdown(false);
+                setShowDisplayDropdown(false);
+            }
+        };
+        document.addEventListener("click", handleClickOutside, true);
+        return () => document.removeEventListener("click", handleClickOutside);
+    }, []);
 
     return (
         <div className="container py-4">
@@ -60,10 +124,6 @@ export default function GroupListPage() {
                                     className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
                                     <a
                                         href="#"
-                                        // onClick={(e) => {
-                                        //     e.preventDefault();
-                                        //     handleCategoryFilter("面鏡");
-                                        // }}
                                     >
                                         台灣
                                     </a>
@@ -71,12 +131,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
                                             >
                                                 屏東
                                             </a>
@@ -84,12 +138,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
                                             >
                                                 台東
                                             </a>
@@ -97,12 +145,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
                                             >
                                                 澎湖
                                             </a>
@@ -110,12 +152,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
                                             >
                                                 綠島
                                             </a>
@@ -123,12 +159,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
                                             >
                                                 蘭嶼
                                             </a>
@@ -136,12 +166,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
                                             >
                                                 小琉球
                                             </a>
@@ -149,12 +173,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "自由潛水面鏡"
-                                                //     );
-                                                // }}
                                             >
                                                 其他
                                             </a>
@@ -165,10 +183,6 @@ export default function GroupListPage() {
                                     className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
                                     <a
                                         href="#"
-                                        // onClick={(e) => {
-                                        //     e.preventDefault();
-                                        //     handleCategoryFilter("蛙鞋");
-                                        // }}
                                     >
                                         日本
                                     </a>
@@ -176,12 +190,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
                                             >
                                                 沖繩
                                             </a>
@@ -189,12 +197,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
                                             >
                                                 石垣島
                                             </a>
@@ -202,12 +204,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
                                             >
                                                 其他
                                             </a>
@@ -218,10 +214,6 @@ export default function GroupListPage() {
                                     className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
                                     <a
                                         href="#"
-                                        // onClick={(e) => {
-                                        //     e.preventDefault();
-                                        //     handleCategoryFilter("蛙鞋");
-                                        // }}
                                     >
                                         菲律賓
                                     </a>
@@ -229,12 +221,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
                                             >
                                                 長灘島
                                             </a>
@@ -242,12 +228,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
                                             >
                                                 宿霧
                                             </a>
@@ -255,12 +235,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
                                             >
                                                 薄荷島
                                             </a>
@@ -268,12 +242,6 @@ export default function GroupListPage() {
                                         <li>
                                             <a
                                                 href="#"
-                                                // onClick={(e) => {
-                                                //     e.preventDefault();
-                                                //     handleCategoryFilter(
-                                                //         "開放式蛙鞋"
-                                                //     );
-                                                // }}
                                             >
                                                 其他
                                             </a>
@@ -284,10 +252,6 @@ export default function GroupListPage() {
                                     className={`${styles.categoryItem} ${styles.hasSubmenu}`}>
                                     <a
                                         href="#"
-                                        // onClick={(e) => {
-                                        //     e.preventDefault();
-                                        //     handleCategoryFilter("蛙鞋");
-                                        // }}
                                     >
                                         其他
                                     </a>
@@ -295,10 +259,10 @@ export default function GroupListPage() {
                             </ul>
                         </div>
 
-                        {/* 活動篩選 */}
+                        {/* 揪團篩選 */}
                         <div className={styles.sideCard}>
                             <div className={styles.cardTitle}>
-                                <h5>活動篩選</h5>
+                                <h5>揪團篩選</h5>
                             </div>
                             <div className={styles.filterSection}>
                                 <div className={styles.filterTitle}>
@@ -312,7 +276,7 @@ export default function GroupListPage() {
                                             id="brand-leaders"
                                         />
                                         <label htmlFor="brand-leaders">
-                                            無須證照 (4)
+                                            無須證照
                                         </label>
                                     </div>
                                     <div className={styles.checkboxItem}>
@@ -322,7 +286,7 @@ export default function GroupListPage() {
                                             id="brand-owd"
                                         />
                                         <label htmlFor="brand-owd">
-                                            需OWD證照 (15)
+                                            需OWD證照
                                         </label>
                                     </div>
                                     <div className={styles.checkboxItem}>
@@ -332,107 +296,58 @@ export default function GroupListPage() {
                                             id="brand-aowd"
                                         />
                                         <label htmlFor="brand-aowd">
-                                            需AOWD證照 (15)
+                                            需AOWD證照
                                         </label>
                                     </div>
                                 </div>
                                 <div className={styles.filterTitle}>
-                                    導覽語言
+                                    揪團類型
                                 </div>
                                 <div className={styles.checkboxGroup}>
                                     <div className={styles.checkboxItem}>
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            id="language-english"
+                                            id="brand-leaders"
                                         />
-                                        <label htmlFor="language-english">
-                                            英文 (4)
+                                        <label htmlFor="brand-leaders">
+                                            浮潛
                                         </label>
                                     </div>
                                     <div className={styles.checkboxItem}>
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            id="language-chinese"
+                                            id="brand-owd"
                                         />
-                                        <label htmlFor="language-chinese">
-                                            中文 (15)
+                                        <label htmlFor="brand-owd">
+                                            自由潛水
                                         </label>
                                     </div>
                                     <div className={styles.checkboxItem}>
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            id="language-jp"
+                                            id="brand-aowd"
                                         />
-                                        <label htmlFor="language-jp">
-                                            日文 (15)
-                                        </label>
-                                    </div>
-                                </div>
-                                <div className={styles.filterTitle}>
-                                    價格區間
-                                </div>
-                                <div className={styles.priceInputs}>
-                                    <input
-                                        type="number"
-                                        placeholder="最低"
-                                        className={styles.priceInput}
-                                    />
-                                    <span>-</span>
-                                    <input
-                                        type="number"
-                                        placeholder="最高"
-                                        className={styles.priceInput}
-                                    />
-                                </div>
-                                <div className={styles.filterTitle}>
-                                    行程時間
-                                </div>
-                                <div className={styles.checkboxGroup}>
-                                    <div className={styles.checkboxItem}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            id="duration-less4"
-                                        />
-                                        <label htmlFor="duration-less4">
-                                            少於4小時 (4)
+                                        <label htmlFor="brand-aowd">
+                                            水肺潛水
                                         </label>
                                     </div>
                                     <div className={styles.checkboxItem}>
                                         <input
                                             type="checkbox"
                                             className={styles.checkbox}
-                                            id="duration-4toDay"
+                                            id="type-other"
                                         />
-                                        <label htmlFor="duration-4toDay">
-                                            4小時-1日 (15)
-                                        </label>
-                                    </div>
-                                    <div className={styles.checkboxItem}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            id="brand-omer"
-                                        />
-                                        <label htmlFor="brand-omer">
-                                            1日-2日 (15)
-                                        </label>
-                                    </div>
-                                    <div className={styles.checkboxItem}>
-                                        <input
-                                            type="checkbox"
-                                            className={styles.checkbox}
-                                            id="brand-omer"
-                                        />
-                                        <label htmlFor="brand-omer">
-                                            2日以上 (15)
+                                        <label htmlFor="type-other">
+                                            其他
                                         </label>
                                     </div>
                                 </div>
                             </div>
+
+
                         </div>
 
                         {/* 活動日期選擇 */}
@@ -452,10 +367,10 @@ export default function GroupListPage() {
                             套用篩選(0/20)
                         </button>
 
-                        {/* 最新活動 */}
-                        <div className={styles.sideCard}>
+                        {/* 最新揪團 */}
+                        {/* <div className={styles.sideCard}>
                             <div className={styles.cardTitle}>
-                                <h5>最新活動</h5>
+                                <h5>最新揪團</h5>
                             </div>
                             {[1, 2, 3].map((item) => (
                                 <div
@@ -463,8 +378,8 @@ export default function GroupListPage() {
                                     className={styles.sidebarProduct}>
                                     <div className={styles.sidebarProductImg}>
                                         <Image
-                                            src="/images/1.webp"
-                                            alt="最新活動"
+                                            src="/image/1.webp"
+                                            alt="最新揪團"
                                             fill
                                             sizes="80px"
                                             style={{ objectFit: "cover" }}
@@ -475,13 +390,13 @@ export default function GroupListPage() {
                                             className={
                                                 styles.sidebarProductBrand
                                             }>
-                                            活動地點
+                                            揪團地點
                                         </div>
                                         <div
                                             className={
                                                 styles.sidebarProductTitle
                                             }>
-                                            活動名稱
+                                            揪團名稱
                                         </div>
                                         <div
                                             className={
@@ -492,49 +407,8 @@ export default function GroupListPage() {
                                     </div>
                                 </div>
                             ))}
-                        </div>
+                        </div> */}
 
-                        {/* 特惠活動 */}
-                        <div className={styles.sideCard}>
-                            <div className={styles.cardTitle}>
-                                <h5>特惠活動</h5>
-                            </div>
-                            {[1, 2, 3].map((item) => (
-                                <div
-                                    key={`special-${item}`}
-                                    className={styles.sidebarProduct}>
-                                    <div className={styles.sidebarProductImg}>
-                                        <Image
-                                            src="/images/1.webp"
-                                            alt="特惠活動"
-                                            fill
-                                            sizes="80px"
-                                            style={{ objectFit: "cover" }}
-                                        />
-                                    </div>
-                                    <div className={styles.sidebarProductInfo}>
-                                        <div
-                                            className={
-                                                styles.sidebarProductBrand
-                                            }>
-                                            活動地點
-                                        </div>
-                                        <div
-                                            className={
-                                                styles.sidebarProductTitle
-                                            }>
-                                            活動名稱
-                                        </div>
-                                        <div
-                                            className={
-                                                styles.sidebarProductPrice
-                                            }>
-                                            NT$0000
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
                     </div>
                 </div>
 
@@ -578,28 +452,28 @@ export default function GroupListPage() {
                         <div className="dropdown">
                             <button
                                 className="btn btn-outline-secondary dropdown-toggle"
-                                // onClick={() =>
-                                //     setShowDisplayDropdown(!showDisplayDropdown)
-                                // }
-                            >
-                                {/* {selectedDisplay} */}
+                                onClick={() =>
+                                    setShowDisplayDropdown(!showDisplayDropdown)
+                                }>
+                                {selectedDisplay}
                             </button>
-                            <ul className={`dropdown-menu`}>
+                            <ul
+                                className={`dropdown-menu ${showDisplayDropdown ? "show" : ""
+                                    }`}>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        // onClick={() =>
-                                        //     handleDisplayChange(
-                                        //         24,
-                                        //         "每頁顯示24件"
-                                        //     )
-                                        // }
-                                    >
+                                        onClick={() =>
+                                            handleDisplayChange(
+                                                24,
+                                                "每頁顯示24件"
+                                            )
+                                        }>
                                         每頁顯示24件
                                     </button>
                                 </li>
                                 <li>
-                                    {/* <button
+                                    <button
                                         className="dropdown-item"
                                         onClick={() =>
                                             handleDisplayChange(
@@ -608,10 +482,10 @@ export default function GroupListPage() {
                                             )
                                         }>
                                         每頁顯示48件
-                                    </button> */}
+                                    </button>
                                 </li>
                                 <li>
-                                    {/* <button
+                                    <button
                                         className="dropdown-item"
                                         onClick={() =>
                                             handleDisplayChange(
@@ -620,7 +494,7 @@ export default function GroupListPage() {
                                             )
                                         }>
                                         每頁顯示72件
-                                    </button> */}
+                                    </button>
                                 </li>
                             </ul>
                         </div>
@@ -628,58 +502,54 @@ export default function GroupListPage() {
                         <div className="dropdown">
                             <button
                                 className="btn btn-outline-secondary dropdown-toggle"
-                                // onClick={() => setShowDropdown(!showDropdown)}
-                            >
+                                onClick={() => setShowDropdown(!showDropdown)}>
                                 <i className="bi bi-sort-down-alt me-2"></i>
-                                {/* {selectedSort.text} */}
+                                {selectedSort.text}
                             </button>
-                            <ul className={`dropdown-menu show`}>
+                            <ul
+                                className={`dropdown-menu ${showDropdown ? "show" : ""
+                                    }`}>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        // onClick={() => handleSort("綜合", 1)}
-                                    >
+                                        onClick={() => handleSort("綜合", 1)}>
                                         綜合
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        // onClick={() =>
-                                        //     handleSort("最新上架", 2)
-                                        // }
-                                    >
+                                        onClick={() =>
+                                            handleSort("最新上架", 2)
+                                        }>
                                         最新上架
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        // onClick={() =>
-                                        //     handleSort("價格：由低到高", 3)
-                                        // }
-                                    >
+                                        onClick={() =>
+                                            handleSort("價格：由低到高", 3)
+                                        }>
                                         價格：由低到高
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        // onClick={() =>
-                                        //     handleSort("價格：由高到低", 4)
-                                        // }
-                                    >
+                                        onClick={() =>
+                                            handleSort("價格：由高到低", 4)
+                                        }>
                                         價格：由高到低
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                        // onClick={() =>
-                                        //     handleSort("商品評分最高", 5)
-                                        // }
-                                    >
-                                        活動評分最高
+                                        onClick={() =>
+                                            handleSort("商品評分最高", 5)
+                                        }>
+                                        商品評分最高
                                     </button>
                                 </li>
                             </ul>
@@ -697,18 +567,18 @@ export default function GroupListPage() {
                     </div> */}
                     <div className="d-flex flex-column gap-3">
                         {groups && groups.length > 0 ? (
-                        groups.map((group, i) => {
-                            return (
-                                <Link className="text-black text-decoration-none" key={i} href={`/group/list/${group.id}`}>
-                                    <GroupCard group={group} />
-                                </Link>
-                            );
-                        })
-                    ) : (
-                        <div>沒有相關資料</div>
-                    )}
+                            groups.map((group, i) => {
+                                return (
+                                    <Link className="text-black text-decoration-none" key={i} href={`/group/list/${group.id}`}>
+                                        <GroupCard group={group} />
+                                    </Link>
+                                );
+                            })
+                        ) : (
+                            <div>沒有相關資料</div>
+                        )}
                     </div>
-                    
+
 
                     {/* 分頁 */}
                 </div>
