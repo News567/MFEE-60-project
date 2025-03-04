@@ -23,8 +23,9 @@ export default function MemberGroupPage() {
   // 獲取會員
   const { user } = useAuth()
   console.log(user);
-  const [userId, setUserId] = useState(user ? user.id : 0)
-  console.log(user);
+  useEffect(()=>{
+    console.log("user更新了"+user.id);
+  },[user])
 
   // 設定地點選項
   const selectOption = {
@@ -52,16 +53,17 @@ export default function MemberGroupPage() {
   const api = "http://localhost:3005/api";
 
   // 確認是否登入
-  useEffect(() => {
-    if (!user) {
-      alert("請先登入！")
-      window.location = "/member/login"
-      return
+  useEffect(() => {  
+    
+    // if (!user.user) { // 檢查 user 和 user.user 是否為 undefined
+    //   alert("請先登入！")
+    //   window.location = "/admin/login"
+    //   return
+    // }
+    if (user && user.id) {
+      const userId = user.id
+      setCondition({ ...condition, user: userId })
     }
-    const userId = user.id
-    setCondition(
-      { ...condition, user: userId }
-    )
   }, [user])
 
   useEffect(() => {
@@ -71,13 +73,14 @@ export default function MemberGroupPage() {
 
   // 連接後端獲取揪團資料
   useEffect(() => {
-    console.log(condition);
+    console.log("condition:"+ [condition]);
+    if (!condition.user) return
     const getList = async () => {
       await axios
         .post((api + "/member/myGroup"), condition)
         .then((res) => {
           console.log(res.data.data);
-          setMyGroups(res.data.data);
+          setMyGroups(res.data.data)
           setOriginMyGroups(res.data.data)
         })
         .catch((error) => {
@@ -88,14 +91,13 @@ export default function MemberGroupPage() {
   }, [condition]);
 
 
-
-
   // 刪除揪團
-  async function doDelete(myGroupId) {
+  async function doCancel(myGroupId) {
+    alert("是否確認要取消此揪團？此操作無法復原！")
     try {
-      const deleteGroup = await axios.delete(api + "/member/myGroup/" + myGroupId).then((res)=>{
+      await axios.put(api + "/member/myGroup/" + myGroupId).then((res)=>{
         if(res.status == "success"){
-          alert("刪除成功")
+          alert("已取消此項揪團！")
         }
       })
     } catch (error) {
@@ -116,6 +118,16 @@ export default function MemberGroupPage() {
         setMyGroups(originMyGroups)
         break
     }
+  }
+
+  // 設定modal用的group
+  function doSetModal(data){
+    setModalGroup(data)
+    console.log(modalGroup);
+  }
+
+  const checkStatus = ()=>{
+        setMyGroups(originMyGroups.filter(item => item.status == 1))
   }
 
 
@@ -194,6 +206,7 @@ export default function MemberGroupPage() {
                 btn.classList.remove(`${styles.active}`)
               })
               e.target.classList.add(`${styles.active}`)
+              checkStatus()
             }
           }>已成團
           </div>
@@ -212,18 +225,18 @@ export default function MemberGroupPage() {
           {mygroups && mygroups.length > 0 ? (mygroups.map((mygroup, i) => {
             return (
               <div key={i} className="d-flex gap-3">
-                <a className="w-100 text-decoration-none text-reset" data-bs-toggle="collapse" href={`#collapseExample${i}`} role="button" aria-expanded="false" aria-controls="collapseExample">
+                <a className="w-100 text-decoration-none text-reset" data-bs-toggle="collapse" href={`#collapseExample${i}`} role="button" aria-expanded="false" aria-controls="collapseExample" onClick={() => {
+                        doSetModal(mygroup)
+                      }}>
                   <GroupCard group={mygroup} />
                 </a>
                 <div className={`collapse collapse-horizontal`} id={`collapseExample${i}`} data-bs-parent="#groupCards">
                   <div className="d-flex gap-2 h-100 flex-column justify-content-between ${styles.collapseSection}">
                     <button className={`btn text-nowrap h-100 ${styles.primaryBtn} ${styles.operateBtn}`} data-bs-toggle="modal" data-bs-target="#groupModal"
-                      onClick={() => {
-                        setModalGroup(mygroup)
-                      }}>查看揪團詳情</button>
-                    {mygroup.user_id == userId ? (<>
+                      >查看揪團詳情</button>
+                    {mygroup.user_id == user.id ? (<>
                       <button className={`btn text-nowrap h-100 ${styles.primaryBtn}`}>修改揪團資訊</button>
-                      <button className={`btn text-nowrap h-100 ${styles.cancelBtn} btn-danger`} onClick={() => doDelete(mygroup.id)}>刪除揪團</button>
+                      <button className={`btn text-nowrap h-100 ${styles.cancelBtn} btn-danger`} onClick={() => doCancel(mygroup.id)}>取消揪團</button>
                     </>) : (
                       <button className={`btn text-nowrap h-100 ${styles.cancelBtn} btn-danger`}>退出揪團</button>
                     )}
@@ -231,10 +244,12 @@ export default function MemberGroupPage() {
                 </div>
               </div>
             )
-          })) : ("目前沒有揪團")}
+          })) : (<div className="text-center">目前沒有揪團</div>)}
+          <div className={styles.cancel}>已取消的揪團</div>
         </div>
+
         {/* 檢視詳細揪團資料的modal */}
-        <div className="modal fade" id="groupModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div className="modal fade" id="groupModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" key={modalGroup ? modalGroup.id : 'default'}>
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
@@ -245,7 +260,7 @@ export default function MemberGroupPage() {
                 <div className="modal-body">
                   {modalGroup ? (
                     <>
-                      <input type="hidden" name="userId" id="" value={userId} />
+                      <input type="hidden" name="userId" id="" value={user.id} />
                       <div className="fs-22px">
                         揪團首圖
                       </div>

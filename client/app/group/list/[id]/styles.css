@@ -79,6 +79,11 @@
             color: #fff;
             padding: 15px 60px;
         }
+        .edit-btn{
+            background-color: var(--secondary-deep-color);
+            color: #fff;
+            padding: 15px 60px;
+        }
         .group-state {
             padding: 10px 23px;
             background-color: var(--secondary-deep-color);

@@ -9,6 +9,52 @@
   background-color: #fff; /* 设置背景颜色 */
   margin: 0 8px;
 }
+
+.article-search-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  overflow: hidden; /* 防止內部元素溢出 */
+  background-color: #fff;
+  width: 100%;
+  max-width: 400px; /* 控制最大寬度 */
+}
+
+.article-search-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 7px 15px;
+  font-size: 16px;
+  border-radius: 30px; /* 讓 input 也有圓角 */
+}
+
+.clear-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  font-size: 18px;
+  color: #888;
+}
+
+.clear-button:hover {
+  color: #333;
+}
+
+.article-search-box .search-button {
+  background-color: #029cad; /* 背景顏色 */
+  color: white;
+  border: none;
+  padding: 7px 20px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.article-search-box .search-button:hover {
+  background-color: #02818b; /* 滑鼠懸停時改變背景顏色 */
+}
+
 .article-controls-btn {
   display: flex;
   justify-content: flex-end; /* 将按钮区域置于右侧 */
@@ -60,8 +106,8 @@
 
 .article-list-card-photo {
   position: relative;
-  height: 40%;  /* 图片区域占卡片高度的40% */
-  overflow: hidden;  /* 隐藏超出部分 */
+  height: 40%; /* 图片区域占卡片高度的40% */
+  overflow: hidden; /* 隐藏超出部分 */
   object-fit: cover;
   object-position: center;
 }
@@ -130,11 +176,21 @@
 }
 
 .article-list-card-btn .btn {
-  border-radius: 30px; /* 控制边框圆角大小 */
-  color: black;
-  background-color: #ffd500;
+  margin: 5px;
+  text-align: center; /* 文字置中 */
+  font-size: 14px; /* 字體大小 */
+  border: none; /* 移除邊框 */
+  border-radius: 4px; /* 圓角邊框 */
+  padding: 8px 19px; /* 內邊距 */
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  color: black; /* 文字顏色為白色 */
+  text-align: center; /* 文字置中 */
   padding: 4px 33px; /* 上下 5px，高度更扁，左右 30px，宽度更长 */
-  font-size: 16px;
+}
+
+.article-list-card-btn .btn:hover {
+  background-color: #029cad; /* 背景顏色 */
+  color: #fff; /* 文字顏色為白色 */
 }
 
 /* Pagination 分页 */

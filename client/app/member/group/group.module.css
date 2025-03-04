@@ -195,3 +195,22 @@
 .cancelBtn{
   width: 122px;
 }
+.cancel{
+  display: flex;
+  align-items: center;
+  text-align: center;
+  font-weight: bold;
+  color: #ccc;
+}
+.cancel::before{
+  content: "";
+  flex: 1;
+  border-bottom: 2px solid #ccc;
+  margin: 0 10px;
+}
+.cancel::after{
+  content: "";
+  flex: 1;
+  border-bottom: 2px solid #ccc;
+  margin: 0 10px;
+}

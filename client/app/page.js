@@ -12,14 +12,8 @@ import {
 import { FiShoppingCart } from "react-icons/fi";
 import Link from "next/link";
 import { useState } from "react";
+import Carousel from "./components/Swiper/Carousel";
 
-// core version + navigation, pagination modules:
-import Swiper from 'swiper';
-import { Navigation, Pagination } from 'swiper/modules';
-// import Swiper and modules styles
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 
 export default function Home() {
   // 設定串接資料
@@ -30,8 +24,8 @@ export default function Home() {
     <>
       <main>
         {/* KV */}
-        
-        <div className={`${styles.kv}`}>
+        <Carousel/>
+        {/* <div className={`${styles.kv}`}>
           <div
             className={`w-100 d-flex justify-content-between align-items-center`}
           >
@@ -56,7 +50,7 @@ export default function Home() {
               <FaAngleRight />
             </button>
           </div>
-        </div>
+        </div> */}
 
         {/* section start */}
         <div className={`container ${styles.sectionStart}`}>
@@ -155,7 +149,7 @@ export default function Home() {
                 進階深潛或技術潛水
               </button>
             </div>
-            <div className={`d-flex justify-content-between ${styles.cards}`}>
+            <div className={`d-flex justify-content-sm-between justify-content-around w-100 ${styles.cards}`}>
               <div className={styles.card}>
                 <div className={styles.imgContainer}>
                   <div className={styles.circleIcons}>
@@ -394,7 +388,7 @@ export default function Home() {
         <div className={`container ${styles.section} ${styles.sectionCourse}`}>
           <h3 className={styles.h3}>零基礎學習，輕鬆進入深藍</h3>
           <div className={styles.cardsAndDots}>
-            <div className={`d-flex justify-content-between`}>
+            <div className={`d-flex justify-content-sm-between justify-content-around`}>
               <div className={`${styles.card}`}>
                 <div className={styles.imgContainer}>
                   <img

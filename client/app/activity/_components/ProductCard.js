@@ -7,7 +7,7 @@ import useFavorite from "@/hooks/useFavorite";
 import { useCart } from "@/hooks/cartContext";
 
 export default function ProductCard({ product }) {
-  const { isFavorite, toggleFavorite, loading } = useFavorite(product.id);
+  const { isFavorite, toggleFavorite, loading } = useFavorite(product.id, "activities");
 
   // const { addToCart } = useCart();
 

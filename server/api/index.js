@@ -4,23 +4,29 @@ import cors from "cors";
 import logger from "morgan";
 import cookieParser from "cookie-parser";
 import path from "path";
+import { fileURLToPath } from "url";
 import createError from "http-errors";
 
 
 
 // 路由模組
 import productRouter from "../routes/products/index.js";
+// import bundleRouter from "../routes/bundle/index.js";
 import favoritesRouter from "../routes/favorites/index.js";
 import cartRouter from "../routes/cart/index.js";
 import categoriesRouter from "../routes/categories/index.js";
 import brandRouter from "../routes/brands/index.js";
+// 活動相關路由
 import activityRouter from "../routes/activity/index.js";
 import activityDetailRouter from "../routes/activity/detail.js";
+// 揪團相關路由
 import groupRouter from "../routes/group/index.js";
 import groupListRouter from "../routes/group/list.js";
 import groupDetailRouter from "../routes/group/detail.js";
 import groupCreate from "../routes/group/create.js";
 import groupJoin from "../routes/group/join.js";
+import "../cron.js" //    排程自動檢查並更新揪團狀態
+// 租借相關路由
 import rentRouter from "../routes/rent/index.js";
 import rentCategoryRouter from "../routes/rent/categories.js";
 import rentBrandCategoryRouter from "../routes/rent/brandcategories.js";
@@ -28,13 +34,17 @@ import rentColorRouter from "../routes/rent/colors.js";
 import rentNewRouter from "../routes/rent/new-arrivals.js";
 import rentDiscountedRouter from "../routes/rent/new-discounted.js";
 import rentFilterRouter from "../routes/rent/filter.js";
+import rentSearchRouter from "../routes/rent/search.js";
 import rentDetailRouter from "../routes/rent/detail.js";
 import rentRecommendedRouter from "../routes/rent/recommended.js";
+import rentIdColorRouter from "../routes/rent/idcolors.js";
+// 論壇相關路由
 import articleRouter from "../routes/article/index.js"; // 文章列表 & 動態文章頁
-// import articleCreateRouter from "../routes/article/create.js"; // 取得新建文章所需的分類/標籤 & 新增文章
+import articleCreateRouter from "../routes/article/create.js"; // 取得新建文章所需的分類/標籤 & 新增文章
 // import articleSidebarRouter from "../routes/article/sidebar.js"; // 側邊欄篩選數據
 // import articleReplyRouter from "../routes/article/reply.js"; // 留言 & 回覆
 // import articleLikeRouter from "../routes/article/like.js"; // 文章與留言按讚
+// 優惠券相關路由
 import couponRouter from "../routes/coupon/index.js";
 import couponClaimRouter from "../routes/coupon/claim.js";
 import memberRouter from "../routes/member/index.js";
@@ -57,12 +67,27 @@ app.use(
     credentials: true,
   })
 );
+// 獲取文章當前文件的目錄路徑
+// const __filename = fileURLToPath(import.meta.url); 
+const __dirname = path.dirname(fileURLToPath(import.meta.url)); 
 // 中間件
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use("/img", express.static('public/img'));
+app.use(express.static(path.join(process.cwd(), "../public")));
+
+// 提供文章圖片靜態服務
+app.use(
+  "/uploads/article",
+  express.static(path.join(__dirname, "..", "public", "uploads", "article"))
+); //封面縮圖 圖片預覽
+
+app.use(
+  "/uploads/temp",
+  express.static(path.join(__dirname, "..", "public", "uploads", "temp"))
+); //ckeditor 圖片預覽
 // 測試 API
 app.get("/", (req, res) => {
   res.json({ message: "Express server is running" });
@@ -72,6 +97,8 @@ const apiRouter = express.Router();
 app.use("/api", apiRouter);
 // 產品相關路由
 apiRouter.use("/products", productRouter);
+//bundle
+// apiRouter.use("/bundle", bundleRouter);
 // 收藏相關路由
 apiRouter.use("/favorites", favoritesRouter);
 // 購物車相關路由
@@ -111,11 +138,13 @@ apiRouter.use("/rent", rentColorRouter); // 負責 `/api/rent/colors`
 apiRouter.use("/rent", rentNewRouter); // 負責 `/api/rent/new-arrivals`
 apiRouter.use("/rent", rentDiscountedRouter); // 負責 `/api/rent/new-discounted`
 apiRouter.use("/rent", rentFilterRouter); // 負責 `/api/rent/filter`
+apiRouter.use("/rent", rentSearchRouter); // 負責 `/api/rent/search`
 apiRouter.use("/rent", rentDetailRouter); // 負責 `/api/rent/:id`
 apiRouter.use("/rent", rentRecommendedRouter); // 負責 `/api/rent/:id/recommended`
+apiRouter.use("/rent", rentIdColorRouter); // 負責 `/api/rent/:id/colors`
 // 文章相關路由
 apiRouter.use("/article", articleRouter); // `/api/article` 文章列表 & 文章內容
-// apiRouter.use("/article", articleCreateRouter); // `/api/article/create` 新增文章、取得新建文章所需數據
+apiRouter.use("/article", articleCreateRouter); // `/api/article/create` 新增文章、取得新建文章所需數據
 // apiRouter.use("/article", articleSidebarRouter); // `/api/article/sidebar` 側邊欄篩選數據
 // apiRouter.use("/article", articleReplyRouter); // `/api/article/reply` 留言 & 回覆
 // apiRouter.use("/article", articleLikeRouter); // `/api/article/like` 文章 & 留言按讚

@@ -103,7 +103,7 @@ export default function GroupCard({ group }) {
                             }
                         })()}
                     </div>
-                    <div>已揪：0</div>
+                    <div>已揪：{group.participant_number}/{group.max_number}</div>
                 </div>
                 {now < new Date(group.sign_end_date)?(<div className="color-primary">
                     揪團截止:{group.sign_end_date}

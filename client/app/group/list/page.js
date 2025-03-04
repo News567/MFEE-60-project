@@ -13,6 +13,67 @@ import "./Calendar.css";
 export default function GroupListPage() {
     // 設定揪團資料
     const [groups, setGroups] = useState([]);
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [showDisplayDropdown, setShowDisplayDropdown] = useState(false);
+    const [selectedSort, setSelectedSort] = useState({
+        text: "排序",
+        value: 1,
+    });
+    const [showClassification, setShowClassification] = useState(false);
+    const [selectedDisplay, setSelectedDisplay] = useState("每頁顯示24件");
+    const [showBrandClassification, setShowBrandClassification] =
+        useState(false);
+    const [location, setLocation] = useState("");
+    const [country, setCountry] = useState("");
+    const [language, setLanguage] = useState([]);
+    const [minPrice, setMinPrice] = useState("");
+    const [maxPrice, setMaxPrice] = useState("");
+    const [duration, setDuration] = useState("");
+    // 分頁
+    //parseInt 把字串轉成數字    || 負責設定預設值
+    const [page, setPage] = useState(parseInt(searchParams.get("page")) || 1);
+    const [limit, setLimit] = useState(
+        parseInt(searchParams.get("limit")) || 24
+    );
+    const [totalPages, setTotalPages] = useState(1);
+    // 可以放動畫 先不動
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    // 處理排序
+    const handleSort = (text, value) => {
+        console.log("text:" + text, "value:" + value);
+        setSelectedSort({ text, value });
+        setShowDropdown(false); // 關閉下拉選單
+
+        const sortedGroups = [...groups];
+        switch (value) {
+            case 1: // 綜合
+            sortedGroups.sort((a, b) => a.id - b.id);
+                break;
+            case 2: // 最新上架
+            sortedGroups.sort(
+                    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                );
+                break;
+            case 3: // 價格：由低到高
+            sortedGroups.sort((a, b) => a.price - b.price);
+                break;
+            case 4: // 價格：由高到低
+            sortedGroups.sort((a, b) => b.price - a.price);
+                break;
+            default:
+                break;
+        }
+    };
+    // 每頁顯示按鈕
+    const handleDisplayChange = (newLimit, displayText) => {
+        setSelectedDisplay(displayText);
+        setLimit(newLimit);
+        setPage(1); // 切換顯示數量時重置為第一頁
+        setShowDisplayDropdown(false); //關閉下拉選單
+    };
 
     // 設定api路徑
     const api = "http://localhost:3005/api";
@@ -33,11 +94,17 @@ export default function GroupListPage() {
         getList();
     }, []);
 
-    // useEffect(() => {
-    //     if (groups.length > 0) {
-    //         console.log(groups);
-    //     }
-    // }, [groups]);
+    // 處理點擊外部關閉下拉選單
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (!e.target.closest(".dropdown")) {
+                setShowDropdown(false);
+                setShowDisplayDropdown(false);
+            }
+        };
+        document.addEventListener("click", handleClickOutside, true);
+        return () => document.removeEventListener("click", handleClickOutside);
+    }, []);
 
     return (
         <div className="container py-4">
@@ -385,28 +452,28 @@ export default function GroupListPage() {
                         <div className="dropdown">
                             <button
                                 className="btn btn-outline-secondary dropdown-toggle"
-                            // onClick={() =>
-                            //     setShowDisplayDropdown(!showDisplayDropdown)
-                            // }
-                            >
-                                {/* {selectedDisplay} */}
+                                onClick={() =>
+                                    setShowDisplayDropdown(!showDisplayDropdown)
+                                }>
+                                {selectedDisplay}
                             </button>
-                            <ul className={`dropdown-menu`}>
+                            <ul
+                                className={`dropdown-menu ${showDisplayDropdown ? "show" : ""
+                                    }`}>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                    // onClick={() =>
-                                    //     handleDisplayChange(
-                                    //         24,
-                                    //         "每頁顯示24件"
-                                    //     )
-                                    // }
-                                    >
+                                        onClick={() =>
+                                            handleDisplayChange(
+                                                24,
+                                                "每頁顯示24件"
+                                            )
+                                        }>
                                         每頁顯示24件
                                     </button>
                                 </li>
                                 <li>
-                                    {/* <button
+                                    <button
                                         className="dropdown-item"
                                         onClick={() =>
                                             handleDisplayChange(
@@ -415,10 +482,10 @@ export default function GroupListPage() {
                                             )
                                         }>
                                         每頁顯示48件
-                                    </button> */}
+                                    </button>
                                 </li>
                                 <li>
-                                    {/* <button
+                                    <button
                                         className="dropdown-item"
                                         onClick={() =>
                                             handleDisplayChange(
@@ -427,7 +494,7 @@ export default function GroupListPage() {
                                             )
                                         }>
                                         每頁顯示72件
-                                    </button> */}
+                                    </button>
                                 </li>
                             </ul>
                         </div>
@@ -435,58 +502,54 @@ export default function GroupListPage() {
                         <div className="dropdown">
                             <button
                                 className="btn btn-outline-secondary dropdown-toggle"
-                            // onClick={() => setShowDropdown(!showDropdown)}
-                            >
+                                onClick={() => setShowDropdown(!showDropdown)}>
                                 <i className="bi bi-sort-down-alt me-2"></i>
-                                {/* {selectedSort.text} */}
+                                {selectedSort.text}
                             </button>
-                            <ul className={`dropdown-menu show`}>
+                            <ul
+                                className={`dropdown-menu ${showDropdown ? "show" : ""
+                                    }`}>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                    // onClick={() => handleSort("綜合", 1)}
-                                    >
+                                        onClick={() => handleSort("綜合", 1)}>
                                         綜合
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                    // onClick={() =>
-                                    //     handleSort("最新上架", 2)
-                                    // }
-                                    >
+                                        onClick={() =>
+                                            handleSort("最新上架", 2)
+                                        }>
                                         最新上架
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                    // onClick={() =>
-                                    //     handleSort("價格：由低到高", 3)
-                                    // }
-                                    >
+                                        onClick={() =>
+                                            handleSort("價格：由低到高", 3)
+                                        }>
                                         價格：由低到高
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                    // onClick={() =>
-                                    //     handleSort("價格：由高到低", 4)
-                                    // }
-                                    >
+                                        onClick={() =>
+                                            handleSort("價格：由高到低", 4)
+                                        }>
                                         價格：由高到低
                                     </button>
                                 </li>
                                 <li>
                                     <button
                                         className="dropdown-item"
-                                    // onClick={() =>
-                                    //     handleSort("商品評分最高", 5)
-                                    // }
-                                    >
-                                        活動評分最高
+                                        onClick={() =>
+                                            handleSort("商品評分最高", 5)
+                                        }>
+                                        商品評分最高
                                     </button>
                                 </li>
                             </ul>

@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
-import { fetchArticleCreateData } from "../../api/article/create";
- // 假設 fetchArticleData 是 API
+import { useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+
+import Image from "next/image";
+import axios from "axios";
 import "./articleCreate.css";
 import Myeditor from "../components/Myeditor";
 
 const ArticleForm = () => {
+  const { id } = useParams(); // 这里 `id` 可能是文章 ID，如果页面是创建新文章，则 `id` 可能为 undefined
+  const articleId = id || null; // 如果是创建文章，articleId 为空
+  const router = useRouter();
   const [new_title, setTitle] = useState("");
   const [new_content, setContent] = useState("");
   const [new_categoryBig, setCategoryBig] = useState("");
@@ -13,6 +19,12 @@ const ArticleForm = () => {
   const [tagsList, setTagsList] = useState([]);
   const [new_coverImage, setCoverImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+  const [submitStatus, setSubmitStatus] = useState(""); // "draft" 或 "published"
+
+  // 按鈕點擊事件，跳轉不同頁面
+  const handleButtonClick = (path) => {
+    router.push(path);
+  };
 
   // 新增的狀態
   const [categoriesBig, setCategoriesBig] = useState([]); // 大分類
@@ -24,17 +36,20 @@ const ArticleForm = () => {
   useEffect(() => {
     const getCategoriesAndTags = async () => {
       try {
-        const response = await fetchArticleData(); // 假設這是 API 請求
-        if (response.success) {
-          setCategoriesBig(response.category_big || []);
-          setCategoriesSmall(response.category_small || []);
-          setTags(response.tags || []);
+        const response = await axios.get(
+          "http://localhost:3005/api/article/create/data"
+        );
+        const data = response.data;
+
+        if (data.success) {
+          setCategoriesBig(data.category_big || []);
+          setCategoriesSmall(data.category_small || []);
+          setTags(data.tags || []);
         }
       } catch (error) {
         console.error("❌ 取得分類與標籤失敗：", error);
       }
     };
-
     getCategoriesAndTags();
   }, []);
 
@@ -67,39 +82,87 @@ const ArticleForm = () => {
   // 處理封面圖片選擇
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setCoverImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setPreviewImage(reader.result);
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+
+    setCoverImage(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setPreviewImage(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const [ckeditorImages, setCkeditorImages] = useState([]);
+  // 提取 CKEditor 內的圖片 URL
+  const extractImageUrls = (content) => {
+    const div = document.createElement("div");
+    div.innerHTML = content;
+    const imgTags = div.querySelectorAll("img");
+    return Array.from(imgTags).map((img) => img.getAttribute("src"));
   };
 
   // 提交表單
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append("new_title", new_title);
-    formData.append("new_content", new_content);
-    formData.append("new_categoryBig", new_categoryBig);
-    formData.append("new_categorySmall", new_categorySmall);
-    formData.append("tags", JSON.stringify(tagsList));
-    if (new_coverImage) formData.append("new_coverImage", new_coverImage);
-
+  const handleSubmit = async (status) => {
     try {
-      const response = await createArticle(formData);
-      if (response.success) alert("文章發表成功！");
-      else alert("發表失敗，請重試！");
+      const formData = new FormData();
+      formData.append("new_title", new_title);
+      formData.append("new_content", new_content);
+      formData.append("new_categorySmall", new_categorySmall);
+      formData.append("new_tags", JSON.stringify(tagsList));
+      formData.append("status", status);
+
+      if (new_coverImage) {
+        formData.append("new_coverImage", new_coverImage);
+      }
+
+      // 提取 CKEditor 中的圖片 URL
+      const imgUrls = extractImageUrls(new_content || "").map((url) => {
+        // 將完整的 URL 轉換為相對路徑
+        return url.replace("http://localhost:3005", "");
+      });
+
+      formData.append("ckeditor_images", JSON.stringify(imgUrls));
+
+      const response = await axios.post(
+        "http://localhost:3005/api/article/create",
+        formData
+      );
+
+      if (response.data.success) {
+        alert("文章創建成功！");
+        router.push(`/article/${response.data.articleId}`);
+      } else {
+        alert("創建文章失敗");
+      }
     } catch (error) {
-      alert("提交錯誤，請稍後再試！");
+      console.error("❌ 文章創建錯誤：", error);
     }
   };
 
   return (
     <div className="create-form">
-      <form onSubmit={handleSubmit}>
-        <div className="create-title">發表新文章</div>
+      <div className="article-controls-btn">
+        <span className="create-title">發表新文章</span>
+        <span className="btn" onClick={() => handleButtonClick("/article")}>
+          <span className="btn-icon">
+            <i className="fa-solid fa-rotate-left"></i>
+          </span>
+          返回列表
+        </span>
+        <span className="btn">
+          {/* onClick={() => handleButtonClick("/article/mine")} */}
+          <span className="btn-icon">
+            <i className="fa-solid fa-bookmark"></i>
+          </span>
+          我的文章
+        </span>
+      </div>
 
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(submitStatus);
+        }}
+        encType="multipart/form-data"
+      >
         {/* 封面圖片 */}
         <div className="secondaryTitle">上傳封面縮圖</div>
         <div className="image-upload-box">
@@ -107,9 +170,10 @@ const ArticleForm = () => {
             {previewImage ? (
               <img src={previewImage} alt="封面預覽" className="upload-image" />
             ) : (
-              <div className="upload-square-icon"></div>
+              <span>請選擇圖片</span>
             )}
           </label>
+
           <input
             type="file"
             id="new_coverImage"
@@ -142,8 +206,11 @@ const ArticleForm = () => {
           >
             <option value="">請選擇大分類</option>
             {categoriesBig.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
+              <option
+                key={category.big_category_id}
+                value={category.big_category_id}
+              >
+                {category.big_category_name}
               </option>
             ))}
           </select>
@@ -157,8 +224,8 @@ const ArticleForm = () => {
           >
             <option value="">請選擇小分類</option>
             {filteredSmallCategories.map((category, index) => (
-              <option key={index} value={category.name}>
-                {category.name}
+              <option key={index} value={category.small_category_id}>
+                {category.small_category_name}
               </option>
             ))}
           </select>
@@ -171,6 +238,7 @@ const ArticleForm = () => {
           value={new_content}
           editorLoaded={true}
           onChange={(data) => setContent(data)}
+          articleId={articleId} // 这里不会再报错
         />
 
         {/* 標籤 */}
@@ -200,8 +268,20 @@ const ArticleForm = () => {
 
         {/* 按鈕 */}
         <div className="btnarea">
-          <button className="btn article-create-btn">儲存草稿</button>
-          <button className="btn article-create-btn">發表文章</button>
+          <button
+            type="submit"
+            className="btn article-create-btn"
+            onClick={() => setSubmitStatus("draft")}
+          >
+            儲存草稿
+          </button>
+          <button
+            type="submit"
+            className="btn article-create-btn"
+            onClick={() => setSubmitStatus("published")}
+          >
+            發表文章
+          </button>
         </div>
       </form>
     </div>
