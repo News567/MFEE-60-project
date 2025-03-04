@@ -19,13 +19,15 @@ export default function MemberGroupPage() {
 
   // modal要用的資料
   const [modalGroup, setModalGroup] = useState(null)
+  const [endDate,setEndDate] = useState(null)
+  const [endTime,setEndTime] = useState(null)
 
   // 獲取會員
   const { user } = useAuth()
   console.log(user);
-  useEffect(()=>{
-    console.log("user更新了"+user.id);
-  },[user])
+  useEffect(() => {
+    console.log("user更新了" + user.id);
+  }, [user])
 
   // 設定地點選項
   const selectOption = {
@@ -33,19 +35,37 @@ export default function MemberGroupPage() {
     1: ["屏東", "台東", "澎湖", "綠島", "蘭嶼", "小琉球", "其他"],
     2: ["沖繩", "石垣島", "其他"],
     3: ["長灘島", "宿霧", "薄荷島", "其他"],
-    4: ["其他"]
-  }
-  const [countrySelect, setCountrySelect] = useState(0)
-  const [citySelect, setCitySelect] = useState(selectOption[countrySelect])
-  const [city, setCity] = useState(0)
-  // console.log("citySelect: " + citySelect);
-  const doCountrySelect = (e) => {
-    setCountrySelect(e.target.value)
-  }
-  useEffect(() => {
-    setCitySelect(selectOption[countrySelect])
-  }, [countrySelect])
+    4: ["其他"],
+  };
 
+  const [countrySelect, setCountrySelect] = useState(0);
+  const [city, setCity] = useState("");
+  const [citySelect, setCitySelect] = useState(selectOption[countrySelect]);
+
+  // 當 countrySelect 改變時更新 citySelect
+  useEffect(() => {
+    setCitySelect(selectOption[countrySelect]);
+  }, [countrySelect]);
+
+  // 處理國家選擇
+  const doCountrySelect = (e) => {
+    const newCountry = Number(e.target.value); // 確保轉為數字
+    setCountrySelect(newCountry);
+    setCity(""); // 重置城市
+  };
+
+  // 處理城市選擇
+  const doCitySelect = (e) => {
+    setCity(e.target.value);
+  };
+
+  // 設定 modal 用的 group
+  function doSetModal(data) {
+    setModalGroup(data); // 設定 modalGroup
+    setCountrySelect(Number(data.country_id)); // 直接用 data.country_id
+    setCity(data.city_name || ""); // 設定城市，預防 undefined
+    setCitySelect(selectOption[Number(data.country_id)]); // 立即更新子選項
+  }
 
 
 
@@ -53,8 +73,8 @@ export default function MemberGroupPage() {
   const api = "http://localhost:3005/api";
 
   // 確認是否登入
-  useEffect(() => {  
-    
+  useEffect(() => {
+
     // if (!user.user) { // 檢查 user 和 user.user 是否為 undefined
     //   alert("請先登入！")
     //   window.location = "/admin/login"
@@ -67,13 +87,16 @@ export default function MemberGroupPage() {
   }, [user])
 
   useEffect(() => {
-    console.log(modalGroup);
+    if(modalGroup){
+      setEndDate((modalGroup.sign_end_date).split(" ")[0])
+      setEndTime((modalGroup.sign_end_date).split(" ")[1])
+    }
   }, [modalGroup])
 
 
   // 連接後端獲取揪團資料
   useEffect(() => {
-    console.log("condition:"+ [condition]);
+    console.log("condition:" + [condition]);
     if (!condition.user) return
     const getList = async () => {
       await axios
@@ -95,8 +118,8 @@ export default function MemberGroupPage() {
   async function doCancel(myGroupId) {
     alert("是否確認要取消此揪團？此操作無法復原！")
     try {
-      await axios.put(api + "/member/myGroup/" + myGroupId).then((res)=>{
-        if(res.status == "success"){
+      await axios.put(api + "/member/myGroup/" + myGroupId).then((res) => {
+        if (res.status == "success") {
           alert("已取消此項揪團！")
         }
       })
@@ -108,13 +131,13 @@ export default function MemberGroupPage() {
   async function doQuitGroup(myGroupId) {
     alert("是否確認要退出此揪團？此操作無法復原！")
     try {
-      await axios.delete(`${api}/member/myGroup/${myGroupId}?userId=${user.id}`).then((res)=>{
-        if(res.status == "success"){
+      await axios.delete(`${api}/member/myGroup/${myGroupId}?userId=${user.id}`).then((res) => {
+        if (res.status == "success") {
           alert("已退出此項揪團！")
         }
       })
     } catch (error) {
-      console.log(error); 
+      console.log(error);
     }
   }
   // 前端篩選是否是user創辦的
@@ -133,21 +156,22 @@ export default function MemberGroupPage() {
     }
   }
 
-  // 設定modal用的group
-  function doSetModal(data){
-    setModalGroup(data)
-    console.log(modalGroup);
-  }
-
   // 篩選成團或取消，1成團2取消
-  const checkStatus = (e)=>{
-    switch(e){
+  const checkStatus = (e) => {
+    switch (e) {
       case 1:
         setMyGroups(originMyGroups.filter(item => item.status == 1))
         break
       case 2:
         setMyGroups(originMyGroups.filter(item => item.status == 2))
     }
+  }
+
+  // 每次切換分類都先關閉現有的collapse
+  const closeCollapse = ()=>{
+    const collapseElement = document.getElementById("myCollapse");
+    const collapseInstance = bootstrap.Collapse.getOrCreateInstance(collapseElement);
+    collapseInstance.hide(); // 關閉 Collapse
   }
 
 
@@ -247,19 +271,19 @@ export default function MemberGroupPage() {
             return (
               <div key={i} className="d-flex gap-3">
                 <a className="w-100 text-decoration-none text-reset" data-bs-toggle="collapse" href={`#collapseExample${i}`} role="button" aria-expanded="false" aria-controls="collapseExample" onClick={() => {
-                        doSetModal(mygroup)
-                      }}>
+                  doSetModal(mygroup)
+                }}>
                   <GroupCard group={mygroup} />
                 </a>
                 <div className={`collapse collapse-horizontal`} id={`collapseExample${i}`} data-bs-parent="#groupCards">
                   <div className="d-flex gap-2 h-100 flex-column justify-content-between ${styles.collapseSection}">
                     <button className={`btn text-nowrap h-100 ${styles.primaryBtn} ${styles.operateBtn}`} data-bs-toggle="modal" data-bs-target="#checkGroupModal"
-                      >查看揪團詳情</button>
+                    >查看揪團詳情</button>
                     {mygroup.user_id == user.id ? (<>
-                      <button className={`btn text-nowrap h-100 ${styles.primaryBtn}`}  data-bs-toggle="modal" data-bs-target="#groupModal">修改揪團資訊</button>
+                      <button className={`btn text-nowrap h-100 ${styles.primaryBtn}`} data-bs-toggle="modal" data-bs-target="#groupModal">修改揪團資訊</button>
                       <button className={`btn text-nowrap h-100 ${styles.cancelBtn} btn-danger`} onClick={() => doCancel(mygroup.id)}>取消揪團</button>
                     </>) : (
-                      <button className={`btn text-nowrap h-100 ${styles.cancelBtn} btn-danger`} onClick={()=> doQuitGroup(mygroup.id)}>退出揪團</button>
+                      <button className={`btn text-nowrap h-100 ${styles.cancelBtn} btn-danger`} onClick={() => doQuitGroup(mygroup.id)}>退出揪團</button>
                     )}
                   </div>
                 </div>
@@ -270,7 +294,7 @@ export default function MemberGroupPage() {
         </div>
 
         {/* 修改揪團資料的modal */}
-        <div className="modal fade" id="groupModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" key={modalGroup ? modalGroup.id+modalGroup.id : 'default1'}>
+        <div className="modal fade" id="groupModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" key={modalGroup ? modalGroup.id + modalGroup.id : 'default1'}>
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
@@ -288,20 +312,18 @@ export default function MemberGroupPage() {
                       <div className={styles.imgContainer}>
                         <img className={styles.img} src={`/image/group/${modalGroup.group_img}`} alt="" />
                       </div>
-                      {modalGroup && user.id && modalGroup.user_id == user.id ? (
                       <input type="file" name="file" required />
-                      ):(<></>)}
                       <div>
                         <div className="fs-22px mb-15px">
                           揪團標題
                         </div>
-                        <input defaultValue={modalGroup.name} className="form-control" type="text" name="title" id="" readOnly />
+                        <input defaultValue={modalGroup.name} className="form-control" type="text" name="title" id="" />
                       </div>
                       <div>
                         <div className="fs-22px mb-15px">
                           揪團性別
                         </div>
-                        <select className="form-select" name="gender" id="" defaultValue={modalGroup.gender} disabled>
+                        <select className="form-select" name="gender" id="" defaultValue={modalGroup.gender}>
                           <option value="default" disabled>
                             請選擇揪團性別
                           </option>
@@ -314,13 +336,13 @@ export default function MemberGroupPage() {
                         <div className="fs-22px mb-15px">
                           揪團人數
                         </div>
-                        <input className="form-control" type="number" name="maxNumber" defaultValue={modalGroup.max_number} id="" readOnly />
+                        <input className="form-control" type="number" name="maxNumber" defaultValue={modalGroup.max_number} id="" />
                       </div>
                       <div>
                         <div className="fs-22px mb-15px">
                           揪團分類
                         </div>
-                        <select className="form-select" name="type" id="" defaultValue={modalGroup.type} readOnly>
+                        <select className="form-select" name="type" id="" defaultValue={modalGroup.type}>
                           <option value="default" disabled>
                             請選擇揪團分類
                           </option>
@@ -334,7 +356,7 @@ export default function MemberGroupPage() {
                         <div className="fs-22px mb-15px">
                           證照資格
                         </div>
-                        <select className="form-select" name="certificates" id="" defaultValue={modalGroup.certificates} readOnly>
+                        <select className="form-select" name="certificates" id="" defaultValue={modalGroup.certificates}>
                           <option value="default" disabled>
                             請選擇是否需要證照
                           </option>
@@ -347,7 +369,7 @@ export default function MemberGroupPage() {
                         <div className="fs-22px mb-15px">
                           揪團地點
                         </div>
-                        <select name="country" className="form-select mb-15px" id="" defaultValue={1} onChange={doCountrySelect} readOnly>
+                        <select name="country" className="form-select mb-15px" id="" defaultValue={modalGroup.country_id} onChange={doCountrySelect} >
                           <option value="default" disabled>
                             請選擇揪團國家
                           </option>
@@ -356,17 +378,18 @@ export default function MemberGroupPage() {
                           <option value={3}>菲律賓</option>
                           <option value={4}>其他</option>
                         </select>
-                        <select className="form-select" name="city" id="" defaultValue="default">
-                          {citySelect.length > 0 ? (citySelect.map((v, i) => (
-                            <>
-                              <option key={`${v}+${i}`} value={v}>
+                        <select className="form-select" name="city" id="" defaultValue={modalGroup.city_name}>
+                          {citySelect.length > 0 ? (
+                            citySelect.map((v, i) => (
+                              <option key={`${v}-${i}`} value={v}>
                                 {v}
                               </option>
-                            </>
-                          )
-                          )) : (<option value="default" disabled>
-                            請先選擇國家
-                          </option>)}
+                            ))
+                          ) : (
+                            <option value="" disabled>
+                              請先選擇國家
+                            </option>
+                          )}
                         </select>
                       </div>
                       <div className="row">
@@ -374,13 +397,13 @@ export default function MemberGroupPage() {
                           <div className="fs-22px">
                             活動日期
                           </div>
-                          <input className="form-control" type="date" name="date" defaultValue={modalGroup.date} readOnly />
+                          <input className="form-control" type="date" name="date" defaultValue={modalGroup.date} />
                         </div>
                         <div className="col-12 col-sm-6 d-flex flex-column gap-3">
                           <div className="fs-22px">
                             活動時間
                           </div>
-                          <input className="form-control" type="time" name="time" defaultValue={modalGroup.time} readOnly />
+                          <input className="form-control" type="time" name="time" defaultValue={modalGroup.time} />
                         </div>
                       </div>
                       <div className="row">
@@ -388,13 +411,13 @@ export default function MemberGroupPage() {
                           <div className="fs-22px">
                             揪團截止日期
                           </div>
-                          <input className="form-control" type="date" name="signEndDate" defaultValue={"2000-05-07"} readOnly />
+                          <input className="form-control" type="date" name="signEndDate" value={endDate}  onChange={()=>{setEndDate(e.target.value)}}/>
                         </div>
                         <div className="col-12 col-sm-6 d-flex flex-column gap-3">
                           <div className="fs-22px">
                             揪團截止時間
                           </div>
-                          <input className="form-control" type="time" name="signEndTime" defaultValue={"00:00:00"} readOnly />
+                          <input className="form-control" type="time" name="signEndTime" value={endTime} onChange={()=>{setEndTime(e.target.value)}} />
                         </div>
                       </div>
                       <div>

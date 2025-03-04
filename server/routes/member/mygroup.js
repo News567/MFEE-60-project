@@ -16,11 +16,13 @@ router.post("/myGroup", async (req, res) => {
                     SELECT groups.*, 
                         activity_city.name AS city_name, 
                         groups_image.img_url AS group_img,
+                        activity_country.id AS country_id,
                         COUNT(groups_participants.id) AS participant_number
                     FROM groups 
                     LEFT JOIN activity_city ON groups.groups_city_id = activity_city.id
                     LEFT JOIN groups_image ON groups.id = groups_image.groups_id
                     LEFT JOIN groups_participants ON groups.id = groups_participants.groups_id
+                    LEFT JOIN activity_country ON activity_country.id = activity_city.activity_country_id
                     WHERE groups.user_id = ? 
                     OR groups.id IN (SELECT groups_id FROM groups_participants WHERE user_id = ?)
                     GROUP BY groups.id, activity_city.name, groups_image.img_url
