@@ -113,6 +113,11 @@ export default function MemberGroupPage() {
     getList();
   }, [condition]);
 
+  // 處理修改資料
+  const doUpdate = async()=>{
+    
+  }
+
 
   // 刪除揪團
   async function doCancel(myGroupId) {
@@ -301,7 +306,7 @@ export default function MemberGroupPage() {
                 <h5 className="modal-title" id="exampleModalLabel">揪團詳情</h5>
                 <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
-              <form className="group-create d-flex flex-column w-100">
+              <form className="group-create d-flex flex-column w-100" onSubmit={(e)=>doUpdate(e)}>
                 <div className="modal-body">
                   {modalGroup ? (
                     <>
@@ -411,13 +416,13 @@ export default function MemberGroupPage() {
                           <div className="fs-22px">
                             揪團截止日期
                           </div>
-                          <input className="form-control" type="date" name="signEndDate" value={endDate}  onChange={()=>{setEndDate(e.target.value)}}/>
+                          <input className="form-control" type="date" name="signEndDate" value={endDate || ""} onChange={(e)=>{setEndDate(e.target.value)}}/>
                         </div>
                         <div className="col-12 col-sm-6 d-flex flex-column gap-3">
                           <div className="fs-22px">
                             揪團截止時間
                           </div>
-                          <input className="form-control" type="time" name="signEndTime" value={endTime} onChange={()=>{setEndTime(e.target.value)}} />
+                          <input className="form-control" type="time" name="signEndTime" value={endTime || ""} onChange={(e)=>{setEndTime(e.target.value)}} />
                         </div>
                       </div>
                       <div>
