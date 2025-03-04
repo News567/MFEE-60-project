@@ -84,7 +84,6 @@
 /* 篩選容器：水平排列並置中 */
 .filter-group {
   display: flex;
-  gap: 3px;
   align-items: center;
 }
 
@@ -102,6 +101,7 @@
   cursor: pointer;
   color: black;
   transition: color 0.2s ease-in-out;
+  padding: 8 !important;
 }
 
 /* 篩選按鈕 hover 效果：文字顏色變藍 */
