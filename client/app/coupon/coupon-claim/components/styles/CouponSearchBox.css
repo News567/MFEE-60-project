@@ -1,0 +1,56 @@
+/* =========================
+   全局樣式
+   -------------------------
+   設定網站的全局樣式，包括字體、背景顏色等
+========================= */
+
+:root {
+  --primary-deep-color: #023047;
+  --primary-color: #219ebc;
+  --primary-light-color: #8ecae6;
+  --secondary-deep-color: #ffb703;
+  --secondary-color: #ffd500;
+  --secondary-light-color: #f1d691;
+  --white-color: #fff;
+  --light-gray-color: #D8D8D8;
+  --cornflower-blue-color: #508BE3;
+  --block-color: #000;
+}
+
+* {
+  font-family: "Noto Sans TC", serif;
+}
+
+
+/* ===================================================================
+   2. 搜尋框
+ =================================================================== */
+
+.coupon-search {
+  max-width: 18.75rem;
+  height: 1.5rem;
+  
+}
+
+.coupon-search {
+  .form-control {
+    margin-right: 5px;
+    border-radius: 3px;
+
+    &:focus {
+      outline: none;
+      box-shadow: none;
+      border-color: var(--light-gray-color);
+    }
+  }
+}
+
+.coupon-search span {
+  background-color: var(--primary-color);
+  border-radius: 3px !important;
+  width: 2.8rem;
+}
+
+.coupon-search i {
+  color: var(--white-color);
+}

@@ -1,0 +1,176 @@
+/* =========================
+   全局樣式
+   -------------------------
+   設定網站的全局樣式，包括字體、背景顏色等
+========================= */
+
+:root {
+  --primary-deep-color: #023047;
+  --primary-color: #219ebc;
+  --primary-light-color: #8ecae6;
+  --secondary-deep-color: #ffb703;
+  --secondary-color: #ffd500;
+  --secondary-light-color: #f1d691;
+  --white-color: #fff;
+  --light-gray-color: #D8D8D8;
+  --cornflower-blue-color: #508BE3;
+  --block-color: #000;
+}
+
+* {
+  font-family: "Noto Sans TC", serif;
+}
+
+
+/* ===================================================================
+   2. 內容容器設定 (Container Section)
+   =================================================================== */
+
+/* 優惠券內容區：左右內邊距設定 */
+/* .coupon-content {
+  padding-left: 27px;
+  padding-right: 27px;
+} */
+
+.coupon-content h1 {
+  font-size: 28px;
+  font-weight: 400;
+}
+
+/* ===================================================================
+   3. 共用工具類 (Utility Classes / 從 HTML 中抽離的 inline style)
+   =================================================================== */
+
+
+/* (2) 優惠活動篩選列水平捲動設定 */
+/* 原本直接在 HTML 中設定相關屬性，現定義為 .horizontal-scroll */
+.horizontal-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+  -ms-overflow-style: none;
+  /* for Internet Explorer */
+  scrollbar-width: none;
+  /* for Firefox */
+}
+
+/* 優惠活動篩選按鈕設計 */
+.horizontal-scroll .btn {
+  background-color: var(--white-color);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  height: 2.5rem;
+  font-size: 14px;
+  text-align: center;
+}
+
+.horizontal-scroll .btn:active {
+  background-color: var(--primary-color);
+  color: var(--white-color);
+}
+
+.horizontal-scroll .active {
+  background-color: var(--primary-color);
+  color: var(--white-color);
+}
+
+/* (3) 向右捲動圖示容器設定 */
+/* 原本 HTML 中設定 margin-left、寬高、邊框、圓角與 cursor */
+
+.scroll-indicator {
+  height: 2rem;
+  margin-left: 8px;
+}
+
+.scroll-indicator i {
+  color: var(--primary-color);
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+/* ===================================================================
+   4. 優惠券類型篩選區塊設定 (Filter Group Section)
+   =================================================================== */
+
+/* 篩選容器：水平排列並置中 */
+.filter-group {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+/* 篩選標籤設定：字型大小、顏色與右側間距 */
+.filter-label {
+  font-size: 16px;
+  color: black;
+}
+
+/* 篩選按鈕基本樣式設定：無背景、無邊框、內邊距與字型大小 */
+.filter-group button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: black;
+  transition: color 0.2s ease-in-out;
+}
+
+/* 篩選按鈕 hover 效果：文字顏色變藍 */
+.filter-group button:hover {
+  color: var(--primary-color);
+}
+
+/* 篩選按鈕選中狀態：文字顏色維持藍色 */
+.filter-group button.active {
+  color: var(--primary-color);
+}
+
+
+/* ===================================================================
+   6. 分頁控制設定 (Pagination Section)
+   =================================================================== */
+/* 下拉選單大小 */
+.custom-select-container {
+  width: 11.25rem;
+  height: 1.875rem;
+  margin: 5px;
+}
+
+
+/* 分頁資訊：字型大小與顏色設定 */
+.pagination-info {
+  font-size: 1rem;
+  color: black;
+}
+
+/* 自定義簡約風格 */
+.pagination {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 1rem;
+  justify-content: center;
+  padding: 1rem 0;
+}
+.pagination .page-link {
+  color: #000;
+  background-color: transparent;
+  border: none;
+  margin: 0 5px;
+  transition: background-color 0.2s;
+}
+.pagination .page-link:hover {
+  background-color: #ffd500;
+  color: #000;
+}
+.pagination .page-item.active .page-link {
+  color: #000;
+  background-color: #ffd500;
+}
+/* 移除 disabled 狀態連結的 hover 效果 */
+/* 移除 disabled 狀態連結的背景、邊框與陰影 */
+.pagination .page-item.disabled .page-link {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  color: #000; /* 讓省略號的顏色與其他按鈕一致 */
+  cursor: default;
+}

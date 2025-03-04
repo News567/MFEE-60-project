@@ -134,7 +134,7 @@ export default function Coupon() {
                   </div>
                 </div>
                 {/* 優惠券列表：使用卡片方式顯示各張優惠券 */}
-                <div className="row row-cols-1 row-cols-md-2 g-3 mt-4">
+                <div className="row row-cols-1 row-cols-md-2 g-3 coupon-list">
                   {/* 優惠券卡片 1 */}
                   {coupons.map((coupon) => (
                     <div className="" key={coupon.id}>
@@ -142,7 +142,7 @@ export default function Coupon() {
                     </div>
                   ))}
                 </div>
-                {/* 分頁控制區：顯示優惠券總數與分頁按鈕 */}
+                分頁控制區：顯示優惠券總數與分頁按鈕
                 <div className="pagination my-4">
                   <div className="pagination-info">
                     顯示 第1-12張 / 共72張 優惠券
@@ -164,244 +164,7 @@ export default function Coupon() {
                     </button>
                   </div>
                 </div>
-                {/* 為你推薦區：顯示推薦商品 */}
-                <div className="d-flex justify-content-center align-items-center mt-5 mb-3">
-                  <div
-                    className="border-bottom"
-                    style={{ width: "12.5rem", height: 1 }}
-                  />
-                  <h5 className="mx-4 mb-0 fw-bold">為你推薦</h5>
-                  <div
-                    className="border-bottom"
-                    style={{ width: "12.5rem", height: 1 }}
-                  />
-                </div>
-                <div className="row row-cols-1 row-cols-md-2 g-3">
-                  {/* 推薦商品 1 */}
-                  <div className="col">
-                    <div className="card border">
-                      <div className="d-flex align-items-center p-3">
-                        {/* 商品圖片 */}
-                        <img
-                          src="./coupon-image/product_375x.webp"
-                          className="rounded me-3 coupon-product-image"
-                          alt="商品圖片"
-                        />
-                        {/* 商品資訊 */}
-                        <div className="flex-grow-1">
-                          <p className="mb-1 text-truncate fw-bold">
-                            MARES - RAZOR PRO 高階塑膠蛙板
-                          </p>
-                          <span className="text-primary fw-bold">$1990</span>
-                        </div>
-                        {/* 優惠資訊區 */}
-                        <div className="border-start ps-3 text-center">
-                          <p className="mb-0">折 $30元</p>
-                          <small className="text-muted">低消 $2000</small>
-                          <button className="btn btn-sm btn-primary mt-2">
-                            領取
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* 推薦商品 2 */}
-                  <div className="col">
-                    <div className="card border">
-                      <div className="d-flex align-items-center p-3">
-                        {/* 商品圖片 */}
-                        <img
-                          src="./coupon-image/product_375x.webp"
-                          className="rounded me-3 coupon-product-image"
-                          alt="商品圖片"
-                        />
-                        {/* 商品資訊 */}
-                        <div className="flex-grow-1">
-                          <p className="mb-1 text-truncate fw-bold">
-                            MARES - RAZOR PRO 高階塑膠蛙板
-                          </p>
-                          <span className="text-primary fw-bold">$1990</span>
-                        </div>
-                        {/* 優惠資訊區 */}
-                        <div className="border-start ps-3 text-center">
-                          <p className="mb-0">折 $30元</p>
-                          <small className="text-muted">低消 $2000</small>
-                          <button className="btn btn-sm btn-primary mt-2">
-                            領取
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* 推薦商品 3 */}
-                  <div className="col">
-                    <div className="card border">
-                      <div className="d-flex align-items-center p-3">
-                        {/* 商品圖片 */}
-                        <img
-                          src="./coupon-image/product_375x.webp"
-                          className="rounded me-3 coupon-product-image"
-                          alt="商品圖片"
-                        />
-                        {/* 商品資訊 */}
-                        <div className="flex-grow-1">
-                          <p className="mb-1 text-truncate fw-bold">
-                            MARES - RAZOR PRO 高階塑膠蛙板
-                          </p>
-                          <span className="text-primary fw-bold">$1990</span>
-                        </div>
-                        {/* 優惠資訊區 */}
-                        <div className="border-start ps-3 text-center">
-                          <p className="mb-0">折 $30元</p>
-                          <small className="text-muted">低消 $2000</small>
-                          <button className="btn btn-sm btn-primary mt-2">
-                            領取
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* 推薦商品 4 */}
-                  <div className="col">
-                    <div className="card border">
-                      <div className="d-flex align-items-center p-3">
-                        {/* 商品圖片 */}
-                        <img
-                          src="./coupon-image/product_375x.webp"
-                          className="rounded me-3 coupon-product-image"
-                          alt="商品圖片"
-                        />
-                        {/* 商品資訊 */}
-                        <div className="flex-grow-1">
-                          <p className="mb-1 text-truncate fw-bold">
-                            MARES - RAZOR PRO 高階塑膠蛙板
-                          </p>
-                          <span className="text-primary fw-bold">$1990</span>
-                        </div>
-                        {/* 優惠資訊區 */}
-                        <div className="border-start ps-3 text-center">
-                          <p className="mb-0">折 $30元</p>
-                          <small className="text-muted">低消 $2000</small>
-                          <button className="btn btn-sm btn-primary mt-2">
-                            領取
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* 推薦商品 5 */}
-                  <div className="col">
-                    <div className="card border">
-                      <div className="d-flex align-items-center p-3">
-                        {/* 商品圖片 */}
-                        <img
-                          src="./coupon-image/product_375x.webp"
-                          className="rounded me-3 coupon-product-image"
-                          alt="商品圖片"
-                        />
-                        {/* 商品資訊 */}
-                        <div className="flex-grow-1">
-                          <p className="mb-1 text-truncate fw-bold">
-                            MARES - RAZOR PRO 高階塑膠蛙板
-                          </p>
-                          <span className="text-primary fw-bold">$1990</span>
-                        </div>
-                        {/* 優惠資訊區 */}
-                        <div className="border-start ps-3 text-center">
-                          <p className="mb-0">折 $30元</p>
-                          <small className="text-muted">低消 $2000</small>
-                          <button className="btn btn-sm btn-primary mt-2">
-                            領取
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* 推薦商品 6 */}
-                  <div className="col">
-                    <div className="card border">
-                      <div className="d-flex align-items-center p-3">
-                        {/* 商品圖片 */}
-                        <img
-                          src="./coupon-image/product_375x.webp"
-                          className="rounded me-3 coupon-product-image"
-                          alt="商品圖片"
-                        />
-                        {/* 商品資訊 */}
-                        <div className="flex-grow-1">
-                          <p className="mb-1 text-truncate fw-bold">
-                            MARES - RAZOR PRO 高階塑膠蛙板
-                          </p>
-                          <span className="text-primary fw-bold">$1990</span>
-                        </div>
-                        {/* 優惠資訊區 */}
-                        <div className="border-start ps-3 text-center">
-                          <p className="mb-0">折 $30元</p>
-                          <small className="text-muted">低消 $2000</small>
-                          <button className="btn btn-sm btn-primary mt-2">
-                            領取
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* 推薦商品 7 */}
-                  <div className="col">
-                    <div className="card border">
-                      <div className="d-flex align-items-center p-3">
-                        {/* 商品圖片 */}
-                        <img
-                          src="./coupon-image/product_375x.webp"
-                          className="rounded me-3 coupon-product-image"
-                          alt="商品圖片"
-                        />
-                        {/* 商品資訊 */}
-                        <div className="flex-grow-1">
-                          <p className="mb-1 text-truncate fw-bold">
-                            MARES - RAZOR PRO 高階塑膠蛙板
-                          </p>
-                          <span className="text-primary fw-bold">$1990</span>
-                        </div>
-                        {/* 優惠資訊區 */}
-                        <div className="border-start ps-3 text-center">
-                          <p className="mb-0">折 $30元</p>
-                          <small className="text-muted">低消 $2000</small>
-                          <button className="btn btn-sm btn-primary mt-2">
-                            領取
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* 推薦商品 8 */}
-                  <div className="col">
-                    <div className="card border">
-                      <div className="d-flex align-items-center p-3">
-                        {/* 商品圖片 */}
-                        <img
-                          src="./coupon-image/product_375x.webp"
-                          className="rounded me-3 coupon-product-image"
-                          alt="商品圖片"
-                        />
-                        {/* 商品資訊 */}
-                        <div className="flex-grow-1">
-                          <p className="mb-1 text-truncate fw-bold">
-                            MARES - RAZOR PRO 高階塑膠蛙板
-                          </p>
-                          <span className="text-primary fw-bold">$1990</span>
-                        </div>
-                        {/* 優惠資訊區 */}
-                        <div className="border-start ps-3 text-center">
-                          <p className="mb-0">折 $30元</p>
-                          <small className="text-muted">低消 $2000</small>
-                          <button className="btn btn-sm btn-primary mt-2">
-                            領取
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                
               </div>
             </div>
           </main>
@@ -410,3 +173,4 @@ export default function Coupon() {
     </>
   );
 }
+

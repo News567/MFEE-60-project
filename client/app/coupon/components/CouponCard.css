@@ -28,8 +28,8 @@
 .coupon-card {
     border: 1px solid;                         /* 邊框樣式與寬度 */
     border-color: var(--light-gray-color);      /* 邊框顏色使用全域變數 */
-    border-radius: 3px;                         /* 卡片圓角 */
-    height: 7.5rem;                             /* 固定卡片高度 */
+    border-radius: 5px;                         /* 卡片圓角 */
+    height: 9rem;                            /* 固定卡片高度*/
     display: flex;                              /* Flex 排版 */
     align-items: center;                        /* 垂直置中 */
     background: #fff;                           /* 背景顏色：白色 */
@@ -43,12 +43,14 @@
 */
 .coupon-image {
     position: relative;                         /* 相對定位，方便內部圖片定位 */
-    width: 7.5rem;                              /* 固定寬度 */
-    height: 100%;                               /* 高度填滿父容器 */
+    width: 9rem;                              /* 固定寬度 */
+    height: 9rem;                               /* 高度填滿父容器 */
     object-fit: cover;                          /* 圖片覆蓋容器且保持比例 */
-    border-radius: 3px 0 0 3px;                   /* 左側圓角 */
 }
 
+.coupon-image img {
+  border-radius: 5px 0 0 5px;                  /* 左側圓角 */
+}
 /* 
   優惠券資訊內容區設定：
   使用 Flex 自動填滿剩餘空間
@@ -74,6 +76,7 @@
 .coupon-condition {
     font-size: 14px;
     font-weight: 400;
+    margin-bottom: 5px;
 }
 
 /* 
@@ -87,9 +90,9 @@
     border: 1px solid;
     border-color: var(--primary-color);
     border-radius: 5px;
-    padding: 2px 8px;
-    margin-top: 5px;
+    padding: 1px 3px;
     font-weight: 400;
+    margin-right: 5px;
 }
 
 /* 
@@ -125,12 +128,14 @@
 .btn.btn-claim.btn-claim-style {
     color: var(--primary-color);
     border-radius: 5px;
-    border: 1.5px solid;
+    border: 1px solid;
     border-color: var(--primary-color);
-    padding: 5px 10px;
-    font-size: 14px;
-    font-weight: 400;
+    padding:1px;
+    font-size: 12px;
+    font-weight: 500;
     margin-right: 10px;
+    width: 2.8rem;
+    height: 2rem;
 }
 
 /* 
@@ -149,4 +154,28 @@
 .btn-claim-style:active {
     background: var(--primary-color) !important;
     color: var(--white-color) !important;
+}
+
+.coupon-max {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  color: var(--primary-color);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.coupon-code {
+  font-size: 12px;
+}
+
+
+/* 進度條容器的底色，代表未填滿的部分 */
+.progress-custom {
+  background-color: #e0e0e0; /* 例如：淺灰色 */
+}
+
+/* 進度條內填充部分的顏色 */
+.progress-bar-custom {
+  background-color: var(--primary-light-color) !important; /* 例如：藍色 */
 }

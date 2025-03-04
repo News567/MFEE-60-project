@@ -195,56 +195,8 @@ export function AuthProvider({ children }) {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
-
-  useEffect(() => {
-    if (!user || user === -1 || !user.id) return;
-    const storedToken = localStorage.getItem("loginWithToken");
-
-    if (!storedToken) {
-      setUser(null);
-      setLoading(false); // ✅ 避免無限 `loading`
-      return;
-    }
-
-
-    const fetchProfile = async () => {
-      try {
-        const profileAPI = `http://localhost:3005/api/member/users/${user.id}`;
-        const res = await fetch(profileAPI, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${storedToken}`,
-          },
-        });
-
-        const result = await res.json();
-        if (result.status !== "success") throw new Error(result.message);
-        console.log("🔍 使用者資料:", result.data);
-        setProfile(result.data);
-      } catch (err) {
-        console.error("❌ 取得使用者資料失敗:", err.message);
-        setProfile({
-          id: "",
-          name: "",
-          email: "",
-          birthday: "",
-          gender: "",
-          address: "",
-          emergency_contact: "",
-          emergency_phone: "",
-          img: "/img/default.png",
-        });
-
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [user]);
 
   return (
     <AuthContext.Provider

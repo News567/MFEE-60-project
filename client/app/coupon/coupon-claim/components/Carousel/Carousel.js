@@ -2,7 +2,6 @@
 
 import React, { useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css"; // 載入 Bootstrap 樣式
-import "bootstrap/dist/js/bootstrap.bundle.min.js"; // 載入 Bootstrap JS
 import CarouselItem from "./CarouselItem"; // 引入輪播圖片元件
 import CarouselIndicators from "./CarouselIndicators"; // 引入輪播指示器元件
 import CarouselControls from "./CarouselControls"; // 引入輪播控制按鈕元件

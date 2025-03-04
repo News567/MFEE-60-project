@@ -26,8 +26,8 @@ const CarouselItem = ({ src, alt, active, interval }) => (
 <Image
       src={src}                 // 圖片來源
       alt={alt}                 // 替代文字
-      layout="fill"             // 讓圖片充滿容器
-      objectFit="cover"         // 圖片保持比例並覆蓋整個容器
+      fill            // 讓圖片充滿容器
+      style={{ objectFit: "cover" }}         // 圖片保持比例並覆蓋整個容器
       className="d-block w-100"  // Bootstrap 樣式：區塊級元素，寬度 100%
     />
   </div>
