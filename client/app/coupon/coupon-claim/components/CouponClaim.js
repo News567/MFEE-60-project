@@ -88,7 +88,7 @@ export default function CouponClaim() {
       });
       if (response.data.success) {
         setCoupons(response.data.coupons);
-        // 搜尋結果通常不含分頁資訊，若需要可自行調整
+        // 搜尋結果通常不含分頁資訊，需要可自行調整
         setPagination({ total: response.data.coupons.length, page: 1, totalPages: 1 });
       } else {
         setCoupons([]);

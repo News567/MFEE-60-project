@@ -1,4 +1,3 @@
-// claim.js
 // 匯入 express 框架
 import express from "express";
 // 從設定檔中取得 MySQL 連線池
