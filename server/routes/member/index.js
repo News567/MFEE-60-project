@@ -93,7 +93,7 @@ router.get("/users/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const sql =
-      "SELECT id, name, email, birthday, gender, phone, address, emergency_contact, emergency_phone, img FROM `users` WHERE id = ?";
+      "SELECT id, name, email, birthday, gender, phone, address, emergency_contact, emergency_phone, img, level_id FROM `users` WHERE id = ?";
     const [rows] = await pool.execute(sql, [id]);
 
     if (rows.length === 0) {
@@ -138,6 +138,7 @@ router.put("/users/:id", checkToken, async (req, res) => {
     address,
     emergency_contact,
     emergency_phone,
+    level_id,
   } = req.body;
 
   try {
@@ -169,6 +170,7 @@ router.put("/users/:id", checkToken, async (req, res) => {
         regex: /^09\d{8}$/,
         errorMsg: "手機號碼格式不正確",
       },
+      { key: "level_id", value: level_id },
     ];
     for (const field of fields) {
       if (field.value) {

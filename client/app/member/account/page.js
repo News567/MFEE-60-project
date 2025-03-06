@@ -138,7 +138,7 @@ export default function Account() {
     <>
       <div className={styles.content}>
         {/* aside */}
-        <div className={styles.aside}>
+        <div className="col-lg-3 col-md-4">
           <div className={styles.listBox}>
             <div className={styles.asideTitle}>
               <h5>會員中心</h5>
@@ -158,7 +158,7 @@ export default function Account() {
               <Link href="/member/favorite" className={styles.ASother}>
                 <h6>我的最愛</h6>
               </Link>
-              <Link href="/member/coupon" className={styles.ASother}>
+              <Link href="/coupon" className={styles.ASother}>
                 <h6>我的優惠券</h6>
               </Link>
             </div>
@@ -424,6 +424,8 @@ export default function Account() {
               <UploadAvatar
                 userId={user?.id}
                 currentAvatar={profile?.img || "/img/default.png"}
+                level_id={profile?.level_id}
+                email={user?.email}
                 onUploadSuccess={(newImg) =>
                   setUserData((prev) => ({ ...prev, img: newImg }))
                 }
